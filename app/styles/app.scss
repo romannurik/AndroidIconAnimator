@@ -1,0 +1,19 @@
+// libraries and such
+@import 'material-colors';
+@import 'material-shadows';
+@import 'material-icons';
+@import 'angular-material-overrides';
+
+// global styles
+@import 'variables';
+@import 'layout-system';
+@import 'typography';
+
+// core page layouts and common stuff
+@import 'root';
+
+// components
+@import '../components/**/*';
+
+// pages
+@import '../pages/**/*';

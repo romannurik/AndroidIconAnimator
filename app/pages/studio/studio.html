@@ -1,0 +1,15 @@
+<main
+    class="page-studio"
+    ng-controller="StudioCtrl as studioCtrl"
+    layout="column">
+
+  <ng-include src="'templates/loading.html'" ng-if="!studioCtrl.loaded"></ng-include>
+
+  <div
+      flex
+      ng-if="studioCtrl.loaded"
+      layout="column">
+    <studio-canvas flex></studio-canvas>
+    <studio-layer-timeline></studio-layer-timeline>
+  </div>
+</main>

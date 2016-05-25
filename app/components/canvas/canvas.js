@@ -1,0 +1,167 @@
+import AnimationRenderer from './animationrenderer';
+import {LayerGroup} from 'avdstudio/model';
+import svgPathParser from 'avdstudio/svgpathparser';
+
+
+class CanvasController {
+  constructor($scope, $element, StudioStateService) {
+    this.scope_ = $scope;
+    this.element_ = $element;
+    this.studioState_ = StudioStateService;
+
+    this.studioState_.onChange((event, changes) => {
+      if (changes.playing) {
+        if (this.studioState_.playing) {
+          this.animStart = Number(new Date()) - this.studioState_.activeTime;
+        }
+
+        this.drawCanvas_();
+      }
+
+      if (changes.activeTime) {
+        this.animTime = this.studioState_.activeTime;
+        this.drawCanvas_();
+      }
+
+      if (changes.artwork || changes.artworkAnimations || changes.activeArtworkAnimation) {
+        this.rebuildRenderer_();
+        this.drawCanvas_();
+      }
+    }, $scope);
+
+    this.rebuildRenderer_();
+    this.drawCanvas_();
+  }
+
+  rebuildRenderer_() {
+    if (this.studioState_.artwork && this.studioState_.activeArtworkAnimation) {
+      this.animationRenderer_ = new AnimationRenderer(this.artwork, this.artworkAnimation);
+    } else {
+      this.animationRenderer_ = null;
+    }
+  }
+
+  get artwork() {
+    return this.studioState_.artwork;
+  }
+
+  get artworkAnimation() {
+    return this.studioState_.activeArtworkAnimation;
+  }
+
+  drawCanvas_() {
+    if (this.animationFrameRequest_) {
+      window.cancelAnimationFrame(this.animationFrameRequest_);
+      this.animationFrameRequest_ = null;
+    }
+
+    if (!this.artwork || !this.artworkAnimation) {
+      return;
+    }
+
+    let $canvas = this.element_.find('canvas');
+    let cssScale = 10;
+    let backingStoreScale = cssScale * (window.devicePixelRatio || 1);
+    $canvas.attr('width', this.artwork.width * backingStoreScale);
+    $canvas.attr('height', this.artwork.height * backingStoreScale);
+    $canvas.css({
+      width: this.artwork.width * cssScale,
+      height: this.artwork.height * cssScale,
+    });
+
+    let ctx = $canvas.get(0).getContext('2d');
+    ctx.save();
+    ctx.scale(backingStoreScale, backingStoreScale);
+
+    let transforms = [];
+
+    let drawLayer = layer => {
+      if (layer instanceof LayerGroup) {
+        transforms.push(() => {
+          ctx.translate(layer.pivotX, layer.pivotY);
+          ctx.translate(layer.translateX, layer.translateY);
+          ctx.rotate(layer.rotation * Math.PI / 180);
+          ctx.scale(layer.scaleX, layer.scaleY);
+          ctx.translate(-layer.pivotX, -layer.pivotY);
+        });
+        layer.layers.forEach(layer => drawLayer(layer));
+        transforms.pop();
+      } else {
+        ctx.strokeStyle = layer.strokeColor;
+        ctx.lineWidth = layer.strokeWidth;
+        ctx.fillStyle = layer.fillColor;
+        ctx.lineCap = layer.strokeLinecap || 'butt';
+
+        ctx.save();
+        transforms.forEach(t => t());
+        //let p = new Path2D(layer.pathData);
+        svgPathParser(ctx, layer.pathData);
+        ctx.restore();
+
+        if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
+          ctx.setLineDash([
+            (layer.trimPathEnd - layer.trimPathStart) * layer._pathLength,
+            layer._pathLength
+          ]);
+          ctx.lineDashOffset = -(layer.trimPathStart * layer._pathLength);
+        } else {
+          ctx.setLineDash([]);
+        }
+
+        if (layer.strokeColor && layer.strokeWidth) {
+          ctx.stroke();
+        }
+        if (layer.fillColor) {
+          ctx.fill();
+        }
+      }
+    };
+
+    // draw artwork
+    this.animationRenderer_.setAnimationTime(this.animTime || 0);
+    drawLayer(this.animationRenderer_.renderedArtwork);
+
+    ctx.restore();
+
+    // draw pixel grid
+    if (cssScale > 4) {
+      ctx.fillStyle = 'rgba(128, 128, 128, .25)';
+
+      for (let x = 1; x < this.artwork.width; ++x) {
+        ctx.fillRect(
+            x * backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
+            0,
+            1 * (window.devicePixelRatio || 1),
+            this.artwork.height * backingStoreScale);
+      }
+      for (let y = 1; y < this.artwork.height; ++y) {
+        ctx.fillRect(
+            0,
+            y * backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
+            this.artwork.width * backingStoreScale,
+            1 * (window.devicePixelRatio || 1));
+      }
+    }
+
+    if (this.studioState_.playing) {
+      this.animationFrameRequest_ = window.requestAnimationFrame(() => {
+        this.animTime = (Number(new Date()) - this.animStart) % this.artworkAnimation.duration;
+        this.studioState_.activeTime = this.animTime;
+        this.drawCanvas_();
+      });
+    }
+  }
+}
+
+
+angular.module('AVDStudio').directive('studioCanvas', () => {
+  return {
+    restrict: 'E',
+    scope: {},
+    templateUrl: 'components/canvas/canvas.html',
+    replace: true,
+    bindToController: true,
+    controller: CanvasController,
+    controllerAs: 'ctrl'
+  };
+});

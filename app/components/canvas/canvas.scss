@@ -1,0 +1,8 @@
+.studio-canvas {
+  background-color: material-color('grey', '500');
+
+  canvas {
+    background-color: #fff;
+    box-shadow: material-shadow(2);
+  }
+}
