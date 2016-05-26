@@ -1,4 +1,5 @@
-import {Artwork, ArtworkAnimation} from 'avdstudio/model';
+import {Artwork, Animation} from 'avdstudio/model';
+import {AnimationRenderer} from 'avdstudio/animationrenderer';
 
 
 const CHANGES_TAG = '$$studioState::CHANGES';
@@ -7,6 +8,7 @@ const CHANGES_TAG = '$$studioState::CHANGES';
 class StudioStateService {
   constructor($rootScope) {
     this.rootScope_ = $rootScope;
+    this.rebuildRenderer_();
   }
 
   get playing() {
@@ -24,45 +26,62 @@ class StudioStateService {
 
   set artwork(artwork) {
     this.artwork_ = artwork;
-    this.broadcastChanges_({artwork: true});
+    this.artworkChanged();
   }
 
-  get artworkAnimations() {
-    return this.artworkAnimations_ || [];
+  get animations() {
+    return this.animations_ || [];
   }
 
-  set artworkAnimations(artworkAnimations) {
-    this.artworkAnimations_ = artworkAnimations;
-    if (artworkAnimations.indexOf(this.activeArtworkAnimation) < 0) {
-      this.activeArtworkAnimation = artworkAnimations[0];
+  set animations(animations) {
+    this.animations_ = animations;
+    if (animations.indexOf(this.activeAnimation) < 0) {
+      this.activeAnimation = animations[0];
     }
-    this.broadcastChanges_({artworkAnimations: true});
+    this.animChanged();
   }
 
   animChanged() {
-    this.broadcastChanges_({artworkAnimations: true});
+    this.rebuildRenderer_();
+    this.broadcastChanges_({animations: true});
   }
 
   artworkChanged() {
+    this.rebuildRenderer_();
     this.broadcastChanges_({artwork: true});
   }
 
-  get activeArtworkAnimation() {
-    return this.activeArtworkAnimation_
-        || (this.artworkAnimations.length && this.artworkAnimations[0]);
+  get animationRenderer() {
+    return this.animationRenderer_;
   }
 
-  set activeArtworkAnimation(activeArtworkAnimation) {
-    this.activeArtworkAnimation_ = activeArtworkAnimation;
-    this.broadcastChanges_({activeArtworkAnimation: true});
+  get activeAnimation() {
+    return this.activeAnimation_ || (this.animations.length && this.animations[0]);
+  }
+
+  set activeAnimation(activeAnimation) {
+    this.activeAnimation_ = activeAnimation;
+    this.rebuildRenderer_();
+    this.broadcastChanges_({activeAnimation: true});
+  }
+
+  rebuildRenderer_() {
+    this.animationRenderer_ = null;
+    if (this.activeAnimation) {
+      this.animationRenderer_ = new AnimationRenderer(
+          this.artwork_,
+          this.activeAnimation);
+      this.animationRenderer_.setAnimationTime(this.activeTime_);
+    }
   }
 
   get activeTime() {
-    return this.activeTime_;
+    return this.activeTime_ || 0;
   }
 
   set activeTime(activeTime) {
     this.activeTime_ = activeTime;
+    this.animationRenderer_.setAnimationTime(activeTime);
     this.broadcastChanges_({activeTime: true});
   }
 
@@ -75,10 +94,11 @@ class StudioStateService {
     this.selectedLayers_ = selectedLayers;
     this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer._selected = true);
 
-    this.selectedAnimations_ && this.selectedAnimations_.forEach(anim => anim._selected = false);
-    this.selectedAnimations_ = null;
+    this.selectedAnimationBlocks_
+        && this.selectedAnimationBlocks_.forEach(anim => anim._selected = false);
+    this.selectedAnimationBlocks_ = null;
 
-    this.broadcastChanges_({selectedLayers: true, selectedAnimations: true});
+    this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
   }
 
   toggleLayerSelected(layer) {
@@ -91,41 +111,44 @@ class StudioStateService {
       layer._selected = false;
     }
 
-    this.selectedAnimations_ && this.selectedAnimations_.forEach(anim => anim._selected = false);
-    this.selectedAnimations_ = null;
+    this.selectedAnimationBlocks_
+        && this.selectedAnimationBlocks_.forEach(anim => anim._selected = false);
+    this.selectedAnimationBlocks_ = null;
 
-    this.broadcastChanges_({selectedLayers: true, selectedAnimations: true});
+    this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
   }
 
-  get selectedAnimations() {
-    return this.selectedAnimations_ || [];
+  get selectedAnimationBlocks() {
+    return this.selectedAnimationBlocks_ || [];
   }
 
-  set selectedAnimations(selectedAnimations) {
-    this.selectedAnimations_ && this.selectedAnimations_.forEach(anim => anim._selected = false);
-    this.selectedAnimations_ = selectedAnimations;
-    this.selectedAnimations_ && this.selectedAnimations_.forEach(anim => anim._selected = true);
+  set selectedAnimationBlocks(selectedAnimationBlocks) {
+    this.selectedAnimationBlocks_
+        && this.selectedAnimationBlocks_.forEach(anim => anim._selected = false);
+    this.selectedAnimationBlocks_ = selectedAnimationBlocks;
+    this.selectedAnimationBlocks_
+        && this.selectedAnimationBlocks_.forEach(anim => anim._selected = true);
 
     this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer._selected = false);
     this.selectedLayers_ = null;
 
-    this.broadcastChanges_({selectedLayers: true, selectedAnimations: true});
+    this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
   }
 
-  toggleAnimationSelected(animation) {
-    let index = (this.selectedAnimations_ || []).indexOf(animation);
+  toggleAnimationBlockSelected(animation) {
+    let index = (this.selectedAnimationBlocks_ || []).indexOf(animation);
     if (index < 0) {
-      this.selectedAnimations_.push(animation);
+      this.selectedAnimationBlocks_.push(animation);
       animation._selected = true;
     } else {
-      this.selectedAnimations_.splice(index, 1);
+      this.selectedAnimationBlocks_.splice(index, 1);
       animation._selected = false;
     }
 
     this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer._selected = false);
     this.selectedLayers_ = null;
 
-    this.broadcastChanges_({selectedLayers: true, selectedAnimations: true});
+    this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
   }
 
   broadcastChanges_(changes) {

@@ -1,0 +1,64 @@
+<div class="studio-property-inspector" layout="column">
+  <studio-splitter edge="left" min="200" persist-id="property-inspector"></studio-splitter>
+  <div ng-if="!ctrl.selection" class="spi-empty" flex>
+    Select a layer, group, or timeline block to edit properties
+  </div>
+  <div
+      ng-if="ctrl.selection"
+      flex
+      layout="column"
+      class="spi-selection-{{ctrl.selection.type}}">
+    <div class="spi-header" flex="none">
+      <i class="material-icons spi-selection-icon">{{ctrl.selection.icon}}</i>
+      <div class="spi-selection-description-container" layout="column" flex>
+        <span class="spi-selection-description">{{ctrl.selection.description}}</span>
+        <span class="spi-selection-sub-description">{{ctrl.selection.subDescription}}</span>
+      </div>
+    </div>
+    <div class="spi-body" flex layout="column">
+      <div class="spi-empty"
+          flex
+          ng-if="!ctrl.selection.properties || !ctrl.selection.properties.length">
+        No shared properties to view or edit
+      </div>
+      <div class="spi-property" ng-repeat="prop in ctrl.selection.properties">
+        <div class="spi-property-name">{{prop.name}}</div>
+        <div class="spi-property-value" layout="row">
+          <div ng-if="prop.type === 'color'"
+              class="spi-property-color-preview"
+              style="background-color: {{ctrl.androidToCssColor(prop.value)}}">
+          </div>
+          <span ng-if="!prop.editable" class="spi-property-value-static" flex>
+            {{prop.displayValue}}
+          </span>
+          <div ng-if="prop.editable" class="spi-property-value-editor" layout="column" flex>
+            <input
+                ng-if="prop.type == 'string' ||
+                       prop.type == 'color' ||
+                       prop.type == 'number' ||
+                       prop.type == 'fraction'"
+                ng-model="prop.value"
+                ng-keydown="ctrl.onValueEditorKeyDown($event, prop)"
+                ng-blur="prop.destroyEnteredValue()">
+            <md-menu
+                class="spi-property-value-menu"
+                ng-if="prop.type.indexOf('enum') >= 0"
+                layout="column">
+              <button class="spi-property-value-menu-target" ng-click="$mdOpenMenu($event)">
+                <span class="spi-property-value-menu-current-value">{{prop.displayValue}}</span>
+              </button>
+              <md-menu-content>
+                <md-menu-item ng-repeat="option in prop.enumOptions">
+                  <md-button ng-click="prop.value = option;">
+                    {{prop.enumDisplayValueForValue(option)}}
+                  </md-button>
+                </md-menu-item>
+              </md-menu-content>
+
+            </md-menu>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

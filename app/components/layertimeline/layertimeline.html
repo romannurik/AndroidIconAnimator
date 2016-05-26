@@ -1,8 +1,15 @@
 <div class="studio-layer-timeline">
-  <div class="slt-layers">
+  <studio-splitter edge="top" min="200" persist-id="layer-timeline"></studio-splitter>
 
-    <div class="slt-header">
-      
+  <div class="slt-layers" layout="column">
+    <studio-splitter edge="right" min="100" persist-id="layer-list"></studio-splitter>
+
+    <div class="slt-header"></div>
+
+    <div class="slt-layers-list-scroller">
+      <div class="slt-layers-list">
+        <div ng-repeat="layer in ctrl.artwork.layers" ng-include="'layerListItem'"></div>
+      </div>
     </div>
 
     <script type="text/ng-template" id="layerListItem">
@@ -11,48 +18,61 @@
           ng-class="{'is-selected': layer._selected}"
           ng-click="ctrl.onLayerClick($event, layer)"
           ng-mousedown="ctrl.onLayerMouseDown($event, layer)"
-          >{{ layer.id }}</div>
+          layout="row">
+        <span flex class="slt-node-id">{{ layer.id }}</span>
+        <md-menu class="slt-node-add-property-menu">
+          <md-button
+              class="md-icon-button"
+              ng-click="$mdOpenMenu($event)">
+            <i class="material-icons">add_circle_outline</i>
+          </md-button>
+          <md-menu-content>
+            <md-menu-item ng-repeat="(propertyName, __) in layer._slt.availableProperties">
+              <md-button ng-click="ctrl.onAddTimelineBlock($event, layer, propertyName,
+                                                           ctrl.activeAnimation)">
+                {{propertyName}}
+              </md-button>
+            </md-menu-item>
+          </md-menu-content>
+        </md-menu>
+      </div>
       <div class="slt-properties"><div
             class="slt-property"
-            ng-repeat="(property, __) in layer._slt.propertyAnimations">{{property}}</div></div>
+            ng-repeat="(property, __) in layer._slt.blocksByProperty">{{property}}</div></div>
       <ul class="slt-children" ng-if="layer.layers">
         <li ng-repeat="layer in layer.layers" ng-include="'layerListItem'"></li>
       </ul>
     </script>
-
-    <div class="slt-layers-list">
-      <div ng-repeat="layer in ctrl.artwork.layers" ng-include="'layerListItem'"></div>
-    </div>
 
   </div>
   <div class="slt-timeline">
     <div class="slt-timeline-animations-container">
       <div
           class="slt-timeline-animation"
-          ng-class="{'is-active': ctrl.activeArtworkAnimation == artworkAnimation}"
-          ng-mousedown="ctrl.onTimelineMouseDown($event, artworkAnimation)"
-          style="width: {{artworkAnimation.duration * ctrl.horizZoom}}px"
-          ng-repeat="artworkAnimation in ctrl.artworkAnimations">
+          ng-class="{'is-active': ctrl.activeAnimation == animation}"
+          ng-mousedown="ctrl.onTimelineMouseDown($event, animation)"
+          style="width: {{animation.duration * ctrl.horizZoom}}px"
+          ng-repeat="animation in ctrl.animations">
 
         <div
             class="slt-header">
           <div class="slt-timeline-animation-name">
-            {{artworkAnimation.id}}
-            ({{artworkAnimation.duration}}ms)
+            {{animation.id}}
+            ({{animation.duration}}ms)
           </div>
           <studio-timeline-grid
               class="slt-timeline-header-grid"
               is-header
-              is-active="ctrl.activeArtworkAnimation == artworkAnimation"
+              is-active="ctrl.activeAnimation == animation"
               active-time="ctrl.activeTime"
-              artwork-animation="artworkAnimation"
-              on-scrub="ctrl.onTimelineHeaderScrub(artworkAnimation, time)">
+              animation="animation"
+              on-scrub="ctrl.onTimelineHeaderScrub(animation, time)">
           </studio-timeline-grid>
         </div>
 
         <studio-timeline-grid
             class="slt-timeline-grid"
-            is-active="ctrl.activeArtworkAnimation == artworkAnimation"
+            is-active="ctrl.activeAnimation == animation"
             active-time="ctrl.activeTime">
         </studio-timeline-grid>
 
@@ -61,16 +81,16 @@
 
           <div class="slt-properties"><div
                 class="slt-property"
-                ng-repeat="(property, anims) in layer._slt.propertyAnimations">
+                ng-repeat="(property, blocks) in layer._slt.blocksByProperty">
             <div
                 class="slt-timeline-block"
-                ng-class="{'is-selected': anim._selected}"
-                ng-click="ctrl.onTimelineBlockClick($event, anim, artworkAnimation, layer)"
-                ng-mousedown="ctrl.onTimelineBlockMouseDown($event, anim, artworkAnimation, layer)"
-                ng-repeat="anim in anims[artworkAnimation.id]"
+                ng-class="{'is-selected': block._selected}"
+                ng-click="ctrl.onTimelineBlockClick($event, block, animation, layer)"
+                ng-mousedown="ctrl.onTimelineBlockMouseDown($event, block, animation, layer)"
+                ng-repeat="block in blocks[animation.id]"
                 tabindex="-1"
-                style="left: {{100 * anim.startTime / artworkAnimation.duration}}%;
-                       width: {{100 * (anim.endTime - anim.startTime) / artworkAnimation.duration}}%">
+                style="left: {{100 * block.startTime / animation.duration}}%;
+                       width: {{100 * (block.endTime - block.startTime) / animation.duration}}%">
             </div>
           </div></div>
 

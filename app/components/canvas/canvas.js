@@ -1,6 +1,6 @@
-import AnimationRenderer from './animationrenderer';
-import {LayerGroup} from 'avdstudio/model';
-import svgPathParser from 'avdstudio/svgpathparser';
+import {LayerGroup, MaskLayer} from 'avdstudio/model';
+import {ColorUtil} from 'avdstudio/colorutil';
+import {SvgPathParser} from 'avdstudio/svgpathparser';
 
 
 class CanvasController {
@@ -23,30 +23,20 @@ class CanvasController {
         this.drawCanvas_();
       }
 
-      if (changes.artwork || changes.artworkAnimations || changes.activeArtworkAnimation) {
-        this.rebuildRenderer_();
+      if (changes.artwork || changes.animations || changes.activeAnimation) {
         this.drawCanvas_();
       }
     }, $scope);
 
-    this.rebuildRenderer_();
     this.drawCanvas_();
-  }
-
-  rebuildRenderer_() {
-    if (this.studioState_.artwork && this.studioState_.activeArtworkAnimation) {
-      this.animationRenderer_ = new AnimationRenderer(this.artwork, this.artworkAnimation);
-    } else {
-      this.animationRenderer_ = null;
-    }
   }
 
   get artwork() {
     return this.studioState_.artwork;
   }
 
-  get artworkAnimation() {
-    return this.studioState_.activeArtworkAnimation;
+  get animation() {
+    return this.studioState_.activeAnimation;
   }
 
   drawCanvas_() {
@@ -55,7 +45,7 @@ class CanvasController {
       this.animationFrameRequest_ = null;
     }
 
-    if (!this.artwork || !this.artworkAnimation) {
+    if (!this.artwork || !this.animation) {
       return;
     }
 
@@ -84,26 +74,36 @@ class CanvasController {
           ctx.scale(layer.scaleX, layer.scaleY);
           ctx.translate(-layer.pivotX, -layer.pivotY);
         });
+
+        ctx.save();
         layer.layers.forEach(layer => drawLayer(layer));
+        ctx.restore();
+
         transforms.pop();
+      } else if (layer instanceof MaskLayer) {
+        transforms.forEach(t => t());
+        //let p = new Path2D(layer.pathData);
+        SvgPathParser.parseAndExecute(ctx, layer.pathData);
+        ctx.clip(); // clip further layers
+
       } else {
-        ctx.strokeStyle = layer.strokeColor;
+        ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor);
         ctx.lineWidth = layer.strokeWidth;
-        ctx.fillStyle = layer.fillColor;
+        ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor);
         ctx.lineCap = layer.strokeLinecap || 'butt';
 
         ctx.save();
         transforms.forEach(t => t());
         //let p = new Path2D(layer.pathData);
-        svgPathParser(ctx, layer.pathData);
+        SvgPathParser.parseAndExecute(ctx, layer.pathData);
         ctx.restore();
 
         if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
           ctx.setLineDash([
-            (layer.trimPathEnd - layer.trimPathStart) * layer._pathLength,
-            layer._pathLength
+            (layer.trimPathEnd - layer.trimPathStart) * layer.pathLength_,
+            layer.pathLength_
           ]);
-          ctx.lineDashOffset = -(layer.trimPathStart * layer._pathLength);
+          ctx.lineDashOffset = -(layer.trimPathStart * layer.pathLength_);
         } else {
           ctx.setLineDash([]);
         }
@@ -118,8 +118,8 @@ class CanvasController {
     };
 
     // draw artwork
-    this.animationRenderer_.setAnimationTime(this.animTime || 0);
-    drawLayer(this.animationRenderer_.renderedArtwork);
+    this.studioState_.animationRenderer.setAnimationTime(this.animTime || 0);
+    drawLayer(this.studioState_.animationRenderer.renderedArtwork);
 
     ctx.restore();
 
@@ -145,7 +145,7 @@ class CanvasController {
 
     if (this.studioState_.playing) {
       this.animationFrameRequest_ = window.requestAnimationFrame(() => {
-        this.animTime = (Number(new Date()) - this.animStart) % this.artworkAnimation.duration;
+        this.animTime = (Number(new Date()) - this.animStart) % this.animation.duration;
         this.studioState_.activeTime = this.animTime;
         this.drawCanvas_();
       });

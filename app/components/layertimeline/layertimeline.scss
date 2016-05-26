@@ -3,8 +3,11 @@
   height: 250px;
   display: flex;
   flex-direction: row;
+  flex-shrink: 0;
   overflow: hidden;
   box-shadow: material-shadow(8);
+  z-index: 1;
+  position: relative;
 
   $headerHeight: 40px;
   $timelineAnimationPadding: 20px;
@@ -20,14 +23,13 @@
     list-style: none;
   }
 
-  .slt-layers,
   .slt-timeline {
-    overflow-y: auto;
+    
   }
 
   // general vertical metrics
 
-  .slt-layers,
+  .slt-layers-list,
   .slt-timeline-animation {
     padding: ($headerHeight + 8px) 0 8px 0; // 20px header
   }
@@ -37,6 +39,24 @@
     box-sizing: border-box;
     line-height: 20px;
     height: 20px;
+  }
+
+  .slt-node-add-property-menu {
+    padding: 0;
+    display: flex;
+
+    .md-button {
+      margin: 0;
+      padding: 2px;
+      height: 20px;
+      width: 20px;
+      line-height: 20px;
+      min-height: 20px;
+    }
+
+    .material-icons {
+      font-size: 16px;
+    }
   }
 
   .slt-property {
@@ -57,15 +77,17 @@
   .slt-layers {
     width: 200px;
     box-shadow: material-shadow(2);
-    overflow-x: hidden;
     position: relative;
     z-index: 3;
     user-select: none;
-
-    -ms-overflow-style: none;
-    &::-webkit-scrollbar { display: none; }
-
     flex: 0 0 auto;
+
+    .slt-layers-list-scroller {
+      overflow-x: hidden;
+      overflow-y: auto;
+      -ms-overflow-style: none;
+      &::-webkit-scrollbar { display: none; }
+    }
 
     .slt-layers-list {
       padding-left: 8px;
@@ -77,6 +99,7 @@
     }
 
     .slt-node-layer,
+    .slt-node-mask,
     .slt-node-group {
       display: flex;
       flex-direction: row;
@@ -112,6 +135,10 @@
 
     .slt-node-layer::before {
       content: 'layers';
+    }
+
+    .slt-node-mask::before {
+      content: 'photo_size_select_large';
     }
 
     .slt-node-group::before {

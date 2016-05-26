@@ -9,7 +9,10 @@
       flex
       ng-if="studioCtrl.loaded"
       layout="column">
-    <studio-canvas flex></studio-canvas>
+    <div flex layout="row">
+      <studio-canvas flex></studio-canvas>
+      <studio-property-inspector></studio-property-inspector>
+    </div>
     <studio-layer-timeline></studio-layer-timeline>
   </div>
 </main>

@@ -2,3 +2,18 @@
   margin: 0;
   padding: 0 12px;
 }
+
+md-menu-content {
+  padding: 4px 0;
+}
+
+md-menu-item {
+  min-height: 32px;
+  height: 32px;
+
+  .md-button {
+    line-height: 32px;
+    min-height: 32px;
+    font-size: 14px;
+  }
+}
