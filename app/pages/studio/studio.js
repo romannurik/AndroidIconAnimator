@@ -1,7 +1,7 @@
 import routes from 'avdstudio/routes.js';
 import {LayerGroup, Artwork, Animation} from 'avdstudio/model.js';
 
-const TEST_DATA = require('avdstudio/test_menutoback.js');
+const TEST_DATA = require('avdstudio/test_weirdpathdata.js');
 
 
 class StudioCtrl {
