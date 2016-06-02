@@ -1,7 +1,7 @@
 import routes from 'avdstudio/routes.js';
 import {LayerGroup, Artwork, Animation} from 'avdstudio/model.js';
 
-const TEST_DATA = require('avdstudio/test_clipping.js');
+const TEST_DATA = require('avdstudio/test_menutoback.js');
 
 
 class StudioCtrl {
@@ -19,6 +19,10 @@ class StudioCtrl {
     $(window).on('keydown', event => {
       if (event.keyCode == 32) {
         // spacebar
+        if (document.activeElement.matches('input')) {
+          return true;
+        }
+
         this.studioState_.playing = !this.studioState_.playing;
         return false;
 

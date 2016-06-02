@@ -81,6 +81,16 @@
       outline: 0;
     }    
 
+    .spi-property-value-static {
+      overflow-x: scroll;
+      white-space: nowrap;
+      overflow-y: hidden;
+      -ms-overflow-style: none;
+      &::-webkit-scrollbar { display: none; }
+      user-select: all;
+      cursor: text;
+    }
+
     .spi-property-value-editor input,
     .spi-property-value-menu-target {
       background-color: #fff;

@@ -34,6 +34,7 @@
           <div ng-if="prop.editable" class="spi-property-value-editor" layout="column" flex>
             <input
                 ng-if="prop.type == 'string' ||
+                       prop.type == 'pathData' ||
                        prop.type == 'color' ||
                        prop.type == 'number' ||
                        prop.type == 'fraction'"

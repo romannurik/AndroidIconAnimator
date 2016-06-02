@@ -82,8 +82,7 @@ class CanvasController {
         transforms.pop();
       } else if (layer instanceof MaskLayer) {
         transforms.forEach(t => t());
-        //let p = new Path2D(layer.pathData);
-        SvgPathParser.parseAndExecute(ctx, layer.pathData);
+        SvgPathParser.execute(ctx, layer.parsedPathData);
         ctx.clip(); // clip further layers
 
       } else {
@@ -94,8 +93,7 @@ class CanvasController {
 
         ctx.save();
         transforms.forEach(t => t());
-        //let p = new Path2D(layer.pathData);
-        SvgPathParser.parseAndExecute(ctx, layer.pathData);
+        SvgPathParser.execute(ctx, layer.parsedPathData);
         ctx.restore();
 
         if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {

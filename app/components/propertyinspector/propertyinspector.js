@@ -57,12 +57,12 @@ class PropertyInspectorController {
           ? 'folder_open'
           : ((layer instanceof MaskLayer) ? 'photo_size_select_large' : 'layers');
       this.selection.description = layer.id;
-      Object.keys(layer.animatableProperties).forEach(propertyName => {
+      Object.keys(layer.inspectableProperties).forEach(propertyName => {
         let self = this;
         this.selection.properties.push(new PropertyModelHelper({
           object: layer,
           propertyName,
-          propertyType: layer.animatableProperties[propertyName],
+          propertyType: layer.inspectableProperties[propertyName],
           get value() {
             let renderedLayer = self.studioState_.animationRenderer
                 .renderedArtwork.findLayerById(layer.id);
@@ -103,7 +103,7 @@ class PropertyInspectorController {
         let propertyType = animation.inspectableProperties[p];
         if (propertyType == 'auto') {
           propertyType = this.studioState_.artwork.findLayerById(animation.layerId)
-              .animatableProperties[animation.propertyName];
+              .inspectableProperties[animation.propertyName];
         }
         this.selection.properties.push(new PropertyModelHelper({
           object: animation,
