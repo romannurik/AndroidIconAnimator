@@ -227,6 +227,22 @@
       &.is-selected {
         background-color: material-color('blue', '500');
       }
+
+      .slt-timeline-block-edge {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        cursor: ew-resize;
+      }
+
+      .slt-timeline-block-edge-start {
+        left: 0;
+      }
+
+      .slt-timeline-block-edge-end {
+        right: 0;
+      }
     }
 
     .slt-timeline-animation.is-active .slt-timeline-block {

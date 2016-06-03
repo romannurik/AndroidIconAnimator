@@ -15,7 +15,7 @@
     <script type="text/ng-template" id="layerListItem">
       <div
           class="slt-node-{{ layer._slt.layerType }}"
-          ng-class="{'is-selected': layer._selected}"
+          ng-class="{'is-selected': layer.selected_}"
           ng-click="ctrl.onLayerClick($event, layer)"
           ng-mousedown="ctrl.onLayerMouseDown($event, layer)"
           layout="row">
@@ -84,13 +84,15 @@
                 ng-repeat="(property, blocks) in layer._slt.blocksByProperty">
             <div
                 class="slt-timeline-block"
-                ng-class="{'is-selected': block._selected}"
+                ng-class="{'is-selected': block.selected_}"
                 ng-click="ctrl.onTimelineBlockClick($event, block, animation, layer)"
                 ng-mousedown="ctrl.onTimelineBlockMouseDown($event, block, animation, layer)"
                 ng-repeat="block in blocks[animation.id]"
                 tabindex="-1"
                 style="left: {{100 * block.startTime / animation.duration}}%;
                        width: {{100 * (block.endTime - block.startTime) / animation.duration}}%">
+              <div class="slt-timeline-block-edge slt-timeline-block-edge-start"></div>
+              <div class="slt-timeline-block-edge slt-timeline-block-edge-end"></div>
             </div>
           </div></div>
 

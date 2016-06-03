@@ -5,6 +5,15 @@ import {ModelUtil} from 'avdstudio/modelutil';
 const DRAG_SLOP = 4; // pixels
 
 
+const MouseActions = {
+  MOVING: 0,
+  SCALING_UNIFORM_START: 1,
+  SCALING_UNIFORM_END: 2,
+  SCALING_TOGETHER_START: 3,
+  SCALING_TOGETHER_END: 4,
+};
+
+
 class LayerTimelineController {
   constructor($scope, $element, StudioStateService) {
     this.scope_ = $scope;
@@ -148,6 +157,10 @@ class LayerTimelineController {
   }
 
   onTimelineBlockClick($event, anim, layer) {
+    if (this.suppressClick_) {
+      return;
+    }
+
     if ($event.metaKey || $event.shiftKey) {
       this.studioState_.toggleAnimationBlockSelected(anim);
     } else {
@@ -155,25 +168,120 @@ class LayerTimelineController {
     }
   }
 
-  onTimelineBlockMouseDown(event, anim, animation, layer) {
+  onTimelineBlockMouseDown(event, dragBlock, animation, layer) {
+    let $target = $(event.target);
+
     let animRect = $(event.target).parents('.slt-property').get(0).getBoundingClientRect();
     let xToTime_ = x => (x - animRect.left) / animRect.width * animation.duration;
     let downX = event.clientX;
-    let downStartTime = anim.startTime;
     let downTime = xToTime_(downX);
 
     let dragging = false;
 
+    let blockInfos = (dragBlock.selected_ ? this.studioState_.selectedAnimationBlocks : [dragBlock])
+        .map(block => ({block, downStartTime: block.startTime, downEndTime: block.endTime}));
+
+    let action = MouseActions.MOVING;
+    if ($target.hasClass('slt-timeline-block-edge-end')) {
+      action = event.altKey
+          ? MouseActions.SCALING_TOGETHER_END
+          : MouseActions.SCALING_UNIFORM_END;
+    } else if ($target.hasClass('slt-timeline-block-edge-start')) {
+      action = event.altKey
+          ? MouseActions.SCALING_TOGETHER_START
+          : MouseActions.SCALING_UNIFORM_START;
+    }
+
+    let dragBlockDownStartTime = dragBlock.startTime;
+    let dragBlockDownEndTime = dragBlock.endTime;
+
+    let minStartTime, maxEndTime;
+    if (action == MouseActions.SCALING_TOGETHER_END
+        || action == MouseActions.SCALING_TOGETHER_START) {
+      minStartTime = blockInfos.reduce(
+          (t, info) => Math.min(t, info.block.startTime), Infinity);
+      maxEndTime = blockInfos.reduce(
+          (t, info) => Math.max(t, info.block.endTime), 0);
+      maxEndTime = Math.max(maxEndTime, minStartTime + 10); // avoid divide by zero
+    }
+
     let mouseMoveHandler_ = event => {
       if (!dragging && Math.abs(event.clientX - downX) > DRAG_SLOP) {
         dragging = true;
+        this.suppressClick_ = true;
       }
 
       if (dragging) {
         let timeDelta = xToTime_(event.clientX) - downTime;
-        let animDuration = (anim.endTime - anim.startTime);
-        anim.startTime = downStartTime + timeDelta;
-        anim.endTime = anim.startTime + animDuration;
+
+        switch (action) {
+          case MouseActions.MOVING: {
+            let constrainAdjust = 0;
+            blockInfos.forEach(info => {
+              let blockDuration  = (info.block.endTime - info.block.startTime);
+              info.block.startTime = info.downStartTime + timeDelta;
+              info.block.endTime = info.block.startTime + blockDuration;
+              constrainAdjust = Math.max(constrainAdjust, -info.block.startTime);
+              constrainAdjust = Math.min(constrainAdjust, animation.duration - info.block.endTime);
+            });
+            blockInfos.forEach(info => {
+              info.block.startTime += constrainAdjust;
+              info.block.endTime += constrainAdjust;
+            });
+            break;
+          }
+
+          case MouseActions.SCALING_UNIFORM_START: {
+            let constrainAdjust = 0;
+            blockInfos.forEach(info => {
+              info.block.startTime = info.downStartTime + timeDelta;
+              constrainAdjust = Math.max(constrainAdjust, -info.block.startTime);
+              constrainAdjust = Math.min(constrainAdjust,
+                  info.block.endTime - info.block.startTime - 10);
+            });
+            blockInfos.forEach(info => info.block.startTime += constrainAdjust);
+            break;
+          }
+
+          case MouseActions.SCALING_TOGETHER_START: {
+            let scale = (dragBlockDownStartTime + timeDelta - maxEndTime)
+                / (dragBlockDownStartTime - maxEndTime);
+            scale = Math.min(scale, maxEndTime / (maxEndTime - minStartTime));
+            blockInfos.forEach(info => {
+              info.block.startTime = maxEndTime - (maxEndTime - info.downStartTime) * scale;
+              info.block.endTime = Math.max(
+                  maxEndTime - (maxEndTime - info.downEndTime) * scale,
+                  info.block.startTime + 10);
+            });
+            break;
+          }
+
+          case MouseActions.SCALING_UNIFORM_END: {
+            let constrainAdjust = 0;
+            blockInfos.forEach(info => {
+              info.block.endTime = info.downEndTime + timeDelta;
+              constrainAdjust = Math.max(constrainAdjust,
+                  info.block.startTime - info.block.endTime + 10);
+              constrainAdjust = Math.min(constrainAdjust, animation.duration - info.block.endTime);
+            });
+            blockInfos.forEach(info => info.block.endTime += constrainAdjust);
+            break;
+          }
+
+          case MouseActions.SCALING_TOGETHER_END: {
+            let scale = (dragBlockDownEndTime + timeDelta - minStartTime)
+                / (dragBlockDownEndTime - minStartTime);
+            scale = Math.min(scale, (animation.duration - minStartTime) / (maxEndTime - minStartTime));
+            blockInfos.forEach(info => {
+              info.block.startTime = minStartTime + (info.downStartTime - minStartTime) * scale;
+              info.block.endTime = Math.max(
+                  minStartTime + (info.downEndTime - minStartTime) * scale,
+                  info.block.startTime + 10);
+            });
+            break;
+          }
+        }
+
         this.studioState_.animChanged();
       }
     };
@@ -184,6 +292,7 @@ class LayerTimelineController {
           .off('mouseup', mouseUpHandler_);
       if (dragging) {
         dragging = false;
+        setTimeout(() => this.suppressClick_ = false, 0);
         event.stopPropagation();
         event.preventDefault();
         return false;

@@ -90,12 +90,12 @@ class StudioStateService {
   }
 
   set selectedLayers(selectedLayers) {
-    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer._selected = false);
+    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer.selected_ = false);
     this.selectedLayers_ = selectedLayers;
-    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer._selected = true);
+    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer.selected_ = true);
 
     this.selectedAnimationBlocks_
-        && this.selectedAnimationBlocks_.forEach(anim => anim._selected = false);
+        && this.selectedAnimationBlocks_.forEach(anim => anim.selected_ = false);
     this.selectedAnimationBlocks_ = null;
 
     this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
@@ -105,14 +105,14 @@ class StudioStateService {
     let index = (this.selectedLayers_ || []).indexOf(layer);
     if (index < 0) {
       this.selectedLayers_.push(layer);
-      layer._selected = true;
+      layer.selected_ = true;
     } else {
       this.selectedLayers_.splice(index, 1);
-      layer._selected = false;
+      layer.selected_ = false;
     }
 
     this.selectedAnimationBlocks_
-        && this.selectedAnimationBlocks_.forEach(anim => anim._selected = false);
+        && this.selectedAnimationBlocks_.forEach(anim => anim.selected_ = false);
     this.selectedAnimationBlocks_ = null;
 
     this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
@@ -124,12 +124,12 @@ class StudioStateService {
 
   set selectedAnimationBlocks(selectedAnimationBlocks) {
     this.selectedAnimationBlocks_
-        && this.selectedAnimationBlocks_.forEach(anim => anim._selected = false);
+        && this.selectedAnimationBlocks_.forEach(anim => anim.selected_ = false);
     this.selectedAnimationBlocks_ = selectedAnimationBlocks;
     this.selectedAnimationBlocks_
-        && this.selectedAnimationBlocks_.forEach(anim => anim._selected = true);
+        && this.selectedAnimationBlocks_.forEach(anim => anim.selected_ = true);
 
-    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer._selected = false);
+    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer.selected_ = false);
     this.selectedLayers_ = null;
 
     this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
@@ -139,13 +139,13 @@ class StudioStateService {
     let index = (this.selectedAnimationBlocks_ || []).indexOf(animation);
     if (index < 0) {
       this.selectedAnimationBlocks_.push(animation);
-      animation._selected = true;
+      animation.selected_ = true;
     } else {
       this.selectedAnimationBlocks_.splice(index, 1);
-      animation._selected = false;
+      animation.selected_ = false;
     }
 
-    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer._selected = false);
+    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer.selected_ = false);
     this.selectedLayers_ = null;
 
     this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
