@@ -30,7 +30,7 @@ class StudioStateService {
   }
 
   get animations() {
-    return this.animations_ || [];
+    return (this.animations_ = this.animations_ || []);
   }
 
   set animations(animations) {
@@ -149,6 +149,24 @@ class StudioStateService {
     this.selectedLayers_ = null;
 
     this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
+  }
+
+  makeNewAnimationId() {
+    let n = 1;
+    let id_ = () => `anim_${n}`;
+    while (this.animations.reduce((a, b) => a || b.id == id_(), false)) {
+      ++n;
+    }
+    return id_();
+  }
+
+  makeNewLayerId(type) {
+    let n = 1;
+    let id_ = () => `${type}_${n}`;
+    while (this.artwork.findLayerById(id_())) {
+      ++n;
+    }
+    return id_();
   }
 
   broadcastChanges_(changes) {

@@ -1,4 +1,4 @@
-import {Artwork, Layer, LayerGroup, MaskLayer, AnimationBlock} from 'avdstudio/model';
+import {Artwork, Layer, LayerGroup, MaskLayer, Animation, AnimationBlock} from 'avdstudio/model';
 import {ModelUtil} from 'avdstudio/modelutil';
 
 
@@ -27,20 +27,7 @@ class LayerTimelineController {
 
     this.horizZoom = 0.5; // 2ms = 1px
 
-    let $layerList = this.element_.find('.slt-layers-list-scroller');
     let $timeline = this.element_.find('.slt-timeline');
-
-    $layerList.on('scroll', () => {
-      let scrollTop = $layerList.scrollTop();
-      $timeline.scrollTop(scrollTop);
-      $timeline.find('.slt-header').css({top:scrollTop});
-    });
-
-    $timeline.on('scroll', () => {
-      let scrollTop = $timeline.scrollTop();
-      $layerList.scrollTop(scrollTop);
-      $timeline.find('.slt-header').css({top:scrollTop});
-    });
 
     let tempHorizZoom = 0.5;
 
@@ -86,12 +73,6 @@ class LayerTimelineController {
     return this.studioState_.activeAnimation;
   }
 
-  onTimelineHeaderScrub(animation, time) {
-    this.studioState_.activeAnimation = animation;
-    this.studioState_.activeTime = time;
-    this.studioState_.playing = false;
-  }
-
   rebuild_() {
     if (!this.artwork || !this.animations) {
       return;
@@ -126,6 +107,12 @@ class LayerTimelineController {
     });
   }
 
+  onTimelineHeaderScrub(animation, time) {
+    this.studioState_.activeAnimation = animation;
+    this.studioState_.activeTime = time;
+    this.studioState_.playing = false;
+  }
+
   onAddTimelineBlock($event, layer, propertyName, animation) {
     let valueAtCurrentTime = this.studioState_.animationRenderer
         .getLayerPropertyValue(layer.id, propertyName);
@@ -148,12 +135,35 @@ class LayerTimelineController {
     this.studioState_.activeAnimation = animation;
   }
 
+  onAddLayer($event, type) {
+    let cls = (type == 'group')
+        ? LayerGroup
+        : ((type == 'mask') ? MaskLayer : Layer);
+    let newLayer = new cls({
+      id: this.studioState_.makeNewLayerId(type)
+    });
+    newLayer.parent = this.studioState_.artwork; // TODO: this should be automatic
+    this.studioState_.artwork.layers.push(newLayer);
+    this.studioState_.artworkChanged();
+  }
+
   onLayerClick($event, layer) {
     if ($event.metaKey || $event.shiftKey) {
       this.studioState_.toggleLayerSelected(layer);
     } else {
       this.studioState_.selectedLayers = [layer];
     }
+  }
+
+  onAddNewAnimation($event) {
+    let newAnim = new Animation({
+      id: this.studioState_.makeNewAnimationId(),
+      blocks: [],
+      duration: 300
+    });
+    this.studioState_.animations.push(newAnim);
+    this.studioState_.activeAnimation = newAnim;
+    this.studioState_.animChanged();
   }
 
   onTimelineBlockClick($event, anim, layer) {

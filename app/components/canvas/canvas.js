@@ -45,7 +45,7 @@ class CanvasController {
       this.animationFrameRequest_ = null;
     }
 
-    if (!this.artwork || !this.animation) {
+    if (!this.artwork) {
       return;
     }
 
@@ -116,8 +116,12 @@ class CanvasController {
     };
 
     // draw artwork
-    this.studioState_.animationRenderer.setAnimationTime(this.animTime || 0);
-    drawLayer(this.studioState_.animationRenderer.renderedArtwork);
+    if (this.studioState_.animationRenderer) {
+      this.studioState_.animationRenderer.setAnimationTime(this.animTime || 0);
+      drawLayer(this.studioState_.animationRenderer.renderedArtwork);
+    } else {
+      drawLayer(this.studioState_.artwork);
+    }
 
     ctx.restore();
 

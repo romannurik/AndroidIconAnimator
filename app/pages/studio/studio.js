@@ -3,6 +3,13 @@ import {LayerGroup, Artwork, Animation} from 'avdstudio/model.js';
 
 const TEST_DATA = require('avdstudio/test_searchtoback.js');
 
+const BLANK_ARTWORK = {
+  width: 24,
+  height: 24,
+  layers: [
+  ]
+};
+
 
 class StudioCtrl {
   constructor($scope, $mdToast, StudioStateService) {
@@ -12,9 +19,10 @@ class StudioCtrl {
 
     this.studioState_ = StudioStateService;
 
-    this.studioState_.artwork = new Artwork(TEST_DATA.artwork);
-    this.studioState_.animations
-        = TEST_DATA.animations.map(anim => new Animation(anim));
+    this.studioState_.artwork = new Artwork(BLANK_ARTWORK);
+    // this.studioState_.artwork = new Artwork(TEST_DATA.artwork);
+    // this.studioState_.animations
+    //     = TEST_DATA.animations.map(anim => new Animation(anim));
 
     $(window).on('keydown', event => {
       if (event.keyCode == 32) {
@@ -118,7 +126,7 @@ class StudioCtrl {
             // remove all selected items from their parents and
             // move them into a new parent
             let newGroup = new LayerGroup({
-              id: this.makeNewLayerId_('group'),
+              id: this.studioState_.makeNewLayerId('group'),
               layers: tempSelLayers
             });
             tempSelLayers.forEach(layer =>
@@ -135,15 +143,6 @@ class StudioCtrl {
         return false;
       }
     });
-  }
-
-  makeNewLayerId_(type) {
-    let n = 1;
-    let id_ = () => `${type}_${n}`;
-    while (this.studioState_.artwork.findLayerById(id_())) {
-      ++n;
-    }
-    return id_();
   }
 
   deleteLayers_(deleteLayers) {

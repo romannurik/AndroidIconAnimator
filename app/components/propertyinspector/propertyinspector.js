@@ -64,6 +64,10 @@ class PropertyInspectorController {
           propertyName,
           propertyType: layer.inspectableProperties[propertyName],
           get value() {
+            if (!self.studioState_.animationRenderer) {
+              return layer[propertyName];
+            }
+
             let renderedLayer = self.studioState_.animationRenderer
                 .renderedArtwork.findLayerById(layer.id);
             return renderedLayer ? renderedLayer[propertyName] : null;
@@ -73,8 +77,10 @@ class PropertyInspectorController {
             self.studioState_.artworkChanged();
           },
           get editable() {
-            return !self.studioState_.animationRenderer
-                .getLayerPropertyState(layer.id, propertyName).activeAnimation;
+            return self.studioState_.animationRenderer
+                ? !self.studioState_.animationRenderer
+                    .getLayerPropertyState(layer.id, propertyName).activeAnimation
+                : true;
           }
         }));
       });

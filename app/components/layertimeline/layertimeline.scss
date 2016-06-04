@@ -23,15 +23,11 @@
     list-style: none;
   }
 
-  .slt-timeline {
-    
-  }
-
   // general vertical metrics
 
   .slt-layers-list,
-  .slt-timeline-animation {
-    padding: ($headerHeight + 8px) 0 8px 0; // 20px header
+  .slt-timeline-animation-rows {
+    padding: 8px 0;
   }
 
   .slt-node-layer,
@@ -162,6 +158,16 @@
         box-shadow: 0 -1px 0 $thinBorderColor inset;
       }
     }
+
+    .slt-header {
+      md-menu {
+        padding: 0;
+
+        .md-icon-button {
+          margin: 0;
+        }
+      }
+    }
   }
 
   // timeline
@@ -169,22 +175,26 @@
   .slt-timeline {
     background-color: material-color('grey', '400');
     overflow-x: auto;
+    overflow-y: hidden;
     flex: 1;
     user-select: none;
     cursor: default;
 
-    .slt-timeline-animations-container {
-      display: flex;
-      flex-direction: row;
-      align-items: stretch;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+
+    .slt-timeline-animation-scroller {
+      overflow-x: hidden;
+      overflow-y: auto;
+      -ms-overflow-style: none;
+      &::-webkit-scrollbar { display: none; }
     }
 
     .slt-timeline-animation {
       position: relative;
       background-color: material-color('grey', '100');
       margin-left: 4px;
-      padding-left: $timelineAnimationPadding;
-      padding-right: $timelineAnimationPadding;
       box-sizing: content-box;
       width: 100px;
       overflow: hidden;
@@ -197,6 +207,57 @@
 
       &.is-active {
         opacity: 1;
+      }
+    }
+
+    .slt-timeline-animation-rows {
+      padding-left: $timelineAnimationPadding;
+      padding-right: $timelineAnimationPadding;
+    }
+
+    .slt-timeline-animation-new {
+      background-color: transparent;
+      border: 0;
+
+      flex: 0 0 auto;
+      width: 128px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 24px;
+
+      span {
+        cursor: pointer;
+        outline: 0;
+
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 500;
+        color: $colorBlackTextSecondary;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        &::before {
+          @include material-icons;
+          content: 'add';
+          font-size: 24px;
+          padding: 12px;
+          border-radius: 50%;
+          background-color: #fff;
+          color: material-color('blue', '500');
+          box-shadow: material-shadow(1);
+          margin-bottom: 8px;
+          transition:
+              background-color $animTimeFast ease,
+              box-shadow $animTimeFast ease;
+        }
+
+        &:focus::before {
+          background-color: material-color('grey', '100');
+          box-shadow: material-shadow(4);
+        }
       }
     }
 
@@ -266,7 +327,7 @@
     .slt-header {
       display: flex;
       flex-direction: column;
-      margin: 0 (-$timelineAnimationPadding);
+      margin: 0;
 
       .slt-timeline-animation-name {
         height: $headerHeight / 2;
@@ -287,8 +348,8 @@
   // headers
 
   .slt-header {
-    position: absolute;
-    top: 0;
+    position: relative;
+    flex: 0 0 auto;
     height: $headerHeight;
     box-sizing: border-box;
     width: 100%;
