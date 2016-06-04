@@ -160,6 +160,36 @@ class StudioStateService {
     return id_();
   }
 
+  deleteLayers(layersToDelete) {
+    if (!Array.isArray(layersToDelete)) {
+      layersToDelete = [layersToDelete];
+    }
+
+    let deleteAnimationsForLayer_ = layer => {
+      layer.walk(layer => {
+        this.animations.forEach(animation => {
+          animation.blocks = animation.blocks.filter(layerAnim => layerAnim.layerId != layer.id);
+        });
+      });
+    };
+
+    let visit_ = layerGroup => {
+      for (let i = layerGroup.layers.length - 1; i >= 0; --i) {
+        let layer = layerGroup.layers[i];
+        if (layersToDelete.indexOf(layer) >= 0) {
+          deleteAnimationsForLayer_(layer);
+          layerGroup.layers.splice(i, 1);
+        } else if (layer.layers) {
+          visit_(layer);
+        }
+      }
+    };
+
+    visit_(this.artwork);
+    this.artworkChanged();
+    this.animChanged();
+  }
+
   makeNewLayerId(type) {
     let n = 1;
     let id_ = () => `${type}_${n}`;
