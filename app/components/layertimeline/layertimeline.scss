@@ -110,11 +110,11 @@
       border-radius: 2px 0 0 2px;
 
       &:focus {
-        box-shadow: 0 0 0 1px material-color('blue', '400') inset;
+        box-shadow: 0 0 0 1px $colorFocusBorder inset;
       }
 
       &.is-selected {
-        background-color: material-color('blue', '700');
+        background-color: $colorSelection;
         box-shadow: none;
         color: #fff;
       }
@@ -285,10 +285,6 @@
       outline: 0;
       cursor: pointer;
 
-      &.is-selected {
-        background-color: material-color('blue', '500');
-      }
-
       .slt-timeline-block-edge {
         position: absolute;
         top: 0;
@@ -310,7 +306,7 @@
       background-color: material-color('green', '200');
 
       &.is-selected {
-        background-color: material-color('blue', '500');
+        background-color: $colorSelectedAnimationBlock;
       }
     }
 
@@ -329,9 +325,29 @@
       flex-direction: column;
       margin: 0;
 
+      .slt-timeline-animation-meta {
+        height: $headerHeight / 2 - 4px;
+        line-height: $headerHeight / 2 - 4px;
+        margin: 2px -4px;
+        padding: 0 4px;
+        border-radius: 2px;
+        cursor: pointer;
+        outline: 0;
+        align-self: flex-start;
+        display: flex;
+        flex-direction: row;
+
+        &.is-selected,
+        &.is-selected .slt-timeline-animation-name {
+          background-color: $colorSelection;
+          color: $colorWhiteTextPrimary;
+        }
+      }
+
       .slt-timeline-animation-name {
-        height: $headerHeight / 2;
-        line-height: $headerHeight / 2;
+        color: $colorBlackTextPrimary;
+        margin-right: 4px;
+        font-weight: 500;
       }
 
       .slt-timeline-header-grid {

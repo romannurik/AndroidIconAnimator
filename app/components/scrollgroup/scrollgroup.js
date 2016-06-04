@@ -13,7 +13,7 @@ class ScrollGroupController {
     });
 
     $scope.$on('$destroy', () => {
-      groups.splice(groups[scrollGroup].indexOf($element), 1);
+      groups[scrollGroup].splice(groups[scrollGroup].indexOf($element), 1);
     });
   }
 }

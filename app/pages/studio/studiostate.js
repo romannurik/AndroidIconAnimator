@@ -1,4 +1,4 @@
-import {Artwork, Animation} from 'avdstudio/model';
+import {Artwork, Animation, AnimationBlock, BaseLayer} from 'avdstudio/model';
 import {AnimationRenderer} from 'avdstudio/animationrenderer';
 
 
@@ -60,6 +60,10 @@ class StudioStateService {
   }
 
   set activeAnimation(activeAnimation) {
+    if (this.activeAnimation_ === activeAnimation) {
+      return;
+    }
+
     this.activeAnimation_ = activeAnimation;
     this.rebuildRenderer_();
     this.broadcastChanges_({activeAnimation: true});
@@ -85,70 +89,92 @@ class StudioStateService {
     this.broadcastChanges_({activeTime: true});
   }
 
+  getSelectionByType_(type) {
+    return (this.selection_ && this.selection_.length && this.selection_[0] instanceof type)
+        ? this.selection_ : [];
+  }
+
   get selectedLayers() {
-    return this.selectedLayers_ || [];
-  }
-
-  set selectedLayers(selectedLayers) {
-    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer.selected_ = false);
-    this.selectedLayers_ = selectedLayers;
-    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer.selected_ = true);
-
-    this.selectedAnimationBlocks_
-        && this.selectedAnimationBlocks_.forEach(anim => anim.selected_ = false);
-    this.selectedAnimationBlocks_ = null;
-
-    this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
-  }
-
-  toggleLayerSelected(layer) {
-    let index = (this.selectedLayers_ || []).indexOf(layer);
-    if (index < 0) {
-      this.selectedLayers_.push(layer);
-      layer.selected_ = true;
-    } else {
-      this.selectedLayers_.splice(index, 1);
-      layer.selected_ = false;
-    }
-
-    this.selectedAnimationBlocks_
-        && this.selectedAnimationBlocks_.forEach(anim => anim.selected_ = false);
-    this.selectedAnimationBlocks_ = null;
-
-    this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
+    return this.getSelectionByType_(BaseLayer);
   }
 
   get selectedAnimationBlocks() {
-    return this.selectedAnimationBlocks_ || [];
+    return this.getSelectionByType_(AnimationBlock);
   }
 
-  set selectedAnimationBlocks(selectedAnimationBlocks) {
-    this.selectedAnimationBlocks_
-        && this.selectedAnimationBlocks_.forEach(anim => anim.selected_ = false);
-    this.selectedAnimationBlocks_ = selectedAnimationBlocks;
-    this.selectedAnimationBlocks_
-        && this.selectedAnimationBlocks_.forEach(anim => anim.selected_ = true);
-
-    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer.selected_ = false);
-    this.selectedLayers_ = null;
-
-    this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
+  get selectedAnimations() {
+    return this.getSelectionByType_(Animation);
   }
 
-  toggleAnimationBlockSelected(animation) {
-    let index = (this.selectedAnimationBlocks_ || []).indexOf(animation);
-    if (index < 0) {
-      this.selectedAnimationBlocks_.push(animation);
-      animation.selected_ = true;
-    } else {
-      this.selectedAnimationBlocks_.splice(index, 1);
-      animation.selected_ = false;
+  get firstSelectedItem() {
+    return ((this.selection_ || []).length > 0) ? this.selection_[0] : null;
+  }
+
+  get isMultipleSelection() {
+    return this.selection_ ? !!(this.selection_.length > 1) : false;
+  }
+
+  get selection() {
+    return this.selection_ || [];
+  }
+
+  set selection(selection) {
+    this.selection_ = this.selection_ || [];
+    this.selection_.forEach(item => delete item.selected_);
+    this.selection_ = selection ? selection.slice() : [];
+    this.selection_.forEach(item => item.selected_ = true);
+    this.broadcastChanges_({selection: true});
+  }
+
+  areItemsMultiselectCompatible_(item1, item2) {
+    return !!(!item1 || !item2
+        || item1.constructor === item2.constructor
+        || item1 instanceof BaseLayer && item2 instanceof BaseLayer);
+  }
+
+  selectItem(item) {
+    this.toggleSelected(item, true);
+  }
+
+  deselectItem(item) {
+    this.toggleSelected(item, false);
+  }
+
+  toggleSelected(item, select) {
+    if (!item) {
+      return;
     }
 
-    this.selectedLayers_ && this.selectedLayers_.forEach(layer => layer.selected_ = false);
-    this.selectedLayers_ = null;
+    if (select === undefined) {
+      select = !item.selected_;
+    }
 
-    this.broadcastChanges_({selectedLayers: true, selectedAnimationBlocks: true});
+    if (item.selected_ == select) {
+      return;
+    }
+
+    this.selection_ = this.selection_ || [];
+
+    if (select) {
+      // ensure only one type of thing is selected
+      if (this.areItemsMultiselectCompatible_(this.firstSelectedItem, item)) {
+        // add this item to the existing selection
+        this.selection_.push(item);
+        item.selected_ = true;
+      } else {
+        // reset the selection
+        this.selection = [item];
+      }
+    } else {
+      // simply toggle this item being selected
+      let index = this.selection_.indexOf(item);
+      if (index >= 0) {
+        this.selection_.splice(index, 1);
+        delete item.selected_;
+      }
+    }
+
+    this.broadcastChanges_({selection: true});
   }
 
   makeNewAnimationId() {

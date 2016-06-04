@@ -16,20 +16,17 @@ $colorWhiteTextPrimary: rgba(#fff, 1.0);
 $colorWhiteTextSecondary: rgba(#fff, .70);
 $colorWhiteTextDisabled: rgba(#fff, .5);
 
-$colorPrimary400: material-color('indigo', '400');
-$colorPrimary500: material-color('indigo', '500');
-$colorPrimary600: material-color('indigo', '600');
-$colorPrimary700: material-color('indigo', '700');
+$colorPrimary400: material-color('blue', '400');
+$colorPrimary500: material-color('blue', '500');
+$colorPrimary600: material-color('blue', '600');
+$colorPrimary700: material-color('blue', '700');
 
-$colorAccent400: material-color('indigo', 'a400');
-$colorAccent500: material-color('indigo', 'a400');
-$colorAccent600: material-color('indigo', 'a700');
-$colorAccent700: material-color('indigo', 'a700');
+$colorFocusBorder: material-color('blue', '400');
+$colorSelection: material-color('blue', '700');
+$colorSelectedAnimationBlock: material-color('blue', '500');
 
-$colorError: material-color('google-red', 'a200');
-$colorWarning: material-color('google-yellow', '500');
+$colorError: material-color('red', 'a200');
 $colorSuccess: material-color('teal', 'a700');
-$colorNeutral: material-color('blue-grey', '400');
 
 // animation timings
 $animTimeMedium: .3s;

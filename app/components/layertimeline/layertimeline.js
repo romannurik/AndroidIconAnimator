@@ -108,6 +108,7 @@ class LayerTimelineController {
   }
 
   onTimelineHeaderScrub(animation, time) {
+    this.studioState_.deselectItem(this.studioState_.activeAnimation);
     this.studioState_.activeAnimation = animation;
     this.studioState_.activeTime = time;
     this.studioState_.playing = false;
@@ -127,11 +128,10 @@ class LayerTimelineController {
     this.studioState_.animChanged();
   }
 
-  onHeaderMouseDown($event, animation) {
-    this.studioState_.activeAnimation = animation;
-  }
-
-  onTimelineMouseDown($event, animation) {
+  onAnimationMouseDown($event, animation) {
+    if (this.studioState_.activeAnimation !== animation) {
+      this.studioState_.deselectItem(this.studioState_.activeAnimation);
+    }
     this.studioState_.activeAnimation = animation;
   }
 
@@ -149,9 +149,9 @@ class LayerTimelineController {
 
   onLayerClick($event, layer) {
     if ($event.metaKey || $event.shiftKey) {
-      this.studioState_.toggleLayerSelected(layer);
+      this.studioState_.toggleSelected(layer);
     } else {
-      this.studioState_.selectedLayers = [layer];
+      this.studioState_.selection = [layer];
     }
   }
 
@@ -161,20 +161,25 @@ class LayerTimelineController {
       blocks: [],
       duration: 300
     });
+    this.studioState_.deselectItem(this.studioState_.activeAnimation);
     this.studioState_.animations.push(newAnim);
     this.studioState_.activeAnimation = newAnim;
     this.studioState_.animChanged();
   }
 
-  onTimelineBlockClick($event, anim, layer) {
+  onAnimationHeaderClick($event, anim) {
+    this.studioState_.selection = [anim];
+  }
+
+  onTimelineBlockClick($event, block, layer) {
     if (this.suppressClick_) {
       return;
     }
 
     if ($event.metaKey || $event.shiftKey) {
-      this.studioState_.toggleAnimationBlockSelected(anim);
+      this.studioState_.toggleSelected(block);
     } else {
-      this.studioState_.selectedAnimationBlocks = [anim];
+      this.studioState_.selection = [block];
     }
   }
 

@@ -68,16 +68,19 @@
     <div
         class="slt-timeline-animation"
         ng-class="{'is-active': ctrl.activeAnimation == animation}"
-        ng-mousedown="ctrl.onTimelineMouseDown($event, animation)"
+        ng-mousedown="ctrl.onAnimationMouseDown($event, animation)"
         style="width: {{animation.duration * ctrl.horizZoom + 40}}px"
         ng-repeat="animation in ctrl.animations"
         layout="column">
 
       <div
           class="slt-header">
-        <div class="slt-timeline-animation-name">
-          {{animation.id}}
-          ({{animation.duration}}ms)
+        <div
+            class="slt-timeline-animation-meta"
+            ng-class="{'is-selected': animation.selected_}"
+            ng-click="ctrl.onAnimationHeaderClick($event, animation)">
+          <span class="slt-timeline-animation-name">{{animation.id}}</span>
+          <span class="slt-timeline-animation-duration">{{animation.duration}}ms</span>
         </div>
         <studio-timeline-grid
             class="slt-timeline-header-grid"

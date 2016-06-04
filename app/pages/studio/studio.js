@@ -1,5 +1,5 @@
 import routes from 'avdstudio/routes.js';
-import {LayerGroup, Artwork, Animation} from 'avdstudio/model.js';
+import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'avdstudio/model.js';
 
 const TEST_DATA = require('avdstudio/test_searchtoback.js');
 
@@ -34,8 +34,10 @@ class StudioCtrl {
         return false;
 
       } else if (event.keyCode == 8) {
+        event.preventDefault(); // in case there's a JS error, never navigate away
         this.deleteSelectedLayers_();
         this.deleteSelectedAnimationBlocks_();
+        this.deleteSelectedAnimations_();
         return false;
 
       } else if (event.metaKey && event.keyCode == "G".charCodeAt(0)) {
@@ -48,17 +50,17 @@ class StudioCtrl {
   }
 
   deleteSelectedLayers_() {
-    if (this.studioState_.selectedLayers.length) {
+    if (this.studioState_.firstSelectedItem instanceof BaseLayer) {
       // delete layers
       this.studioState_.deleteLayers(this.studioState_.selectedLayers);
-      this.studioState_.selectedLayers = null;
+      this.studioState_.selection = null;
       this.studioState_.artworkChanged();
       this.studioState_.animChanged();
     }
   }
 
   deleteSelectedAnimationBlocks_() {
-    if (this.studioState_.selectedAnimationBlocks.length) {
+    if (this.studioState_.firstSelectedItem instanceof AnimationBlock) {
       // delete animations
       let selectedAnimationBlocks = this.studioState_.selectedAnimationBlocks;
       this.studioState_.animations.forEach(animation => {
@@ -70,7 +72,19 @@ class StudioCtrl {
         }
       });
 
-      this.studioState_.selectedAnimationBlocks = null;
+      this.studioState_.selection = null;
+      this.studioState_.animChanged();
+      return false;
+    }
+  }
+
+  deleteSelectedAnimations_() {
+    if (this.studioState_.firstSelectedItem instanceof Animation) {
+      // delete animations
+      this.studioState_.activeAnimation = null;
+      this.studioState_.animations = this.studioState_.animations.filter(
+          animation => animation !== this.studioState_.firstSelectedItem);
+      this.studioState_.selection = null;
       this.studioState_.animChanged();
       return false;
     }
@@ -124,7 +138,7 @@ class StudioCtrl {
 
         this.studioState_.artworkChanged();
         this.studioState_.animChanged();
-        this.studioState_.selectedLayers = [newGroup];
+        this.studioState_.selection = [newGroup];
 
       } else {
         // ungroup selected layer groups
@@ -146,7 +160,7 @@ class StudioCtrl {
               this.studioState_.artworkChanged();
               this.studioState_.animChanged();
             });
-        this.studioState_.selectedLayers = newSelectedLayers;
+        this.studioState_.selection = newSelectedLayers;
       }
     }
   }

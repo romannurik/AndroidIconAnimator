@@ -1,4 +1,4 @@
-import {Artwork, Layer, LayerGroup, MaskLayer, PropertyType} from 'avdstudio/model';
+import {Artwork, Layer, LayerGroup, MaskLayer, Animation, PropertyType} from 'avdstudio/model';
 import {ColorUtil} from 'avdstudio/colorutil';
 import {ModelUtil} from 'avdstudio/modelutil';
 
@@ -10,7 +10,7 @@ class PropertyInspectorController {
 
     this.studioState_ = StudioStateService;
     this.studioState_.onChange((event, changes) => {
-      if (changes.selectedLayers || changes.selectedAnimationBlocks) {
+      if (changes.selection) {
         this.rebuildSelection_();
       }
     }, $scope);
@@ -18,19 +18,13 @@ class PropertyInspectorController {
     this.rebuildSelection_();
   }
 
-  get selectedLayers() {
-    return this.studioState_.selectedLayers;
-  }
-
-  get selectedAnimationBlocks() {
-    return this.studioState_.selectedAnimationBlocks;
-  }
-
   rebuildSelection_() {
-    this.selection = null;
+    this.selectionInfo = null;
     if (this.studioState_.selectedLayers.length) {
       this.rebuildLayersSelection_();
     } else if (this.studioState_.selectedAnimationBlocks.length) {
+      this.rebuildAnimationBlocksSelection_();
+    } else if (this.studioState_.firstSelectedItem instanceof Animation) {
       this.rebuildAnimationsSelection_();
     }
   }
@@ -40,26 +34,26 @@ class PropertyInspectorController {
   }
 
   rebuildLayersSelection_() {
-    this.selection = {
+    this.selectionInfo = {
       type: 'layers',
       properties: []
     };
 
-    if (this.studioState_.selectedLayers.length > 1) {
-      let count = this.studioState_.selectedLayers.length;
-      this.selection.multiple = true;
-      this.selection.icon = 'collections';
-      this.selection.description = `${count} items`;
+    if (this.studioState_.selection.length > 1) {
+      let count = this.studioState_.selection.length;
+      this.selectionInfo.multiple = true;
+      this.selectionInfo.icon = 'collections';
+      this.selectionInfo.description = `${count} layers`;
 
     } else {
-      let layer = this.studioState_.selectedLayers[0];
-      this.selection.icon = (layer instanceof LayerGroup)
+      let layer = this.studioState_.firstSelectedItem;
+      this.selectionInfo.icon = (layer instanceof LayerGroup)
           ? 'folder_open'
           : ((layer instanceof MaskLayer) ? 'photo_size_select_large' : 'layers');
-      this.selection.description = layer.id;
+      this.selectionInfo.description = layer.id;
       Object.keys(layer.inspectableProperties).forEach(propertyName => {
         let self = this;
-        this.selection.properties.push(new PropertyModelHelper({
+        this.selectionInfo.properties.push(new PropertyModelHelper({
           object: layer,
           propertyName,
           propertyType: layer.inspectableProperties[propertyName],
@@ -87,34 +81,71 @@ class PropertyInspectorController {
     }
   }
 
+  rebuildAnimationBlocksSelection_() {
+    this.selectionInfo = {
+      type: 'animationBlocks',
+      properties: []
+    };
+
+    if (this.studioState_.selection.length > 1) {
+      let count = this.studioState_.selection.length;
+      this.selectionInfo.multiple = true;
+      this.selectionInfo.icon = 'collections';
+      this.selectionInfo.description = `${count} property animations`;
+
+    } else {
+      let block = this.studioState_.firstSelectedItem;
+      this.selectionInfo.icon = 'access_time';
+      this.selectionInfo.description = `${block.propertyName}`;
+      this.selectionInfo.subDescription = `for '${block.layerId}'`;
+      Object.keys(block.inspectableProperties).forEach(p => {
+        let self = this;
+        let propertyType = block.inspectableProperties[p];
+        if (propertyType == 'auto') {
+          propertyType = this.studioState_.artwork.findLayerById(block.layerId)
+              .inspectableProperties[block.propertyName];
+        }
+        this.selectionInfo.properties.push(new PropertyModelHelper({
+          object: block,
+          propertyName: p,
+          propertyType,
+          get value() {
+            return block[p];
+          },
+          set value(value) {
+            block[p] = value;
+            self.studioState_.animChanged();
+          },
+          get editable() {
+            return true;
+          }
+        }));
+      });
+    }
+  }
+
   rebuildAnimationsSelection_() {
-    this.selection = {
+    this.selectionInfo = {
       type: 'animations',
       properties: []
     };
 
-    if (this.studioState_.selectedAnimationBlocks.length > 1) {
-      let count = this.studioState_.selectedAnimationBlocks.length;
-      this.selection.multiple = true;
-      this.selection.icon = 'collections';
-      this.selection.description = `${count} property animations`;
+    if (this.studioState_.selection.length > 1) {
+      let count = this.studioState_.selection.length;
+      this.selectionInfo.multiple = true;
+      this.selectionInfo.icon = 'collections';
+      this.selectionInfo.description = `${count} animations`;
 
     } else {
-      let animation = this.studioState_.selectedAnimationBlocks[0];
-      this.selection.icon = 'access_time';
-      this.selection.description = `${animation.propertyName}`;
-      this.selection.subDescription = `for '${animation.layerId}'`;
+      let animation = this.studioState_.firstSelectedItem;
+      this.selectionInfo.icon = 'movie';
+      this.selectionInfo.description = animation.id;
       Object.keys(animation.inspectableProperties).forEach(p => {
         let self = this;
-        let propertyType = animation.inspectableProperties[p];
-        if (propertyType == 'auto') {
-          propertyType = this.studioState_.artwork.findLayerById(animation.layerId)
-              .inspectableProperties[animation.propertyName];
-        }
-        this.selection.properties.push(new PropertyModelHelper({
+        this.selectionInfo.properties.push(new PropertyModelHelper({
           object: animation,
           propertyName: p,
-          propertyType,
+          propertyType: animation.inspectableProperties[p],
           get value() {
             return animation[p];
           },

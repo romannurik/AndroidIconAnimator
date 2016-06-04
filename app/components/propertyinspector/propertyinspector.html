@@ -1,27 +1,26 @@
 <div class="studio-property-inspector" layout="column">
   <studio-splitter edge="left" min="200" persist-id="property-inspector"></studio-splitter>
-  <div ng-if="!ctrl.selection" class="spi-empty" flex>
+  <div ng-if="!ctrl.selectionInfo" class="spi-empty" flex>
     Select a layer, group, or timeline block to edit properties
   </div>
   <div
-      ng-if="ctrl.selection"
+      ng-if="ctrl.selectionInfo"
       flex
-      layout="column"
-      class="spi-selection-{{ctrl.selection.type}}">
+      layout="column">
     <div class="spi-header" flex="none">
-      <i class="material-icons spi-selection-icon">{{ctrl.selection.icon}}</i>
+      <i class="material-icons spi-selection-icon">{{ctrl.selectionInfo.icon}}</i>
       <div class="spi-selection-description-container" layout="column" flex>
-        <span class="spi-selection-description">{{ctrl.selection.description}}</span>
-        <span class="spi-selection-sub-description">{{ctrl.selection.subDescription}}</span>
+        <span class="spi-selection-description">{{ctrl.selectionInfo.description}}</span>
+        <span class="spi-selection-sub-description">{{ctrl.selectionInfo.subDescription}}</span>
       </div>
     </div>
     <div class="spi-body" flex layout="column">
       <div class="spi-empty"
           flex
-          ng-if="!ctrl.selection.properties || !ctrl.selection.properties.length">
+          ng-if="!ctrl.selectionInfo.properties || !ctrl.selectionInfo.properties.length">
         No shared properties to view or edit
       </div>
-      <div class="spi-property" ng-repeat="prop in ctrl.selection.properties">
+      <div class="spi-property" ng-repeat="prop in ctrl.selectionInfo.properties">
         <div class="spi-property-name">{{prop.name}}</div>
         <div class="spi-property-value" layout="row">
           <div ng-if="prop.type === 'color'"

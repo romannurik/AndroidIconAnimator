@@ -96,7 +96,7 @@
       background-color: #fff;
 
       &:focus {
-        box-shadow: 0 0 0 1px material-color('blue', '500') inset;
+        box-shadow: 0 0 0 1px $colorFocusBorder inset;
       }
     }
 
