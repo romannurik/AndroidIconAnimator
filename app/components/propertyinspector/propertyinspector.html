@@ -23,7 +23,7 @@
       <div class="spi-property" ng-repeat="prop in ctrl.selectionInfo.properties">
         <div class="spi-property-name">{{prop.name}}</div>
         <div class="spi-property-value" layout="row">
-          <div ng-if="prop.type === 'color'"
+          <div ng-if="prop.typeName == 'ColorProperty'"
               class="spi-property-color-preview"
               style="background-color: {{ctrl.androidToCssColor(prop.value)}}">
           </div>
@@ -32,25 +32,25 @@
           </span>
           <div ng-if="prop.editable" class="spi-property-value-editor" layout="column" flex>
             <input
-                ng-if="prop.type == 'string' ||
-                       prop.type == 'pathData' ||
-                       prop.type == 'color' ||
-                       prop.type == 'number' ||
-                       prop.type == 'fraction'"
-                ng-model="prop.value"
+                ng-if="prop.typeName == 'StringProperty' ||
+                       prop.typeName == 'PathDataProperty' ||
+                       prop.typeName == 'ColorProperty' ||
+                       prop.typeName == 'NumberProperty' ||
+                       prop.typeName == 'FractionProperty'"
+                ng-model="prop.displayValue"
                 ng-keydown="ctrl.onValueEditorKeyDown($event, prop)"
                 ng-blur="prop.destroyEnteredValue()">
             <md-menu
                 class="spi-property-value-menu"
-                ng-if="prop.type.indexOf('enum') >= 0"
+                ng-if="prop.typeName == 'EnumProperty'"
                 layout="column">
               <button class="spi-property-value-menu-target" ng-click="$mdOpenMenu($event)">
                 <span class="spi-property-value-menu-current-value">{{prop.displayValue}}</span>
               </button>
               <md-menu-content>
-                <md-menu-item ng-repeat="option in prop.enumOptions">
+                <md-menu-item ng-repeat="option in prop.property.options">
                   <md-button ng-click="prop.value = option;">
-                    {{prop.enumDisplayValueForValue(option)}}
+                    {{option.label}}
                   </md-button>
                 </md-menu-item>
               </md-menu-content>

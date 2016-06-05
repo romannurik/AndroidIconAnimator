@@ -1,4 +1,4 @@
-import {Artwork, Layer, LayerGroup, MaskLayer, Animation, PropertyType} from 'avdstudio/model';
+import {Artwork, Layer, LayerGroup, MaskLayer, Animation, Property, EnumProperty} from 'avdstudio/model';
 import {ColorUtil} from 'avdstudio/colorutil';
 import {ModelUtil} from 'avdstudio/modelutil';
 
@@ -56,7 +56,7 @@ class PropertyInspectorController {
         this.selectionInfo.properties.push(new PropertyModelHelper({
           object: layer,
           propertyName,
-          propertyType: layer.inspectableProperties[propertyName],
+          property: layer.inspectableProperties[propertyName],
           get value() {
             if (!self.studioState_.animationRenderer) {
               return layer[propertyName];
@@ -73,7 +73,7 @@ class PropertyInspectorController {
           get editable() {
             return self.studioState_.animationRenderer
                 ? !self.studioState_.animationRenderer
-                    .getLayerPropertyState(layer.id, propertyName).activeAnimation
+                    .getLayerPropertyState(layer.id, propertyName).activeBlock
                 : true;
           }
         }));
@@ -100,15 +100,15 @@ class PropertyInspectorController {
       this.selectionInfo.subDescription = `for '${block.layerId}'`;
       Object.keys(block.inspectableProperties).forEach(p => {
         let self = this;
-        let propertyType = block.inspectableProperties[p];
-        if (propertyType == 'auto') {
-          propertyType = this.studioState_.artwork.findLayerById(block.layerId)
+        let property = block.inspectableProperties[p];
+        if (property == 'auto') {
+          property = this.studioState_.artwork.findLayerById(block.layerId)
               .inspectableProperties[block.propertyName];
         }
         this.selectionInfo.properties.push(new PropertyModelHelper({
           object: block,
           propertyName: p,
-          propertyType,
+          property,
           get value() {
             return block[p];
           },
@@ -145,7 +145,7 @@ class PropertyInspectorController {
         this.selectionInfo.properties.push(new PropertyModelHelper({
           object: animation,
           propertyName: p,
-          propertyType: animation.inspectableProperties[p],
+          property: animation.inspectableProperties[p],
           get value() {
             return animation[p];
           },
@@ -197,8 +197,7 @@ class PropertyModelHelper {
     this.opts_ = opts;
     this.object_ = opts.object;
     this.propertyName_ = opts.propertyName;
-    this.propertyType_ = opts.propertyType;
-    this.propertyTypeObj_ = PropertyType.get(opts.propertyType);
+    this.property_ = opts.property;
     this.enteredValue_ = null;
   }
 
@@ -206,52 +205,37 @@ class PropertyModelHelper {
     return this.propertyName_;
   }
 
-  get type() {
-    return this.propertyType_;
+  get property() {
+    return this.property_;
+  }
+
+  get typeName() {
+    return this.property_.constructor.name;
   }
 
   get value() {
-    return (this.enteredValue_ !== null)
-        ? this.enteredValue_
-        : this.opts_.value;
+    return this.property_.getValueForObject(this.opts_, 'value');
   }
 
   set value(enteredValue) {
-    if (this.propertyType_.indexOf('enum') >= 0) {
-      this.opts_.value = enteredValue;
-    } else {
-      this.enteredValue_ = enteredValue;
-      let value = this.propertyTypeObj_.parse(enteredValue);
-      if (value !== null) {
-        this.opts_.value = value;
-      }
-    }
+    this.property_.setValueOnObject(this.opts_, 'value', enteredValue);
   }
 
   get editable() {
     return this.opts_.editable;
   }
 
-  get enumOptions() {
-    return this.propertyTypeObj_.options;
-  }
-
-  enumDisplayValueForValue(value) {
-    return this.propertyTypeObj_.displayValueForValue(value);
-  }
-
   get displayValue() {
-    if (this.propertyType_.indexOf('enum') >= 0) {
-      return this.propertyTypeObj_.displayValueForValue(this.value);
-    } else {
-      let value = this.value;
-      if (typeof value === 'number') {
-        return (Number.isInteger(value)
-              ? value.toString()
-              : Number(value.toFixed(3)).toString())
-            .replace(/-/g, '\u2212');
-      }
-      return value;
+    return (this.enteredValue_ !== null)
+        ? this.enteredValue_
+        : this.property_.displayValueForValue(this.value);
+  }
+
+  set displayValue(enteredValue) {
+    this.enteredValue_ = enteredValue;
+    let value = this.property_.parse(enteredValue);
+    if (value !== null) {
+      this.value = value;
     }
   }
 

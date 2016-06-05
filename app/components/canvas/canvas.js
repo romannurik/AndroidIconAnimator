@@ -82,7 +82,7 @@ class CanvasController {
         transforms.pop();
       } else if (layer instanceof MaskLayer) {
         transforms.forEach(t => t());
-        SvgPathParser.execute(ctx, layer.parsedPathData);
+        SvgPathParser.execute(ctx, layer.pathData.parsed);
         ctx.clip(); // clip further layers
 
       } else {
@@ -93,15 +93,15 @@ class CanvasController {
 
         ctx.save();
         transforms.forEach(t => t());
-        SvgPathParser.execute(ctx, layer.parsedPathData);
+        SvgPathParser.execute(ctx, layer.pathData.parsed);
         ctx.restore();
 
         if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
           ctx.setLineDash([
-            (layer.trimPathEnd - layer.trimPathStart) * layer.pathLength_,
-            layer.pathLength_
+            (layer.trimPathEnd - layer.trimPathStart) * layer.pathData.length,
+            layer.pathData.length
           ]);
-          ctx.lineDashOffset = -(layer.trimPathStart * layer.pathLength_);
+          ctx.lineDashOffset = -(layer.trimPathStart * layer.pathData.length);
         } else {
           ctx.setLineDash([]);
         }

@@ -149,7 +149,7 @@ class StudioStateService {
       select = !item.selected_;
     }
 
-    if (item.selected_ == select) {
+    if (!!item.selected_ == select) {
       return;
     }
 
