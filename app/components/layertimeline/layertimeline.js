@@ -1,5 +1,6 @@
 import {Artwork, Layer, LayerGroup, MaskLayer, Animation, AnimationBlock} from 'avdstudio/model';
 import {ModelUtil} from 'avdstudio/modelutil';
+import {DragHelper} from 'avdstudio/draghelper';
 
 
 const DRAG_SLOP = 4; // pixels
@@ -227,10 +228,7 @@ class LayerTimelineController {
 
     let animRect = $(event.target).parents('.slt-property').get(0).getBoundingClientRect();
     let xToTime_ = x => (x - animRect.left) / animRect.width * animation.duration;
-    let downX = event.clientX;
-    let downTime = xToTime_(downX);
-
-    let dragging = false;
+    let downTime = xToTime_(event.clientX);
 
     let blockInfos = (dragBlock.selected_ ? this.studioState_.selectedAnimationBlocks : [dragBlock])
         .map(block => ({block, downStartTime: block.startTime, downEndTime: block.endTime}));
@@ -259,13 +257,15 @@ class LayerTimelineController {
       maxEndTime = Math.max(maxEndTime, minStartTime + 10); // avoid divide by zero
     }
 
-    let mouseMoveHandler_ = event => {
-      if (!dragging && Math.abs(event.clientX - downX) > DRAG_SLOP) {
-        dragging = true;
-        this.suppressClick_ = true;
-      }
+    let dragHelper = new DragHelper({
+      downEvent: event,
+      direction: 'horizontal',
+      draggingCursor: (action == MouseActions.MOVING) ? 'grabbing' : 'ew-resize',
 
-      if (dragging) {
+      onBeginDrag: event => this.suppressClick_ = true,
+      onDrop: event => setTimeout(() => this.suppressClick_ = false, 0),
+
+      onDrag: event => {
         let timeDelta = xToTime_(event.clientX) - downTime;
 
         switch (action) {
@@ -337,25 +337,8 @@ class LayerTimelineController {
         }
 
         this.studioState_.animChanged();
-      }
-    };
-
-    let mouseUpHandler_ = event => {
-      $(window)
-          .off('mousemove', mouseMoveHandler_)
-          .off('mouseup', mouseUpHandler_);
-      if (dragging) {
-        dragging = false;
-        setTimeout(() => this.suppressClick_ = false, 0);
-        event.stopPropagation();
-        event.preventDefault();
-        return false;
-      }
-    };
-
-    $(window)
-          .on('mousemove', mouseMoveHandler_)
-          .on('mouseup', mouseUpHandler_);
+      },
+    });
   }
 
   /**
@@ -363,13 +346,8 @@ class LayerTimelineController {
    * the artwork.
    */
   onLayerMouseDown(event, dragLayer) {
-    let $target = $(event.target);
-    let $layersList = $target.parents('.slt-layers-list');
-    let $scroller = $target.parents('.slt-layers-list-scroller');
-
-    let downX = event.clientX;
-    let downY = event.clientY;
-    let dragging = false;
+    let $layersList = $(event.target).parents('.slt-layers-list');
+    let $scroller = $(event.target).parents('.slt-layers-list-scroller');
 
     let orderedLayerInfos = [];
     let $dragIndicator;
@@ -380,42 +358,39 @@ class LayerTimelineController {
 
     let EDGES = {top:true, bottom:true};
 
-    let prepareToDrag_ = () => {
-      // build up a list of all layers ordered by Y position
-      orderedLayerInfos = [];
-      scrollerRect = $scroller.get(0).getBoundingClientRect();
-      let scrollTop = $scroller.scrollTop();
-      $layersList.find('.slt-layer-container').each((i, element) => {
-        let rect = element.getBoundingClientRect();
-        rect = {
-          left: rect.left,
-          top: rect.top + scrollTop - scrollerRect.top,
-          bottom: rect.bottom + scrollTop - scrollerRect.top
-        };
-        orderedLayerInfos.push({
-          layer: this.studioState_.artwork.findLayerById($(element).data('layer-id')),
-          localRect: rect,
-          element,
-        });
-      });
+    let dragHelper = new DragHelper({
+      downEvent: event,
+      direction: 'both',
 
-      orderedLayerInfos.sort((a, b) => a.localRect.top - b.localRect.top);
-
-      $dragIndicator = $('<div>')
-          .addClass('slt-layers-list-drag-indicator')
-          .appendTo($scroller);
-    };
-
-    let mouseMoveHandler_ = event => {
-      if (!dragging &&
-          (Math.abs(event.clientX - downX) > DRAG_SLOP ||
-           Math.abs(event.clientY - downY) > DRAG_SLOP)) {
-        dragging = true;
-        prepareToDrag_();
+      onBeginDrag: () => {
         this.suppressClick_ = true;
-      }
 
-      if (dragging) {
+        // build up a list of all layers ordered by Y position
+        orderedLayerInfos = [];
+        scrollerRect = $scroller.get(0).getBoundingClientRect();
+        let scrollTop = $scroller.scrollTop();
+        $layersList.find('.slt-layer-container').each((i, element) => {
+          let rect = element.getBoundingClientRect();
+          rect = {
+            left: rect.left,
+            top: rect.top + scrollTop - scrollerRect.top,
+            bottom: rect.bottom + scrollTop - scrollerRect.top
+          };
+          orderedLayerInfos.push({
+            layer: this.studioState_.artwork.findLayerById($(element).data('layer-id')),
+            localRect: rect,
+            element,
+          });
+        });
+
+        orderedLayerInfos.sort((a, b) => a.localRect.top - b.localRect.top);
+
+        $dragIndicator = $('<div>')
+            .addClass('slt-layers-list-drag-indicator')
+            .appendTo($scroller);
+      },
+
+      onDrag: event => {
         let localEventY = event.clientY - scrollerRect.top + $scroller.scrollTop();
 
         // find the target layer and edge (top or bottom)
@@ -469,14 +444,9 @@ class LayerTimelineController {
         }
 
         $dragIndicator.toggle(!!targetLayerInfo);
-      }
-    };
+      },
 
-    let mouseUpHandler_ = event => {
-      $(window)
-          .off('mousemove', mouseMoveHandler_)
-          .off('mouseup', mouseUpHandler_);
-      if (dragging) {
+      onDrop: event => {
         if ($dragIndicator) {
           $dragIndicator.remove();
         }
@@ -498,17 +468,9 @@ class LayerTimelineController {
           });
         }
 
-        dragging = false;
         setTimeout(() => this.suppressClick_ = false, 0);
-        event.stopPropagation();
-        event.preventDefault();
-        return false;
       }
-    };
-
-    $(window)
-          .on('mousemove', mouseMoveHandler_)
-          .on('mouseup', mouseUpHandler_);
+    });
   }
 }
 

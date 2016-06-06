@@ -1,4 +1,4 @@
-const DRAG_SLOP = 4;
+import {DragHelper} from 'avdstudio/draghelper';
 
 
 class SplitterController {
@@ -42,36 +42,23 @@ class SplitterController {
   }
 
   setupEventListeners_() {
-    let mouseMoveHandler_ = event => {
-      if (!this.dragging_ && Math.abs(event[this.clientXY_] - this.downXY_) > DRAG_SLOP) {
-        this.setDragging_(true);
-      }
-
-      if (this.dragging_) {
-        let sign = (this.edge_ == 'left' || this.edge_ == 'top') ? -1 : 1;
-        this.setSize_(Math.max(this.min_,
-            this.downSize_ + sign * (event[this.clientXY_] - this.downXY_)));
-      }
-    };
-
-    let mouseUpHandler_ = event => {
-      $(window)
-          .off('mousemove', mouseMoveHandler_)
-          .off('mouseup', mouseUpHandler_);
-      if (this.dragging_) {
-        this.setDragging_(false);
-        event.stopPropagation();
-        event.preventDefault();
-        return false;
-      }
-    };
-
     this.element_.on('mousedown', event => {
       this.downXY_ = event[this.clientXY_];
       this.downSize_ = this.sizeGetter_();
-      $(window)
-            .on('mousemove', mouseMoveHandler_)
-            .on('mouseup', mouseUpHandler_);
+
+      new DragHelper({
+        downEvent: event,
+        direction: (this.orientation_ == 'vertical') ? 'horizontal' : 'vertical',
+        draggingCursor: (this.orientation_ == 'vertical') ? 'col-resize' : 'row-resize',
+
+        onBeginDrag: event => this.element_.addClass('is-dragging'),
+        onDrop: event => this.element_.removeClass('is-dragging'),
+        onDrag: (event, delta) => {
+          let sign = (this.edge_ == 'left' || this.edge_ == 'top') ? -1 : 1;
+          this.setSize_(Math.max(this.min_,
+              this.downSize_ + sign * delta[(this.orientation_ == 'vertical') ? 'x' : 'y']));
+        }
+      });
     });
   }
 
@@ -80,12 +67,6 @@ class SplitterController {
       localStorage[this.persistKey_] = size;
     }
     this.sizeSetter_(size);
-  }
-
-  setDragging_(dragging) {
-    this.dragging_ = dragging;
-    this.element_.toggleClass('is-dragging', dragging);
-    $(document.body).toggleClass(`studio-splitter-dragging-${this.orientation_}`, dragging);
   }
 }
 

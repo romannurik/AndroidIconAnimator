@@ -39,23 +39,3 @@
     bottom: 0;
   }
 }
-
-body.studio-splitter-dragging-horizontal::after,
-body.studio-splitter-dragging-vertical::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9999;
-}
-
-body.studio-splitter-dragging-vertical::after {
-  cursor: col-resize !important;
-}
-
-body.studio-splitter-dragging-horizontal::after {
-  cursor: row-resize !important;
-}
-
