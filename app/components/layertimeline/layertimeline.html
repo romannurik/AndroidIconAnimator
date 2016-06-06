@@ -100,13 +100,13 @@
         </studio-timeline-grid>
       </div>
 
-      <div class="slt-timeline-animation-scroller" scroll-group="timeline">
-        <studio-timeline-grid
-            class="slt-timeline-grid"
-            is-active="ctrl.activeAnimation == animation"
-            active-time="ctrl.activeTime">
-        </studio-timeline-grid>
+      <studio-timeline-grid
+          class="slt-timeline-grid"
+          is-active="ctrl.activeAnimation == animation"
+          active-time="ctrl.activeTime">
+      </studio-timeline-grid>
 
+      <div class="slt-timeline-animation-scroller" scroll-group="timeline">
         <div class="slt-timeline-animation-rows">
           <div ng-repeat="layer in ctrl.artwork.layers" ng-include="'timelineRow'"></div>
         </div>

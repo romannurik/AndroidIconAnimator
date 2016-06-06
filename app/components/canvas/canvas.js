@@ -1,12 +1,17 @@
 import {LayerGroup, MaskLayer} from 'avdstudio/model';
 import {ColorUtil} from 'avdstudio/colorutil';
 import {SvgPathParser} from 'avdstudio/svgpathparser';
+import {ElementResizeWatcher} from 'avdstudio/elementresizewatcher';
+
+
+const CANVAS_MARGIN = 64; // pixels
 
 
 class CanvasController {
-  constructor($scope, $element, StudioStateService) {
+  constructor($scope, $element, StudioStateService, $timeout) {
     this.scope_ = $scope;
     this.element_ = $element;
+    this.canvas_ = $element.find('canvas');
     this.studioState_ = StudioStateService;
 
     this.studioState_.onChange((event, changes) => {
@@ -25,11 +30,14 @@ class CanvasController {
       }
 
       if (changes.artwork || changes.animations || changes.activeAnimation) {
-        this.drawCanvas_();
+        this.resizeAndDrawCanvas_();
       }
     }, $scope);
 
-    this.drawCanvas_();
+    let resizeWatcher = new ElementResizeWatcher(this.element_, () => this.resizeAndDrawCanvas_());
+    $scope.$on('$destroy', () => resizeWatcher.destroy());
+
+    $timeout(() => this.resizeAndDrawCanvas_(), 0);
   }
 
   get artwork() {
@@ -38,6 +46,34 @@ class CanvasController {
 
   get animation() {
     return this.studioState_.activeAnimation;
+  }
+
+  resizeAndDrawCanvas_() {
+    let containerWidth = this.element_.width() - CANVAS_MARGIN * 2;
+    let containerHeight = this.element_.height() - CANVAS_MARGIN * 2;
+    let containerAspectRatio = containerWidth / (containerHeight || 1);
+
+    let artworkAspectRatio = this.artwork.width / (this.artwork.height || 1);
+
+    if (artworkAspectRatio > containerAspectRatio) {
+      this.scale_ = containerWidth / this.artwork.width;
+    } else {
+      this.scale_ = containerHeight / this.artwork.height;
+    }
+
+    this.scale_ = Math.floor(this.scale_);
+
+    this.backingStoreScale_ = this.scale_ * (window.devicePixelRatio || 1);
+    this.canvas_
+        .attr({
+          width: this.artwork.width * this.backingStoreScale_,
+          height: this.artwork.height * this.backingStoreScale_
+        })
+        .css({
+          width: this.artwork.width * this.scale_,
+          height: this.artwork.height * this.scale_,
+        });
+    this.drawCanvas_();
   }
 
   drawCanvas_() {
@@ -50,19 +86,10 @@ class CanvasController {
       return;
     }
 
-    let $canvas = this.element_.find('canvas');
-    let cssScale = 10;
-    let backingStoreScale = cssScale * (window.devicePixelRatio || 1);
-    $canvas.attr('width', this.artwork.width * backingStoreScale);
-    $canvas.attr('height', this.artwork.height * backingStoreScale);
-    $canvas.css({
-      width: this.artwork.width * cssScale,
-      height: this.artwork.height * cssScale,
-    });
-
-    let ctx = $canvas.get(0).getContext('2d');
+    let ctx = this.canvas_.get(0).getContext('2d');
     ctx.save();
-    ctx.scale(backingStoreScale, backingStoreScale);
+    ctx.scale(this.backingStoreScale_, this.backingStoreScale_);
+    ctx.clearRect(0, 0, this.artwork.width, this.artwork.height);
 
     let transforms = [];
 
@@ -127,21 +154,21 @@ class CanvasController {
     ctx.restore();
 
     // draw pixel grid
-    if (cssScale > 4) {
+    if (this.scale_ > 4) {
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
 
       for (let x = 1; x < this.artwork.width; ++x) {
         ctx.fillRect(
-            x * backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
+            x * this.backingStoreScale_ - 0.5 * (window.devicePixelRatio || 1),
             0,
             1 * (window.devicePixelRatio || 1),
-            this.artwork.height * backingStoreScale);
+            this.artwork.height * this.backingStoreScale_);
       }
       for (let y = 1; y < this.artwork.height; ++y) {
         ctx.fillRect(
             0,
-            y * backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
-            this.artwork.width * backingStoreScale,
+            y * this.backingStoreScale_ - 0.5 * (window.devicePixelRatio || 1),
+            this.artwork.width * this.backingStoreScale_,
             1 * (window.devicePixelRatio || 1));
       }
     }
