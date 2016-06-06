@@ -10,46 +10,48 @@
     <div class="spi-header" flex="none">
       <i class="material-icons spi-selection-icon">{{ctrl.selectionInfo.icon}}</i>
       <div class="spi-selection-description-container" layout="column" flex>
-        <span class="spi-selection-description">{{ctrl.selectionInfo.description}}</span>
+        <span class="spi-selection-description">{{ctrl.selectionDescription}}</span>
         <span class="spi-selection-sub-description">{{ctrl.selectionInfo.subDescription}}</span>
       </div>
     </div>
     <div class="spi-body" flex layout="column">
       <div class="spi-empty"
           flex
-          ng-if="!ctrl.selectionInfo.properties || !ctrl.selectionInfo.properties.length">
+          ng-if="!ctrl.selectionInfo.inspectedProperties
+                 || !ctrl.selectionInfo.inspectedProperties.length">
         No shared properties to view or edit
       </div>
-      <div class="spi-property" ng-repeat="prop in ctrl.selectionInfo.properties">
-        <div class="spi-property-name">{{prop.name}}</div>
+      <div class="spi-property" ng-repeat="ip in ctrl.selectionInfo.inspectedProperties">
+        <div class="spi-property-name">{{ip.propertyName}}</div>
         <div class="spi-property-value" layout="row">
-          <div ng-if="prop.typeName == 'ColorProperty'"
+          <div ng-if="ip.typeName == 'ColorProperty'"
               class="spi-property-color-preview"
-              style="background-color: {{ctrl.androidToCssColor(prop.value)}}">
+              style="background-color: {{ctrl.androidToCssColor(ip.value)}}">
           </div>
-          <span ng-if="!prop.editable" class="spi-property-value-static" flex>
-            {{prop.displayValue}}
+          <span ng-if="!ip.editable" class="spi-property-value-static" flex>
+            {{ip.displayValue}}
           </span>
-          <div ng-if="prop.editable" class="spi-property-value-editor" layout="column" flex>
+          <div ng-if="ip.editable" class="spi-property-value-editor" layout="column" flex>
             <input
-                ng-if="prop.typeName == 'StringProperty' ||
-                       prop.typeName == 'PathDataProperty' ||
-                       prop.typeName == 'ColorProperty' ||
-                       prop.typeName == 'NumberProperty' ||
-                       prop.typeName == 'FractionProperty'"
-                ng-model="prop.displayValue"
-                ng-keydown="ctrl.onValueEditorKeyDown($event, prop)"
-                ng-blur="prop.destroyEnteredValue()">
+                ng-if="ip.typeName == 'StringProperty' ||
+                       ip.typeName == 'IdProperty' ||
+                       ip.typeName == 'PathDataProperty' ||
+                       ip.typeName == 'ColorProperty' ||
+                       ip.typeName == 'NumberProperty' ||
+                       ip.typeName == 'FractionProperty'"
+                ng-model="ip.editableValue"
+                ng-keydown="ctrl.onValueEditorKeyDown($event, ip)"
+                ng-blur="ip.resolveEnteredValue()">
             <md-menu
                 class="spi-property-value-menu"
-                ng-if="prop.typeName == 'EnumProperty'"
+                ng-if="ip.typeName == 'EnumProperty'"
                 layout="column">
               <button class="spi-property-value-menu-target" ng-click="$mdOpenMenu($event)">
-                <span class="spi-property-value-menu-current-value">{{prop.displayValue}}</span>
+                <span class="spi-property-value-menu-current-value">{{ip.displayValue}}</span>
               </button>
               <md-menu-content>
-                <md-menu-item ng-repeat="option in prop.property.options">
-                  <md-button ng-click="prop.value = option;">
+                <md-menu-item ng-repeat="option in ip.property.options">
+                  <md-button ng-click="ip.value = option;">
                     {{option.label}}
                   </md-button>
                 </md-menu-item>

@@ -11,6 +11,14 @@ class StudioStateService {
     this.rebuildRenderer_();
   }
 
+  get playbackSpeed() {
+    return this.playbackSpeed_ || 1;
+  }
+
+  set playbackSpeed(speed) {
+    this.playbackSpeed_ = speed;
+  }
+
   get playing() {
     return this.playing_;
   }
@@ -177,10 +185,12 @@ class StudioStateService {
     this.broadcastChanges_({selection: true});
   }
 
-  makeNewAnimationId() {
-    let n = 1;
-    let id_ = () => `anim_${n}`;
-    while (this.animations.reduce((a, b) => a || b.id == id_(), false)) {
+  getUniqueAnimationId(prefix, targetAnimation = null) {
+    prefix = prefix || 'anim';
+
+    let n = 0;
+    let id_ = () => prefix + (n ? `_${n}` : '');
+    while (this.animations.reduce((a, b) => a || (b.id == id_() && b != targetAnimation), false)) {
       ++n;
     }
     return id_();
@@ -194,7 +204,7 @@ class StudioStateService {
     let deleteAnimationsForLayer_ = layer => {
       layer.walk(layer => {
         this.animations.forEach(animation => {
-          animation.blocks = animation.blocks.filter(layerAnim => layerAnim.layerId != layer.id);
+          animation.blocks = animation.blocks.filter(block => block.layerId != layer.id);
         });
       });
     };
@@ -216,10 +226,34 @@ class StudioStateService {
     this.animChanged();
   }
 
-  makeNewLayerId(type) {
-    let n = 1;
-    let id_ = () => `${type}_${n}`;
-    while (this.artwork.findLayerById(id_())) {
+  updateLayerId(layer, newId) {
+    let oldId = layer.id;
+    if (oldId == newId) {
+      return;
+    }
+
+    this.animations.forEach(animation => animation.blocks.forEach(block => {
+      if (block.layerId == oldId) {
+        block.layerId = newId;
+      }
+    }));
+    layer.id = newId;
+
+    this.artworkChanged();
+    this.animChanged();
+  }
+
+  getUniqueLayerId(prefix, targetLayer = null) {
+    prefix = prefix || 'layer';
+
+    let n = 0;
+    let id_ = () => prefix + (n ? `_${n}` : '');
+    while (true) {
+      let l = this.artwork.findLayerById(id_());
+      if (!l || l == targetLayer) {
+        break;
+      }
+
       ++n;
     }
     return id_();

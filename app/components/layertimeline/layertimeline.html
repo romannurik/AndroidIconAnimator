@@ -27,19 +27,23 @@
 
     <div class="slt-layers-list-scroller" scroll-group="timeline">
       <div class="slt-layers-list">
-        <div ng-repeat="layer in ctrl.artwork.layers" ng-include="'layerListItem'"></div>
+        <div class="slt-layer-container"
+            data-layer-id="{{layer.id}}"
+            ng-repeat="layer in ctrl.artwork.layers"
+            ng-include="'layerListItem'"
+            layout="column"></div>
       </div>
     </div>
 
     <script type="text/ng-template" id="layerListItem">
       <div
-          class="slt-node-{{ layer._slt.layerType }}"
+          class="slt-layer slt-layer-type-{{ layer._slt.layerType }}"
           ng-class="{'is-selected': layer.selected_}"
           ng-click="ctrl.onLayerClick($event, layer)"
           ng-mousedown="ctrl.onLayerMouseDown($event, layer)"
           layout="row">
-        <span flex class="slt-node-id">{{ layer.id }}</span>
-        <md-menu class="slt-node-add-property-menu" ng-if="ctrl.activeAnimation">
+        <span flex class="slt-layer-id">{{ layer.id }}</span>
+        <md-menu class="slt-layer-add-property-menu" ng-if="ctrl.activeAnimation">
           <md-button
               class="md-icon-button"
               ng-click="$mdOpenMenu($event)">
@@ -59,7 +63,11 @@
             class="slt-property"
             ng-repeat="(property, __) in layer._slt.blocksByProperty">{{property}}</div></div>
       <ul class="slt-children" ng-if="layer.layers">
-        <li ng-repeat="layer in layer.layers" ng-include="'layerListItem'"></li>
+        <li class="slt-layer-container"
+            ng-repeat="layer in layer.layers"
+            data-layer-id="{{layer.id}}"
+            ng-include="'layerListItem'"
+            layout="column"></li>
       </ul>
     </script>
 
@@ -105,7 +113,7 @@
       </div>
 
       <script type="text/ng-template" id="timelineRow">
-        <div class="slt-node-{{ layer._slt.layerType }}"></div>
+        <div class="slt-layer slt-layer-type-{{ layer._slt.layerType }}"></div>
 
         <div class="slt-properties"><div
               class="slt-property"

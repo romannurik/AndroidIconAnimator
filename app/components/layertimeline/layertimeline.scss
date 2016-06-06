@@ -30,15 +30,13 @@
     padding: 8px 0;
   }
 
-  .slt-node-layer,
-  .slt-node-mask,
-  .slt-node-group {
+  .slt-layer {
     box-sizing: border-box;
     line-height: 20px;
     height: 20px;
   }
 
-  .slt-node-add-property-menu {
+  .slt-layer-add-property-menu {
     padding: 0;
     display: flex;
 
@@ -80,6 +78,7 @@
     flex: 0 0 auto;
 
     .slt-layers-list-scroller {
+      position: relative;
       overflow-x: hidden;
       overflow-y: auto;
       -ms-overflow-style: none;
@@ -95,9 +94,7 @@
       margin: 0 0 0 20px;
     }
 
-    .slt-node-layer,
-    .slt-node-mask,
-    .slt-node-group {
+    .slt-layer {
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -126,19 +123,19 @@
       }
     }
 
-    .slt-node-group {
+    .slt-layer-type-group {
       font-weight: 500;
     }
 
-    .slt-node-layer::before {
+    .slt-layer::before {
       content: 'layers';
     }
 
-    .slt-node-mask::before {
+    .slt-layer-type-mask::before {
       content: 'photo_size_select_large';
     }
 
-    .slt-node-group::before {
+    .slt-layer-type-group::before {
       content: 'folder_open';
     }
 
@@ -168,6 +165,27 @@
         }
       }
     }
+
+    .slt-layers-list-drag-indicator {
+      position: absolute;
+      height: 2px;
+      left: 0;
+      right: 0;
+      margin-top: -1px;
+      background-color: $colorPrimary400;
+      pointer-events: none;
+
+      &::before {
+        position: absolute;
+        content: '';
+        left: -4px;
+        top: -3px;
+        height: 8px;
+        width: 8px;
+        background-color: $colorPrimary400;
+        border-radius: 50%;
+      }
+    }
   }
 
   // timeline
@@ -185,6 +203,7 @@
     align-items: stretch;
 
     .slt-timeline-animation-scroller {
+      position: relative;
       overflow-x: hidden;
       overflow-y: auto;
       -ms-overflow-style: none;

@@ -12,7 +12,8 @@ class CanvasController {
     this.studioState_.onChange((event, changes) => {
       if (changes.playing) {
         if (this.studioState_.playing) {
-          this.animStart = Number(new Date()) - this.studioState_.activeTime;
+          this.animStart = Number(new Date())
+              - this.studioState_.activeTime / this.studioState_.playbackSpeed;
         }
 
         this.drawCanvas_();
@@ -82,7 +83,7 @@ class CanvasController {
         transforms.pop();
       } else if (layer instanceof MaskLayer) {
         transforms.forEach(t => t());
-        SvgPathParser.execute(ctx, layer.pathData.parsed);
+        SvgPathParser.execute(ctx, layer.pathData);
         ctx.clip(); // clip further layers
 
       } else {
@@ -93,7 +94,7 @@ class CanvasController {
 
         ctx.save();
         transforms.forEach(t => t());
-        SvgPathParser.execute(ctx, layer.pathData.parsed);
+        SvgPathParser.execute(ctx, layer.pathData);
         ctx.restore();
 
         if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
@@ -106,7 +107,7 @@ class CanvasController {
           ctx.setLineDash([]);
         }
 
-        if (layer.strokeColor && layer.strokeWidth) {
+        if (layer.strokeColor && layer.strokeWidth && layer.trimPathStart != layer.trimPathEnd) {
           ctx.stroke();
         }
         if (layer.fillColor) {
@@ -147,7 +148,8 @@ class CanvasController {
 
     if (this.studioState_.playing) {
       this.animationFrameRequest_ = window.requestAnimationFrame(() => {
-        this.animTime = (Number(new Date()) - this.animStart) % this.animation.duration;
+        this.animTime = ((Number(new Date()) - this.animStart) * this.studioState_.playbackSpeed)
+            % this.animation.duration;
         this.studioState_.activeTime = this.animTime;
         this.drawCanvas_();
       });

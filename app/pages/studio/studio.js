@@ -11,6 +11,9 @@ const BLANK_ARTWORK = {
 };
 
 
+const PLAYBACK_SPEEDS = [.1, .25, .5, 1, 2, 3, 4, 8, 10];
+
+
 class StudioCtrl {
   constructor($scope, $mdToast, StudioStateService) {
     this.scope_ = $scope;
@@ -44,6 +47,27 @@ class StudioCtrl {
         event.shiftKey
             ? this.ungroupSelectedLayers_()
             : this.groupSelectedLayers_();
+        return false;
+      } else if (event.keyCode == 187
+              || event.keyCode == 189
+              || event.keyCode == "0".charCodeAt(0)) {
+        if (this.studioState_.playing) {
+          this.studioState_.playing = false;
+          if (event.keyCode == "0".charCodeAt(0)) {
+            this.studioState_.playbackSpeed = 1;
+          } else {
+            let speedUp = !!(event.keyCode == 187);
+            let currentIndex = PLAYBACK_SPEEDS.indexOf(this.studioState_.playbackSpeed);
+            if (currentIndex < 0) {
+              this.studioState_.playbackSpeed = 1;
+            } else {
+              this.studioState_.playbackSpeed = PLAYBACK_SPEEDS[
+                  Math.max(0, Math.min(PLAYBACK_SPEEDS.length - 1,
+                      currentIndex + (speedUp ? 1 : -1)))];
+            }
+          }
+          this.studioState_.playing = true;
+        }
         return false;
       }
     });
@@ -128,7 +152,7 @@ class StudioCtrl {
         // remove all selected items from their parents and
         // move them into a new parent
         let newGroup = new LayerGroup({
-          id: this.studioState_.makeNewLayerId('group'),
+          id: this.studioState_.getUniqueLayerId('group'),
           layers: tempSelLayers
         });
         tempSelLayers.forEach(layer =>

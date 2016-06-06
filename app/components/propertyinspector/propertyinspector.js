@@ -1,4 +1,6 @@
-import {Artwork, Layer, LayerGroup, MaskLayer, Animation, Property, EnumProperty} from 'avdstudio/model';
+import {Artwork, Layer, LayerGroup, MaskLayer,
+        Animation,
+        Property, FractionProperty, IdProperty, EnumProperty} from 'avdstudio/model';
 import {ColorUtil} from 'avdstudio/colorutil';
 import {ModelUtil} from 'avdstudio/modelutil';
 
@@ -33,10 +35,14 @@ class PropertyInspectorController {
     return ColorUtil.androidToCssColor(val);
   }
 
+  get selectionDescription() {
+    return this.selectionInfo && this.selectionInfo.description;
+  }
+
   rebuildLayersSelection_() {
     this.selectionInfo = {
       type: 'layers',
-      properties: []
+      inspectedProperties: []
     };
 
     if (this.studioState_.selection.length > 1) {
@@ -50,13 +56,16 @@ class PropertyInspectorController {
       this.selectionInfo.icon = (layer instanceof LayerGroup)
           ? 'folder_open'
           : ((layer instanceof MaskLayer) ? 'photo_size_select_large' : 'layers');
-      this.selectionInfo.description = layer.id;
+      Object.defineProperty(this.selectionInfo, 'description', {
+        get: () => layer.id
+      });
       Object.keys(layer.inspectableProperties).forEach(propertyName => {
         let self = this;
-        this.selectionInfo.properties.push(new PropertyModelHelper({
+        let property = layer.inspectableProperties[propertyName];
+        this.selectionInfo.inspectedProperties.push(new InspectedProperty({
           object: layer,
           propertyName,
-          property: layer.inspectableProperties[propertyName],
+          property,
           get value() {
             if (!self.studioState_.animationRenderer) {
               return layer[propertyName];
@@ -67,9 +76,17 @@ class PropertyInspectorController {
             return renderedLayer ? renderedLayer[propertyName] : null;
           },
           set value(value) {
-            layer[propertyName] = value;
-            self.studioState_.artworkChanged();
+            if (property instanceof IdProperty) {
+              self.studioState_.updateLayerId(layer, value);
+            } else {
+              layer[propertyName] = value;
+              self.studioState_.artworkChanged();
+            }
           },
+          transformEditedValue: (property instanceof IdProperty)
+              ? enteredValue => this.studioState_
+                    .getUniqueLayerId(IdProperty.sanitize(enteredValue), layer)
+              : null,
           get editable() {
             return self.studioState_.animationRenderer
                 ? !self.studioState_.animationRenderer
@@ -84,7 +101,7 @@ class PropertyInspectorController {
   rebuildAnimationBlocksSelection_() {
     this.selectionInfo = {
       type: 'animationBlocks',
-      properties: []
+      inspectedProperties: []
     };
 
     if (this.studioState_.selection.length > 1) {
@@ -98,27 +115,17 @@ class PropertyInspectorController {
       this.selectionInfo.icon = 'access_time';
       this.selectionInfo.description = `${block.propertyName}`;
       this.selectionInfo.subDescription = `for '${block.layerId}'`;
-      Object.keys(block.inspectableProperties).forEach(p => {
-        let self = this;
-        let property = block.inspectableProperties[p];
+      Object.keys(block.inspectableProperties).forEach(propertyName => {
+        let property = block.inspectableProperties[propertyName];
         if (property == 'auto') {
           property = this.studioState_.artwork.findLayerById(block.layerId)
               .inspectableProperties[block.propertyName];
         }
-        this.selectionInfo.properties.push(new PropertyModelHelper({
+        this.selectionInfo.inspectedProperties.push(new InspectedProperty({
           object: block,
-          propertyName: p,
+          propertyName,
           property,
-          get value() {
-            return block[p];
-          },
-          set value(value) {
-            block[p] = value;
-            self.studioState_.animChanged();
-          },
-          get editable() {
-            return true;
-          }
+          onChange: () => this.studioState_.animChanged()
         }));
       });
     }
@@ -127,7 +134,7 @@ class PropertyInspectorController {
   rebuildAnimationsSelection_() {
     this.selectionInfo = {
       type: 'animations',
-      properties: []
+      inspectedProperties: []
     };
 
     if (this.studioState_.selection.length > 1) {
@@ -139,29 +146,26 @@ class PropertyInspectorController {
     } else {
       let animation = this.studioState_.firstSelectedItem;
       this.selectionInfo.icon = 'movie';
-      this.selectionInfo.description = animation.id;
-      Object.keys(animation.inspectableProperties).forEach(p => {
-        let self = this;
-        this.selectionInfo.properties.push(new PropertyModelHelper({
+      Object.defineProperty(this.selectionInfo, 'description', {
+        get: () => animation.id
+      });
+      Object.keys(animation.inspectableProperties).forEach(propertyName => {
+        let property = animation.inspectableProperties[propertyName];
+        this.selectionInfo.inspectedProperties.push(new InspectedProperty({
           object: animation,
-          propertyName: p,
-          property: animation.inspectableProperties[p],
-          get value() {
-            return animation[p];
-          },
-          set value(value) {
-            animation[p] = value;
-            self.studioState_.animChanged();
-          },
-          get editable() {
-            return true;
-          }
+          propertyName,
+          transformEditedValue: (property instanceof IdProperty)
+              ? enteredValue => this.studioState_
+                    .getUniqueAnimationId(IdProperty.sanitize(enteredValue), animation)
+              : null,
+          property,
+          onChange: () => this.studioState_.animChanged()
         }));
       });
     }
   }
 
-  onValueEditorKeyDown(event, prop) {
+  onValueEditorKeyDown(event, inspectedProperty) {
     switch (event.keyCode) {
       // up/down buttons
       case 38:
@@ -171,7 +175,7 @@ class PropertyInspectorController {
         if (!isNaN(numberValue)) {
           let delta = (event.keyCode == 38) ? 1 : -1;
 
-          if (prop.type == 'fraction') {
+          if (inspectedProperty.property instanceof FractionProperty) {
             delta *= .1;
           }
 
@@ -182,7 +186,8 @@ class PropertyInspectorController {
           }
 
           numberValue += delta;
-          prop.value = Number(numberValue.toFixed(6));
+          inspectedProperty.property.trySetEditedValue(
+              inspectedProperty, 'value', Number(numberValue.toFixed(6)));
           setTimeout(() => $target.get(0).select(), 0);
           return true;
         }
@@ -192,54 +197,57 @@ class PropertyInspectorController {
 }
 
 
-class PropertyModelHelper {
-  constructor(opts) {
-    this.opts_ = opts;
-    this.object_ = opts.object;
-    this.propertyName_ = opts.propertyName;
-    this.property_ = opts.property;
+class InspectedProperty {
+  constructor(delegate) {
+    this.delegate = delegate;
+    this.object = delegate.object;
+    this.propertyName = delegate.propertyName;
+    this.property = delegate.property;
     this.enteredValue_ = null;
   }
 
-  get name() {
-    return this.propertyName_;
-  }
-
-  get property() {
-    return this.property_;
-  }
-
-  get typeName() {
-    return this.property_.constructor.name;
-  }
-
   get value() {
-    return this.property_.getValueForObject(this.opts_, 'value');
+    return 'value' in this.delegate
+        ? this.delegate.value
+        : this.object[this.propertyName];
   }
 
-  set value(enteredValue) {
-    this.property_.setValueOnObject(this.opts_, 'value', enteredValue);
-  }
-
-  get editable() {
-    return this.opts_.editable;
-  }
-
-  get displayValue() {
-    return (this.enteredValue_ !== null)
-        ? this.enteredValue_
-        : this.property_.displayValueForValue(this.value);
-  }
-
-  set displayValue(enteredValue) {
-    this.enteredValue_ = enteredValue;
-    let value = this.property_.parse(enteredValue);
-    if (value !== null) {
-      this.value = value;
+  set value(value) {
+    ('value' in this.delegate)
+        ? (this.delegate.value = value)
+        : (this.object[this.propertyName] = value);
+    if (this.delegate.onChange) {
+      this.delegate.onChange();
     }
   }
 
-  destroyEnteredValue() {
+  get typeName() {
+    return this.property.constructor.name;
+  }
+
+  get editable() {
+    return 'editable' in this.delegate ? this.delegate.editable : true;
+  }
+
+  get displayValue() {
+    return this.property.displayValueForValue(this.value);
+  }
+
+  get editableValue() {
+    return (this.enteredValue_ !== null)
+        ? this.enteredValue_
+        : this.property.getEditableValue(this, 'value');
+  }
+
+  set editableValue(enteredValue) {
+    this.enteredValue_ = enteredValue;
+    if (this.delegate.transformEditedValue) {
+      enteredValue = this.delegate.transformEditedValue(enteredValue);
+    }
+    this.property.trySetEditedValue(this, 'value', enteredValue);
+  }
+
+  resolveEnteredValue() {
     this.enteredValue_ = null;
   }
 }

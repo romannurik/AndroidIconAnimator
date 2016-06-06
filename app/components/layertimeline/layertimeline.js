@@ -73,6 +73,10 @@ class LayerTimelineController {
     return this.studioState_.activeAnimation;
   }
 
+  /**
+   * Rebuilds internal layer/timeline related data structures (_slt) about the current
+   * artwork and animations.
+   */
   rebuild_() {
     if (!this.artwork || !this.animations) {
       return;
@@ -107,6 +111,10 @@ class LayerTimelineController {
     });
   }
 
+  /**
+   * Handles scrubbing (dragging) over the timeline header area, which should
+   * change the time cursor.
+   */
   onTimelineHeaderScrub(animation, time) {
     this.studioState_.deselectItem(this.studioState_.activeAnimation);
     this.studioState_.activeAnimation = animation;
@@ -114,6 +122,10 @@ class LayerTimelineController {
     this.studioState_.playing = false;
   }
 
+  /**
+   * Called when adding a timeline block from the list of available properties for
+   * a given layer.
+   */
   onAddTimelineBlock($event, layer, propertyName, animation) {
     let valueAtCurrentTime = this.studioState_.animationRenderer
         .getLayerPropertyValue(layer.id, propertyName);
@@ -128,6 +140,9 @@ class LayerTimelineController {
     this.studioState_.animChanged();
   }
 
+  /**
+   * Handles clicks on an animation in the list of current animations.
+   */
   onAnimationMouseDown($event, animation) {
     if (this.studioState_.activeAnimation !== animation) {
       this.studioState_.deselectItem(this.studioState_.activeAnimation);
@@ -135,19 +150,30 @@ class LayerTimelineController {
     this.studioState_.activeAnimation = animation;
   }
 
+  /**
+   * Called in response to adding a layer of a given type to the artwork.
+   */
   onAddLayer($event, type) {
     let cls = (type == 'group')
         ? LayerGroup
         : ((type == 'mask') ? MaskLayer : Layer);
     let newLayer = new cls({
-      id: this.studioState_.makeNewLayerId(type)
+      id: this.studioState_.getUniqueLayerId(type)
     });
+    // TODO: add just below the selected layer
     newLayer.parent = this.studioState_.artwork; // TODO: this should be automatic
     this.studioState_.artwork.layers.push(newLayer);
     this.studioState_.artworkChanged();
   }
 
+  /**
+   * Handles clicks on a layer, either selecting or deselecting it.
+   */
   onLayerClick($event, layer) {
+    if (this.suppressClick_) {
+      return;
+    }
+
     if ($event.metaKey || $event.shiftKey) {
       this.studioState_.toggleSelected(layer);
     } else {
@@ -155,9 +181,12 @@ class LayerTimelineController {
     }
   }
 
+  /**
+   * Creates a new empty animation to the list of animations.
+   */
   onAddNewAnimation($event) {
     let newAnim = new Animation({
-      id: this.studioState_.makeNewAnimationId(),
+      id: this.studioState_.getUniqueAnimationId(),
       blocks: [],
       duration: 300
     });
@@ -167,10 +196,16 @@ class LayerTimelineController {
     this.studioState_.animChanged();
   }
 
+  /**
+   * Selects the given animation, for inspection w/ the property inspector.
+   */
   onAnimationHeaderClick($event, anim) {
     this.studioState_.selection = [anim];
   }
 
+  /**
+   * Handles clicks on a timeline block (either selecting or deselecting it).
+   */
   onTimelineBlockClick($event, block, layer) {
     if (this.suppressClick_) {
       return;
@@ -183,6 +218,10 @@ class LayerTimelineController {
     }
   }
 
+  /**
+   * Handles a variety of drag behaviors for timeline blocks, including movement
+   * and scaling.
+   */
   onTimelineBlockMouseDown(event, dragBlock, animation, layer) {
     let $target = $(event.target);
 
@@ -306,6 +345,159 @@ class LayerTimelineController {
           .off('mousemove', mouseMoveHandler_)
           .off('mouseup', mouseUpHandler_);
       if (dragging) {
+        dragging = false;
+        setTimeout(() => this.suppressClick_ = false, 0);
+        event.stopPropagation();
+        event.preventDefault();
+        return false;
+      }
+    };
+
+    $(window)
+          .on('mousemove', mouseMoveHandler_)
+          .on('mouseup', mouseUpHandler_);
+  }
+
+  /**
+   * Handles drag and drop for layers, allowing re-ordering and re-parenting layers in
+   * the artwork.
+   */
+  onLayerMouseDown(event, dragLayer) {
+    let $target = $(event.target);
+    let $layersList = $target.parents('.slt-layers-list');
+    let $scroller = $target.parents('.slt-layers-list-scroller');
+
+    let downX = event.clientX;
+    let downY = event.clientY;
+    let dragging = false;
+
+    let orderedLayerInfos = [];
+    let $dragIndicator;
+    let scrollerRect;
+
+    let targetLayerInfo = null;
+    let targetEdge;
+
+    let EDGES = {top:true, bottom:true};
+
+    let prepareToDrag_ = () => {
+      // build up a list of all layers ordered by Y position
+      orderedLayerInfos = [];
+      scrollerRect = $scroller.get(0).getBoundingClientRect();
+      let scrollTop = $scroller.scrollTop();
+      $layersList.find('.slt-layer-container').each((i, element) => {
+        let rect = element.getBoundingClientRect();
+        rect = {
+          left: rect.left,
+          top: rect.top + scrollTop - scrollerRect.top,
+          bottom: rect.bottom + scrollTop - scrollerRect.top
+        };
+        orderedLayerInfos.push({
+          layer: this.studioState_.artwork.findLayerById($(element).data('layer-id')),
+          localRect: rect,
+          element,
+        });
+      });
+
+      orderedLayerInfos.sort((a, b) => a.localRect.top - b.localRect.top);
+
+      $dragIndicator = $('<div>')
+          .addClass('slt-layers-list-drag-indicator')
+          .appendTo($scroller);
+    };
+
+    let mouseMoveHandler_ = event => {
+      if (!dragging &&
+          (Math.abs(event.clientX - downX) > DRAG_SLOP ||
+           Math.abs(event.clientY - downY) > DRAG_SLOP)) {
+        dragging = true;
+        prepareToDrag_();
+        this.suppressClick_ = true;
+      }
+
+      if (dragging) {
+        let localEventY = event.clientY - scrollerRect.top + $scroller.scrollTop();
+
+        // find the target layer and edge (top or bottom)
+        targetLayerInfo = null;
+        let minDistance = Infinity;
+        let minDistanceIndent = Infinity; // tie break to most indented layer
+        for (let i = 0; i < orderedLayerInfos.length; i++) {
+          let layerInfo = orderedLayerInfos[i];
+
+          // skip if mouse to the left of this layer
+          if (event.clientX < layerInfo.localRect.left) {
+            continue;
+          }
+
+          for (let edge in EDGES) {
+            // test distance to top edge
+            let distance = Math.abs(localEventY - layerInfo.localRect[edge]);
+            let indent = layerInfo.localRect.left;
+            if (distance <= minDistance) {
+              if (distance != minDistance || indent > minDistanceIndent) {
+                minDistance = distance;
+                minDistanceIndent = indent;
+                targetLayerInfo = layerInfo;
+                targetEdge = edge;
+              }
+            }
+          }
+        }
+
+        // disallow dragging a layer into itself or its children
+        if (targetLayerInfo) {
+          let layer = targetLayerInfo.layer;
+          while (layer) {
+            if (layer == dragLayer) {
+              targetLayerInfo = null;
+              break;
+            }
+
+            layer = layer.parent;
+          }
+        }
+
+        if (targetLayerInfo && targetEdge == 'bottom'
+              && targetLayerInfo.layer.nextSibling == dragLayer) {
+          targetLayerInfo = null;
+        }
+
+        if (targetLayerInfo) {
+          $dragIndicator.css('left', targetLayerInfo.localRect.left);
+          $dragIndicator.css('top', targetLayerInfo.localRect[targetEdge]);
+        }
+
+        $dragIndicator.toggle(!!targetLayerInfo);
+      }
+    };
+
+    let mouseUpHandler_ = event => {
+      $(window)
+          .off('mousemove', mouseMoveHandler_)
+          .off('mouseup', mouseUpHandler_);
+      if (dragging) {
+        if ($dragIndicator) {
+          $dragIndicator.remove();
+        }
+
+        if (targetLayerInfo) {
+          this.scope_.$apply(() => {
+            let newParent = targetLayerInfo.layer.parent;
+            if (newParent) {
+              dragLayer.remove();
+              let index = newParent.layers.indexOf(targetLayerInfo.layer);
+              if (index >= 0) {
+                index += (targetEdge == 'top') ? 0 : 1;
+                newParent.layers.splice(index, 0, dragLayer);
+                dragLayer.parent = newParent;
+              }
+            }
+
+            this.studioState_.artworkChanged();
+          });
+        }
+
         dragging = false;
         setTimeout(() => this.suppressClick_ = false, 0);
         event.stopPropagation();
