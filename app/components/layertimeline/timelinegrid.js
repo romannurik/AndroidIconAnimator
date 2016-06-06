@@ -1,3 +1,6 @@
+import {DragHelper} from 'avdstudio/draghelper';
+
+
 const TIMELINE_ANIMATION_PADDING = 20; // 20px
 
 
@@ -29,9 +32,10 @@ angular.module('AVDStudio').directive('studioTimelineGrid', function() {
         scope.redraw_();
       });
 
+      // TODO: switch to drag helper?
+
       if ('onScrub' in attrs) {
-        var scrubbing = false;
-        let handleX_ = x => {
+        let scrubToX_ = x => {
           x -= $canvas.offset().left;
           let time = (x - TIMELINE_ANIMATION_PADDING)
               / ($canvas.width() - TIMELINE_ANIMATION_PADDING * 2)
@@ -40,32 +44,18 @@ angular.module('AVDStudio').directive('studioTimelineGrid', function() {
           scope.onScrub({ animation: scope.animation, time });
         };
 
-        $canvas
-            .on('mousedown', event => {
-              scrubbing = true;
-              handleX_(event.clientX);
-            })
-            .on('mouseup', event => {
-              scrubbing = false;
-            });
-
-        let mouseMoveHandler_ = event => {
-          if (scrubbing) {
-            handleX_(event.clientX);
-          }
-        };
-
-        let mouseUpHandler_ = event => {
-          scrubbing = false;
-        };
-
-        $(window)
-            .on('mousemove', mouseMoveHandler_)
-            .on('mouseup', mouseUpHandler_);
-        scope.$on('$destroy', () =>
-            $(window)
-                .off('mousemove', mouseMoveHandler_)
-                .off('mouseup', mouseUpHandler_));
+        $canvas.on('mousedown', event => {
+          scrubToX_(event.clientX);
+          new DragHelper({
+            downEvent: event,
+            direction: 'horizontal',
+            skipSlopCheck: true,
+            onBeginDrag: event => scrubToX_(event.clientX),
+            onDrag: event => scrubToX_(event.clientX),
+          });
+          event.preventDefault();
+          return false;
+        });
       }
 
       scope.redraw_ = () => {
