@@ -83,6 +83,20 @@ gulp.task('images', function () {
     .pipe($.size({title: 'images'}));
 });
 
+// Generate icon set
+gulp.task('icons', function () {
+  return gulp.src('app/icons/**/*.svg')
+    .pipe($.cache($.imagemin({
+      progressive: true,
+      interlaced: true
+    })))
+    .pipe($.svgNgmaterial({filename: 'icons.svg'}))
+    .pipe(gulp.dest('dist/images'))
+    .pipe(gulp.dest('.tmp/images'))
+    .pipe($.size({title: 'icons'}));
+
+});
+
 // Copy All Files At The Root Level (app) and lib
 gulp.task('copy', function () {
   var s1 = gulp.src([
@@ -142,7 +156,7 @@ gulp.task('clean', function() {
 });
 
 // Watch Files For Changes & Reload
-gulp.task('serve', ['styles', 'scripts', 'bower'], function () {
+gulp.task('serve', ['styles', 'scripts', 'icons', 'bower'], function () {
   browserSync({
     notify: false,
     // Run as an https by uncommenting 'https: true'
@@ -159,6 +173,7 @@ gulp.task('serve', ['styles', 'scripts', 'bower'], function () {
   gulp.watch(['app/**/*.{scss,css}'], ['styles', reload]);
   gulp.watch(['app/**/*.js'], ['scripts', reload]);
   gulp.watch(['app/images/**/*'], reload);
+  gulp.watch(['app/icons/**/*'], ['icons', reload]);
   gulp.watch(['app/assets/**/*'], reload);
   gulp.watch(['app/**/*.html'], reload);
 });
@@ -178,7 +193,7 @@ gulp.task('serve:dist', ['default'], function () {
 // Build Production Files, the Default Task
 gulp.task('default', ['clean'], function (cb) {
   runSequence('styles',
-      ['scripts', 'bower', 'html', 'images', 'lib', 'copy'],
+      ['scripts', 'bower', 'html', 'images', 'icons', 'lib', 'copy'],
       cb);
 });
 

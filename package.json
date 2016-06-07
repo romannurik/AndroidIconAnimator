@@ -23,6 +23,7 @@
     "gulp-sass-glob": "^1.0.6",
     "gulp-size": "^2.1.0",
     "gulp-sourcemaps": "^1.6.0",
+    "gulp-svg-ngmaterial": "^2.0.2",
     "gulp-uglify": "^1.5.3",
     "jquery": "^2.2.0",
     "merge-stream": "^1.0.0",

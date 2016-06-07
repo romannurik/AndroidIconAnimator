@@ -54,8 +54,8 @@ class PropertyInspectorController {
     } else {
       let layer = this.studioState_.firstSelectedItem;
       this.selectionInfo.icon = (layer instanceof LayerGroup)
-          ? 'folder_open'
-          : ((layer instanceof MaskLayer) ? 'photo_size_select_large' : 'layers');
+          ? 'layer_group'
+          : ((layer instanceof MaskLayer) ? 'mask_layer' : 'path_layer');
       Object.defineProperty(this.selectionInfo, 'description', {
         get: () => layer.id
       });
@@ -112,7 +112,7 @@ class PropertyInspectorController {
 
     } else {
       let block = this.studioState_.firstSelectedItem;
-      this.selectionInfo.icon = 'access_time';
+      this.selectionInfo.icon = 'animation_block';
       this.selectionInfo.description = `${block.propertyName}`;
       this.selectionInfo.subDescription = `for '${block.layerId}'`;
       Object.keys(block.inspectableProperties).forEach(propertyName => {
@@ -145,7 +145,7 @@ class PropertyInspectorController {
 
     } else {
       let animation = this.studioState_.firstSelectedItem;
-      this.selectionInfo.icon = 'movie';
+      this.selectionInfo.icon = 'animation';
       Object.defineProperty(this.selectionInfo, 'description', {
         get: () => animation.id
       });
@@ -207,7 +207,7 @@ class InspectedProperty {
   }
 
   get value() {
-    return 'value' in this.delegate
+    return ('value' in this.delegate)
         ? this.delegate.value
         : this.object[this.propertyName];
   }

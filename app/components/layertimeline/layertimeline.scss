@@ -45,12 +45,14 @@
       padding: 2px;
       height: 20px;
       width: 20px;
-      line-height: 20px;
+      line-height: 16px;
       min-height: 20px;
     }
 
-    .material-icons {
-      font-size: 16px;
+    md-icon {
+      vertical-align: top;
+      width: 16px;
+      height: 16px;
     }
   }
 
@@ -113,30 +115,22 @@
       &.is-selected {
         background-color: $colorSelection;
         box-shadow: none;
-        color: #fff;
+
+        &,
+        & md-icon {
+          color: #fff;
+        }
       }
 
-      &::before {
-        @include material-icons;
-        font-size: 16px;
+      md-icon {
+        width: 16px;
+        height: 16px;
         margin-right: 4px;
       }
     }
 
     .slt-layer-type-group {
       font-weight: 500;
-    }
-
-    .slt-layer::before {
-      content: 'layers';
-    }
-
-    .slt-layer-type-mask::before {
-      content: 'photo_size_select_large';
-    }
-
-    .slt-layer-type-group::before {
-      content: 'folder_open';
     }
 
     .slt-properties {
@@ -157,6 +151,8 @@
     }
 
     .slt-header {
+      padding: 0;
+
       md-menu {
         padding: 0;
 
@@ -234,22 +230,40 @@
       padding-right: $timelineAnimationPadding;
     }
 
+    .slt-timeline-animation-new-container {
+      flex: 0 0 auto;
+      width: 128px;
+      margin: 24px;
+    }
+
     .slt-timeline-animation-new {
       background-color: transparent;
       border: 0;
+      cursor: pointer;
+      outline: 0;
 
-      flex: 0 0 auto;
-      width: 128px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 24px;
+      md-icon {
+        content: 'add';
+        width: 24px;
+        height: 24px;
+        box-sizing: content-box;
+        padding: 12px;
+        border-radius: 50%;
+        background-color: #fff;
+        color: $colorPrimary600;
+        box-shadow: material-shadow(1);
+        margin-bottom: 8px;
+        transition:
+            background-color $animTimeFast ease,
+            box-shadow $animTimeFast ease;
+      }
+
+      &:focus md-icon {
+        background-color: material-color('grey', '100');
+        box-shadow: material-shadow(4);
+      }
 
       span {
-        cursor: pointer;
-        outline: 0;
-
         font-size: 12px;
         line-height: 16px;
         font-weight: 500;
@@ -257,26 +271,6 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-
-        &::before {
-          @include material-icons;
-          content: 'add';
-          font-size: 24px;
-          padding: 12px;
-          border-radius: 50%;
-          background-color: #fff;
-          color: material-color('blue', '500');
-          box-shadow: material-shadow(1);
-          margin-bottom: 8px;
-          transition:
-              background-color $animTimeFast ease,
-              box-shadow $animTimeFast ease;
-        }
-
-        &:focus::before {
-          background-color: material-color('grey', '100');
-          box-shadow: material-shadow(4);
-        }
       }
     }
 
@@ -397,6 +391,4 @@
     box-shadow: material-shadow(2);
     z-index: 2;
   }
-
-
 }

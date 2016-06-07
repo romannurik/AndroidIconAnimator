@@ -88,6 +88,9 @@ class LayerTimelineController {
       _slt.layerType = (layer instanceof LayerGroup)
           ? 'group'
           : ((layer instanceof MaskLayer) ? 'mask' : 'layer');
+      _slt.icon = (layer instanceof LayerGroup)
+          ? 'layer_group'
+          : ((layer instanceof MaskLayer) ? 'mask_layer' : 'path_layer');
       _slt.blocksByProperty = {};
       _slt.availableProperties = layer.animatableProperties;
       layer._slt = _slt;

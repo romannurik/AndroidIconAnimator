@@ -9,14 +9,14 @@
         <md-button
             class="md-icon-button"
             ng-click="$mdOpenMenu($event)">
-          <i class="material-icons">add</i>
+          <md-icon md-svg-icon="avdstudio:add_layer"></md-icon>
         </md-button>
         <md-menu-content>
           <md-menu-item><md-button ng-click="ctrl.onAddLayer($event, 'layer')">
-            Layer
+            Path
           </md-button></md-menu-item>
           <md-menu-item><md-button ng-click="ctrl.onAddLayer($event, 'mask')">
-            Clip layer
+            Clip path
           </md-button></md-menu-item>
           <md-menu-item><md-button ng-click="ctrl.onAddLayer($event, 'group')">
             Layer group
@@ -42,12 +42,13 @@
           ng-click="ctrl.onLayerClick($event, layer)"
           ng-mousedown="ctrl.onLayerMouseDown($event, layer)"
           layout="row">
+        <md-icon md-svg-icon="avdstudio:{{ layer._slt.icon }}"></md-icon>
         <span flex class="slt-layer-id">{{ layer.id }}</span>
         <md-menu class="slt-layer-add-property-menu" ng-if="ctrl.activeAnimation">
           <md-button
               class="md-icon-button"
               ng-click="$mdOpenMenu($event)">
-            <i class="material-icons">add_circle_outline</i>
+            <md-icon md-svg-icon="avdstudio:animation_block"></md-icon>
           </md-button>
           <md-menu-content>
             <md-menu-item ng-repeat="(propertyName, __) in layer._slt.availableProperties">
@@ -140,8 +141,18 @@
     </div>
 
     <div layout="row" layout-align="start stretch">
-      <div class="slt-timeline-animation-new">
-        <span ng-click="ctrl.onAddNewAnimation()">New animation</span>
+      <div
+          class="slt-timeline-animation-new-container"
+          layout="column"
+          layout-align="center center">
+        <div
+            ng-click="ctrl.onAddNewAnimation()"
+            class="slt-timeline-animation-new"
+            layout="column"
+            layout-align="center center">
+          <md-icon md-svg-icon="avdstudio:add_animation"></md-icon>
+          <span>New animation</span>
+        </div>
       </div>
     </div>
   </div>

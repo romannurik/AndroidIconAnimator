@@ -8,7 +8,9 @@
       flex
       layout="column">
     <div class="spi-header" flex="none">
-      <i class="material-icons spi-selection-icon">{{ctrl.selectionInfo.icon}}</i>
+      <md-icon
+          class="spi-selection-icon"
+          md-svg-icon="avdstudio:{{ctrl.selectionInfo.icon}}"></md-icon>
       <div class="spi-selection-description-container" layout="column" flex>
         <span class="spi-selection-description">{{ctrl.selectionDescription}}</span>
         <span class="spi-selection-sub-description">{{ctrl.selectionInfo.subDescription}}</span>
