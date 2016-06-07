@@ -270,6 +270,22 @@ class StudioStateService {
     $scope.$on('$destroy', () => watcher());
     return watcher;
   }
+
+  exportJSON() {
+    let json = JSON.stringify({
+      artwork: this.artwork.toJSON(),
+      animations: this.animations.map(anim => anim.toJSON())
+    }, null, 2);
+    let anchor = $('<a>').hide().appendTo(document.body);
+    let blob = new Blob([json], {type: 'octet/stream'});
+    let url = window.URL.createObjectURL(blob);
+    anchor.attr({
+      href: url,
+      download: 'thing.json'
+    });
+    anchor.get(0).click();
+    window.URL.revokeObjectURL(url);
+  }
 }
 
 

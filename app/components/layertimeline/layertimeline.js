@@ -223,6 +223,13 @@ class LayerTimelineController {
   }
 
   /**
+   * Handles export to JSON format.
+   */
+  onExportJSON() {
+    this.studioState_.exportJSON();
+  }
+
+  /**
    * Handles a variety of drag behaviors for timeline blocks, including movement
    * and scaling.
    */

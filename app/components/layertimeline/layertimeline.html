@@ -4,7 +4,26 @@
   <div class="slt-layers" layout="column">
     <studio-splitter edge="right" min="100" persist-id="layer-list"></studio-splitter>
 
-    <div class="slt-header" layout="row" layout-align="end">
+    <div class="slt-header" layout="row" layout-align="start center">
+      <md-menu md-offset="0 40">
+        <button class="slt-layers-menu-group-button" ng-click="$mdOpenMenu()">
+          Export
+        </button>
+        <md-menu-content>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onExportJSON($event)">
+              Export JSON
+            </md-button>
+          </md-menu-item>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onExportAVDs($event)">
+              Export Animated Vector Drawable(s)
+            </md-button>
+          </md-menu-item>
+        </md-menu-content>
+      </md-menu>
+      </md-toolbar>
+      <div flex></div>
       <md-menu class="slt-add-layer-menu">
         <md-button
             class="md-icon-button"

@@ -151,13 +151,46 @@
     }
 
     .slt-header {
-      padding: 0;
+      padding: 0 0 0 4px;
+
+      .slt-layers-menu-group-button {
+        position: relative;
+        border: 0;
+        height: $headerHeight;
+        font-size: 12px;
+        font-weight: 500;
+        color: $colorBlackTextSecondary;
+        line-height: $headerHeight;
+        padding: 0 24px 0 8px;
+        margin: 0;
+        outline: 0;
+        background-color: transparent;
+
+        &::after {
+          @include material-icons;
+          content: 'arrow_drop_down';
+          position: absolute;
+          font-size: 24px;
+          right: 0;
+          top: 50%;
+          transform: translate(0, -50%);
+          color: $colorBlackTextDisabled;
+        }
+
+        &:focus {
+          background-color: rgba(#000, .08);
+        }
+      }
 
       md-menu {
         padding: 0;
 
         .md-icon-button {
           margin: 0;
+        }
+
+        md-icon {
+          vertical-align: top;
         }
       }
     }
@@ -237,8 +270,6 @@
     }
 
     .slt-timeline-animation-new {
-      background-color: transparent;
-      border: 0;
       cursor: pointer;
       outline: 0;
 
