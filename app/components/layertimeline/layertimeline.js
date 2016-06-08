@@ -88,9 +88,6 @@ class LayerTimelineController {
       _slt.layerType = (layer instanceof LayerGroup)
           ? 'group'
           : ((layer instanceof MaskLayer) ? 'mask' : 'layer');
-      _slt.icon = (layer instanceof LayerGroup)
-          ? 'layer_group'
-          : ((layer instanceof MaskLayer) ? 'mask_layer' : 'path_layer');
       _slt.blocksByProperty = {};
       _slt.availableProperties = layer.animatableProperties;
       layer._slt = _slt;
@@ -160,10 +157,12 @@ class LayerTimelineController {
   onAddLayer($event, type) {
     let cls = (type == 'group')
         ? LayerGroup
-        : ((type == 'mask') ? MaskLayer : Layer);
-    let newLayer = new cls({
-      id: this.studioState_.getUniqueLayerId(type)
-    });
+        : ((type == 'mask')
+            ? MaskLayer
+            : Layer);
+    let newLayer = new cls();
+    newLayer.id = this.studioState_.getUniqueLayerId(null, newLayer);
+
     // TODO: add just below the selected layer
     newLayer.parent = this.studioState_.artwork; // TODO: this should be automatic
     this.studioState_.artwork.layers.push(newLayer);
@@ -380,6 +379,11 @@ class LayerTimelineController {
         scrollerRect = $scroller.get(0).getBoundingClientRect();
         let scrollTop = $scroller.scrollTop();
         $layersList.find('.slt-layer-container').each((i, element) => {
+          if (!$(element).data('layer-id')) {
+            // the artwork root layer doesn't have an ID set
+            return;
+          }
+
           let rect = element.getBoundingClientRect();
           rect = {
             left: rect.left,

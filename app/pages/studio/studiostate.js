@@ -11,6 +11,21 @@ class StudioStateService {
     this.rebuildRenderer_();
   }
 
+  load(obj) {
+    this.artwork_ = obj.artwork;
+    this.animations_ = obj.animations || [];
+    this.activeTime_ = 0;
+
+    this.activeAnimation_ = this.animations_.length ? this.animations_[0] : null;
+
+    this.rebuildRenderer_();
+
+    this.artworkChanged();
+    this.animChanged();
+
+    this.dirty_ = false;
+  }
+
   get playbackSpeed() {
     return this.playbackSpeed_ || 1;
   }
@@ -50,13 +65,23 @@ class StudioStateService {
   }
 
   animChanged() {
+    this.dirty_ = true;
     this.rebuildRenderer_();
     this.broadcastChanges_({animations: true});
   }
 
   artworkChanged() {
+    this.dirty_ = true;
     this.rebuildRenderer_();
     this.broadcastChanges_({artwork: true});
+  }
+
+  get dirty() {
+    return !!this.dirty_;
+  }
+
+  set dirty(dirty) {
+    this.dirty_ = dirty;
   }
 
   get animationRenderer() {
@@ -93,7 +118,9 @@ class StudioStateService {
 
   set activeTime(activeTime) {
     this.activeTime_ = activeTime;
-    this.animationRenderer_.setAnimationTime(activeTime);
+    if (this.animationRenderer_) {
+      this.animationRenderer_.setAnimationTime(activeTime);
+    }
     this.broadcastChanges_({activeTime: true});
   }
 
@@ -244,7 +271,7 @@ class StudioStateService {
   }
 
   getUniqueLayerId(prefix, targetLayer = null) {
-    prefix = prefix || 'layer';
+    prefix = prefix || (targetLayer ? targetLayer.typeIdPrefix : 'layer');
 
     let n = 0;
     let id_ = () => prefix + (n ? `_${n}` : '');
@@ -281,10 +308,11 @@ class StudioStateService {
     let url = window.URL.createObjectURL(blob);
     anchor.attr({
       href: url,
-      download: 'thing.json'
+      download: `${this.artwork.id}.json`
     });
     anchor.get(0).click();
     window.URL.revokeObjectURL(url);
+    this.dirty_ = false;
   }
 }
 

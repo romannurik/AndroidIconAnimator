@@ -27,7 +27,8 @@
       <md-menu class="slt-add-layer-menu">
         <md-button
             class="md-icon-button"
-            ng-click="$mdOpenMenu($event)">
+            ng-click="$mdOpenMenu($event)"
+            aria-label="Add layer or group">
           <md-icon md-svg-icon="avdstudio:add_layer"></md-icon>
         </md-button>
         <md-menu-content>
@@ -44,13 +45,15 @@
       </md-menu>
     </div>
 
-    <div class="slt-layers-list-scroller" scroll-group="timeline">
+    <div class="slt-layers-list-scroller" flex scroll-group="timeline">
       <div class="slt-layers-list">
         <div class="slt-layer-container"
-            data-layer-id="{{layer.id}}"
-            ng-repeat="layer in ctrl.artwork.layers"
+            ng-repeat="layer in [ctrl.artwork]"
             ng-include="'layerListItem'"
             layout="column"></div>
+      </div>
+      <div class="slt-layers-empty" ng-if="!ctrl.artwork.layers.length">
+        To get started, drag + drop an SVG or JSON file, or create a new layer above
       </div>
     </div>
 
@@ -61,12 +64,15 @@
           ng-click="ctrl.onLayerClick($event, layer)"
           ng-mousedown="ctrl.onLayerMouseDown($event, layer)"
           layout="row">
-        <md-icon md-svg-icon="avdstudio:{{ layer._slt.icon }}"></md-icon>
+        <md-icon md-svg-icon="avdstudio:{{ layer.typeIcon }}"></md-icon>
         <span flex class="slt-layer-id">{{ layer.id }}</span>
-        <md-menu class="slt-layer-add-property-menu" ng-if="ctrl.activeAnimation">
+        <md-menu
+            class="slt-layer-add-property-menu"
+            ng-if="ctrl.activeAnimation && layer._slt.availableProperties">
           <md-button
               class="md-icon-button"
-              ng-click="$mdOpenMenu($event)">
+              ng-click="$mdOpenMenu($event)"
+              aria-label="Add property animation">
             <md-icon md-svg-icon="avdstudio:animation_block"></md-icon>
           </md-button>
           <md-menu-content>
@@ -128,7 +134,7 @@
 
       <div class="slt-timeline-animation-scroller" scroll-group="timeline">
         <div class="slt-timeline-animation-rows">
-          <div ng-repeat="layer in ctrl.artwork.layers" ng-include="'timelineRow'"></div>
+          <div ng-repeat="layer in [ctrl.artwork]" ng-include="'timelineRow'"></div>
         </div>
       </div>
 

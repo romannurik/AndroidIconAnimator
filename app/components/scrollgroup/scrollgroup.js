@@ -22,9 +22,6 @@ class ScrollGroupController {
 angular.module('AVDStudio').directive('scrollGroup', () => {
   return {
     restrict: 'A',
-    scope: {},
-    bindToController: true,
-    controller: ScrollGroupController,
-    controllerAs: 'ctrl'
+    controller: ScrollGroupController
   };
 });

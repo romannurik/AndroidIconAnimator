@@ -53,9 +53,7 @@ class PropertyInspectorController {
 
     } else {
       let layer = this.studioState_.firstSelectedItem;
-      this.selectionInfo.icon = (layer instanceof LayerGroup)
-          ? 'layer_group'
-          : ((layer instanceof MaskLayer) ? 'mask_layer' : 'path_layer');
+      this.selectionInfo.icon = layer.typeIcon;
       Object.defineProperty(this.selectionInfo, 'description', {
         get: () => layer.id
       });
@@ -67,7 +65,7 @@ class PropertyInspectorController {
           propertyName,
           property,
           get value() {
-            if (!self.studioState_.animationRenderer) {
+            if (!self.studioState_.animationRenderer || layer === self.studioState_.artwork) {
               return layer[propertyName];
             }
 
@@ -170,6 +168,7 @@ class PropertyInspectorController {
       // up/down buttons
       case 38:
       case 40:
+        inspectedProperty.resolveEnteredValue();
         let $target = $(event.target);
         let numberValue = Number($target.val());
         if (!isNaN(numberValue)) {

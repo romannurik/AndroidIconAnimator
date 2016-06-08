@@ -1,0 +1,137 @@
+<html>
+<body>
+
+
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.8.1 (29687) - http://www.bohemiancoding.com/sketch -->
+    <title>Artboard 1</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill-rule="evenodd" stroke-linecap="square">
+      <line x1="20" y1="100" x2="100" y2="20" stroke="black" stroke-width="2" />
+      <rect fill="red" fill-opacity=".2" x="10" y="10" width="100" height="100" />
+      <polygon points="60,20 100,40 100,80 60,100 20,80 20,40" />
+      <ellipse fill="green" fill-opacity=".2" cx="60" cy="120" rx="50" ry="25" />
+      <circle fill="blue" fill-opacity=".2" cx="60" cy="60" r="50" />
+      <path d="M 60,95 A 50 25 0 1 0 60,145 A 50 25 0 1 0 60,95 Z" fill="purple" />
+      <polyline fill="none" stroke="black" points="20,100 40,60 70,80 100,20" />
+
+      <g id="Artboard-1" stroke="#000000" stroke-width="2">
+        <g id="arrow" transform="translate(5.000000, 5.000000)">
+          <path d="M7,0.409999847 L13.59,7" id="bottom"></path>
+          <path d="M7,13.5900002 L13.59,7" id="top"></path>
+          <path d="M0,7 L13,7" id="stem"></path>
+        </g>
+        <g id="menu" transform="translate(4.000000, 6.000000)">
+          <path d="M0,1 L16,1" id="top"></path>
+          <path d="M0,11 L16,11" id="bottom"></path>
+          <path d="M0,6 L16,6" id="stem"></path>
+        </g>
+      </g>
+    </g>
+</svg>
+
+  <script>
+    'use strict';
+
+    // let parser = new DOMParser();
+    // let doc = parser.parseFromString(svgString, 'image/svg+xml');
+    let doc = document.querySelector('svg');
+
+    const lengthPx_ = svgLength => {
+      if (svgLength.baseVal) {
+        svgLength = svgLength.baseVal;
+      }
+      svgLength.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX);
+      return svgLength.valueInSpecifiedUnits;
+    };
+
+    const transformPoint_ = (p, transforms) => transforms.reduce((p, transform) => {
+        let m = transform.matrix;
+        return {
+          // dot product
+          x: m.a * p.x + m.c * p.y + m.e * 1,
+          y: m.b * p.x + m.d * p.y + m.f * 1
+        };
+      }, p);
+
+    const contextAttr_ = (node, context, attr) => {
+      if (node.attributes[attr]) {
+        context[attr] = node.attributes[attr].value;
+      }
+    };
+
+    const visitNode_ = (node, context) => {
+      if (node.nodeType == Node.TEXT_NODE || node.nodeType == Node.COMMENT_NODE) {
+        return;
+      }
+
+      // set attributes
+      contextAttr_(node, context, 'stroke');
+      contextAttr_(node, context, 'stroke-width');
+      contextAttr_(node, context, 'stroke-linecap');
+      contextAttr_(node, context, 'stroke-opacity');
+      contextAttr_(node, context, 'fill');
+      contextAttr_(node, context, 'fill-opacity');
+      contextAttr_(node, context, 'stroke');
+
+      // add transforms
+      if (node.transform) {
+        context.transforms = (context.transforms || [])
+            .concat(Array.from(node.transform.baseVal));
+      }
+
+      // console.log(node.id, context);
+      console.log(node);
+      let path;
+      if (node instanceof SVGPathElement) {
+        path = node.attributes.d.value;
+
+      } else if (node instanceof SVGRectElement) {
+        let l = lengthPx_(node.x),
+            t = lengthPx_(node.y),
+            r = l + lengthPx_(node.width),
+            b = t + lengthPx_(node.height);
+        path = `M ${l},${t} ${r},${t} ${r},${b} ${l},${b} Z`;
+
+      } else if (node instanceof SVGLineElement) {
+        let x1 = lengthPx_(node.x1),
+            y1 = lengthPx_(node.y1),
+            x2 = lengthPx_(node.x2),
+            y2 = lengthPx_(node.y2);
+        path = `M ${x1},${y1} ${x2},${y2} Z`;
+
+      } else if (node instanceof SVGPolygonElement || node instanceof SVGPolylineElement) {
+        path = 'M ' + Array.from(node.points).map(pt => pt.x +',' + pt.y).join(' ');
+        if (node instanceof SVGPolygonElement) {
+          path += ' Z';
+        }
+
+      } else if (node instanceof SVGCircleElement) {
+        let cx = lengthPx_(node.cx),
+            cy = lengthPx_(node.cy),
+            r = lengthPx_(node.r);
+        path = `M ${cx},${cy-r} A ${r} ${r} 0 1 0 ${cx},${cy+r} A ${r} ${r} 0 1 0 ${cx},${cy-r} Z`;
+
+      } else if (node instanceof SVGEllipseElement) {
+        let cx = lengthPx_(node.cx),
+            cy = lengthPx_(node.cy),
+            rx = lengthPx_(node.rx),
+            ry = lengthPx_(node.ry);
+        path = `M ${cx},${cy-ry} A ${rx} ${ry} 0 1 0 ${cx},${cy+ry} ` +
+               `A ${rx} ${ry} 0 1 0 ${cx},${cy-ry} Z`;
+      }
+
+      console.log(path);
+
+      // visit children
+      if (node.childNodes.length) {
+        node.childNodes.forEach(child => visitNode_(child, Object.assign({}, context)));
+      }
+    };
+
+    visitNode_(doc, {});
+  </script>
+
+</body>
+</html>

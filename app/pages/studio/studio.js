@@ -1,9 +1,10 @@
-import routes from 'avdstudio/routes.js';
-import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'avdstudio/model.js';
+import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'avdstudio/model';
+import {SvgLoader} from 'avdstudio/svgloader';
 
-const TEST_DATA = require('avdstudio/test_searchtoback.js');
+const TEST_DATA = require('avdstudio/test_searchtoback.json');
 
 const BLANK_ARTWORK = {
+  id: new Artwork().typeIdPrefix,
   width: 24,
   height: 24,
   layers: [
@@ -18,21 +19,26 @@ class StudioCtrl {
   constructor($scope, $mdToast, StudioStateService) {
     this.scope_ = $scope;
     this.mdToast_ = $mdToast;
-    this.loaded = true;
 
     this.studioState_ = StudioStateService;
 
-    // this.studioState_.artwork = new Artwork(BLANK_ARTWORK);
-    this.studioState_.artwork = new Artwork(TEST_DATA.artwork);
-    this.studioState_.animations = TEST_DATA.animations.map(anim => new Animation(anim));
+    this.studioState_.load({
+      artwork: new Artwork(TEST_DATA.artwork),
+      animations: TEST_DATA.animations.map(anim => new Animation(anim))
+    });
 
-    $(window).on('keydown', event => {
+    this.setupKeyboardAndUnloadEvents_();
+  }
+
+  setupKeyboardAndUnloadEvents_() {
+    let keydownHandler_ = event => {
       // delete/backspace
       if (document.activeElement.matches('input')) {
         return true;
       }
 
       if (event.keyCode == 32) {
+        // spacebar
         this.studioState_.playing = !this.studioState_.playing;
         return false;
 
@@ -48,6 +54,7 @@ class StudioCtrl {
             ? this.ungroupSelectedLayers_()
             : this.groupSelectedLayers_();
         return false;
+
       } else if (event.keyCode == 187
               || event.keyCode == 189
               || event.keyCode == "0".charCodeAt(0)) {
@@ -70,7 +77,48 @@ class StudioCtrl {
         }
         return false;
       }
+    };
+
+    let beforeUnloadHandler_ = event => {
+      if (this.studioState_.dirty) {
+        return 'You\'ve made changes but haven\'t exported. ' +
+               'Are you sure you want to navigate away?';
+      }
+    };
+
+    $(window)
+        .on('keydown', keydownHandler_)
+        .on('beforeunload', beforeUnloadHandler_);
+
+    this.scope_.$on('$destroy', () => {
+      $(window)
+          .off('keydown', keydownHandler_)
+          .off('beforeunload', beforeUnloadHandler_);
     });
+  }
+
+  onDropFile(fileInfo) {
+    if (this.studioState_.dirty) {
+      if (!window.confirm('You\'ve made changes but haven\'t exported. ' +
+                         'Really load the dropped file?')) {
+        return;
+      }
+    }
+
+    if (fileInfo.type == 'application/json') {
+      let jsonObj = JSON.parse(fileInfo.textContent);
+      this.studioState_.load({
+        artwork: new Artwork(jsonObj.artwork),
+        animations: jsonObj.animations.map(anim => new Animation(anim))
+      });
+
+    } else if (fileInfo.type == 'image/svg+xml') {
+      let artwork = SvgLoader.loadArtworkFromSvgString(fileInfo.textContent);
+      this.studioState_.load({
+        artwork,
+        animations: []
+      });
+    }
   }
 
   deleteSelectedLayers_() {
@@ -132,8 +180,13 @@ class StudioCtrl {
       if (shouldGroup) {
         // group selected layers
 
-        // remove any layers that are descendants of other selected layers
+        // remove any layers that are descendants of other selected layers,
+        // and remove the artwork itself if selected
         tempSelLayers = tempSelLayers.filter(layer => {
+          if (layer instanceof Artwork) {
+            return false;
+          }
+
           let p = layer.parent;
           while (p) {
             if (tempSelLayers.indexOf(p) >= 0) {
@@ -143,6 +196,10 @@ class StudioCtrl {
           }
           return true;
         });
+
+        if (!tempSelLayers.length) {
+          return;
+        }
 
         // find destination parent and insertion point
         let firstSelectedLayerParent = tempSelLayers[0].parent;
@@ -168,7 +225,7 @@ class StudioCtrl {
         // ungroup selected layer groups
         let newSelectedLayers = [];
         tempSelLayers
-            .filter(layer => layer instanceof LayerGroup)
+            .filter(layer => layer instanceof LayerGroup && !(layer instanceof Artwork))
             .forEach(layerGroup => {
               // move children into parent
               let parent = layerGroup.parent;

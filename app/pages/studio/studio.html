@@ -1,14 +1,10 @@
 <main
     class="page-studio"
     ng-controller="StudioCtrl as studioCtrl"
+    file-drop-target="studioCtrl.onDropFile(fileInfo)"
     layout="column">
 
-  <ng-include src="'templates/loading.html'" ng-if="!studioCtrl.loaded"></ng-include>
-
-  <div
-      flex
-      ng-if="studioCtrl.loaded"
-      layout="column">
+  <div flex layout="column">
     <div flex layout="row">
       <studio-canvas flex></studio-canvas>
       <studio-property-inspector></studio-property-inspector>

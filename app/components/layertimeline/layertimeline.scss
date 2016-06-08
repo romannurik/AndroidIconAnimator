@@ -217,6 +217,17 @@
     }
   }
 
+  // empty/placeholder pattern
+
+  .slt-layers-empty {
+    padding: 32px;
+    text-align: center;
+
+    font-size: 14px;
+    line-height: 20px;
+    color: $colorBlackTextDisabled;
+  }
+
   // timeline
 
   .slt-timeline {
