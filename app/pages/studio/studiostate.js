@@ -1,5 +1,6 @@
 import {Artwork, Animation, AnimationBlock, BaseLayer} from 'avdstudio/model';
 import {AnimationRenderer} from 'avdstudio/animationrenderer';
+import {AvdSerializer} from 'avdstudio/avdserializer';
 
 
 const CHANGES_TAG = '$$studioState::CHANGES';
@@ -68,6 +69,9 @@ class StudioStateService {
     this.dirty_ = true;
     this.rebuildRenderer_();
     this.broadcastChanges_({animations: true});
+
+    // console.clear();
+    // console.log(AvdSerializer.artworkAnimationToAvdXmlString(this.artwork, this.animations[0]));
   }
 
   artworkChanged() {
@@ -298,21 +302,38 @@ class StudioStateService {
     return watcher;
   }
 
-  exportJSON() {
-    let json = JSON.stringify({
-      artwork: this.artwork.toJSON(),
-      animations: this.animations.map(anim => anim.toJSON())
-    }, null, 2);
+  downloadFile_(content, filename) {
     let anchor = $('<a>').hide().appendTo(document.body);
-    let blob = new Blob([json], {type: 'octet/stream'});
+    let blob = new Blob([content], {type: 'octet/stream'});
     let url = window.URL.createObjectURL(blob);
     anchor.attr({
       href: url,
-      download: `${this.artwork.id}.json`
+      download: filename
     });
     anchor.get(0).click();
     window.URL.revokeObjectURL(url);
+  }
+
+  exportJSON() {
+    let jsonStr = JSON.stringify({
+      artwork: this.artwork.toJSON(),
+      animations: this.animations.map(anim => anim.toJSON())
+    }, null, 2);
+    this.downloadFile_(jsonStr, `${this.artwork.id}.json`);
     this.dirty_ = false;
+  }
+
+  exportVectorDrawable() {
+    let xmlStr = AvdSerializer.artworkToVectorDrawableXmlString(this.artwork);
+    this.downloadFile_(xmlStr, `${this.artwork.id}.xml`);
+  }
+
+  exportAVDs() {
+    if (this.animations.length) {
+      let animation = this.animations[0];
+      let xmlStr = AvdSerializer.artworkAnimationToAvdXmlString(this.artwork, animation);
+      this.downloadFile_(xmlStr, `${this.artwork.id}_${animation.id}.xml`);
+    }
   }
 }
 

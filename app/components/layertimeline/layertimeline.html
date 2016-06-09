@@ -16,8 +16,13 @@
             </md-button>
           </md-menu-item>
           <md-menu-item>
-            <md-button ng-click="ctrl.onExportAVDs($event)">
-              Export Animated Vector Drawable(s)
+            <md-button ng-click="ctrl.onExportVectorDrawable($event)">
+              Export vector drawable
+            </md-button>
+          </md-menu-item>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onExportAVDs($event)" ng-disabled="!ctrl.animations.length">
+              Export animated vector drawable(s)
             </md-button>
           </md-menu-item>
         </md-menu-content>
@@ -33,13 +38,13 @@
         </md-button>
         <md-menu-content>
           <md-menu-item><md-button ng-click="ctrl.onAddLayer($event, 'layer')">
-            Path
+            New path
           </md-button></md-menu-item>
           <md-menu-item><md-button ng-click="ctrl.onAddLayer($event, 'mask')">
-            Clip path
+            New clip path
           </md-button></md-menu-item>
           <md-menu-item><md-button ng-click="ctrl.onAddLayer($event, 'group')">
-            Layer group
+            New layer group
           </md-button></md-menu-item>
         </md-menu-content>
       </md-menu>

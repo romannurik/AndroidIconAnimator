@@ -229,6 +229,20 @@ class LayerTimelineController {
   }
 
   /**
+   * Handles export to animated vector drawable format.
+   */
+  onExportAVDs() {
+    this.studioState_.exportAVDs();
+  }
+
+  /**
+   * Handles export to vector drawable format.
+   */
+  onExportVectorDrawable() {
+    this.studioState_.exportVectorDrawable();
+  }
+
+  /**
    * Handles a variety of drag behaviors for timeline blocks, including movement
    * and scaling.
    */

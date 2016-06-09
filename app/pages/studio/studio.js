@@ -1,7 +1,9 @@
 import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'avdstudio/model';
 import {SvgLoader} from 'avdstudio/svgloader';
+import {AvdSerializer} from 'avdstudio/avdserializer';
 
-const TEST_DATA = require('avdstudio/test_searchtoback.json');
+
+//const TEST_DATA = require('avdstudio/test_menutoback.json');
 
 const BLANK_ARTWORK = {
   id: new Artwork().typeIdPrefix,
@@ -23,9 +25,14 @@ class StudioCtrl {
     this.studioState_ = StudioStateService;
 
     this.studioState_.load({
-      artwork: new Artwork(TEST_DATA.artwork),
-      animations: TEST_DATA.animations.map(anim => new Animation(anim))
+      artwork: new Artwork(BLANK_ARTWORK),
+      animations: []
     });
+
+    // this.studioState_.load({
+    //   artwork: new Artwork(TEST_DATA.artwork),
+    //   animations: TEST_DATA.animations.map(anim => new Animation(anim))
+    // });
 
     this.setupKeyboardAndUnloadEvents_();
   }
