@@ -57,6 +57,9 @@ gulp.task('scripts', function () {
       .pipe(source('app.js'))
       .pipe(buffer())
       .pipe(gulp.dest('.tmp/scripts'))
+      .pipe($.uglify({
+        mangle:false
+      }))
       .pipe(gulp.dest('dist/scripts'));
 });
 
@@ -101,6 +104,8 @@ gulp.task('icons', function () {
 gulp.task('copy', function () {
   var s1 = gulp.src([
     'app/*',
+    '!app/icons',
+    '!app/node_modules',
     '!app/*.html',
     'node_modules/apache-server-configs/dist/.htaccess'
   ], {
@@ -136,7 +141,7 @@ gulp.task('styles', function () {
     .pipe($.autoprefixer(AUTOPREFIXER_BROWSERS))
     .pipe(gulp.dest('.tmp/styles'))
     // Concatenate And Minify Styles
-    //.pipe($.if('*.css', $.csso()))
+    .pipe($.if('*.css', $.csso()))
     .pipe(gulp.dest('dist/styles'))
     .pipe($.size({title: 'styles'}));
 });
@@ -144,7 +149,7 @@ gulp.task('styles', function () {
 // Scan Your HTML For Assets & Optimize Them
 gulp.task('html', function () {
   return gulp.src('app/**/*.html')
-    //.pipe($.if('*.html', $.minifyHtml({empty:true})))
+    .pipe($.if('*.html', $.minifyHtml({empty:true})))
     .pipe(gulp.dest('dist'))
     .pipe($.size({title: 'html'}));
 });

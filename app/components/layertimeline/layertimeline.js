@@ -26,7 +26,7 @@ class LayerTimelineController {
       }
     }, $scope);
 
-    this.horizZoom = 0.5; // 2ms = 1px
+    this.horizZoom = 1; // 1ms = 1px
 
     let $timeline = this.element_.find('.slt-timeline');
 

@@ -1,6 +1,6 @@
 .studio-layer-timeline {
   background-color: #fff;
-  height: 250px;
+  height: 300px;
   display: flex;
   flex-direction: row;
   flex-shrink: 0;
@@ -72,7 +72,7 @@
   // layers list
 
   .slt-layers {
-    width: 200px;
+    width: 300px;
     box-shadow: material-shadow(2);
     position: relative;
     z-index: 3;

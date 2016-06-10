@@ -1,6 +1,7 @@
 import {Artwork, Animation, AnimationBlock, BaseLayer} from 'avdstudio/model';
 import {AnimationRenderer} from 'avdstudio/animationrenderer';
 import {AvdSerializer} from 'avdstudio/avdserializer';
+import {ModelUtil} from 'avdstudio/modelutil';
 
 
 const CHANGES_TAG = '$$studioState::CHANGES';
@@ -216,17 +217,6 @@ class StudioStateService {
     this.broadcastChanges_({selection: true});
   }
 
-  getUniqueAnimationId(prefix, targetAnimation = null) {
-    prefix = prefix || 'anim';
-
-    let n = 0;
-    let id_ = () => prefix + (n ? `_${n}` : '');
-    while (this.animations.reduce((a, b) => a || (b.id == id_() && b != targetAnimation), false)) {
-      ++n;
-    }
-    return id_();
-  }
-
   deleteLayers(layersToDelete) {
     if (!Array.isArray(layersToDelete)) {
       layersToDelete = [layersToDelete];
@@ -274,20 +264,20 @@ class StudioStateService {
     this.animChanged();
   }
 
+  getUniqueAnimationId(prefix, targetAnimation = null) {
+    return ModelUtil.getUniqueId({
+      prefix: prefix || 'anim',
+      objectById: id => this.animations.reduce((a, b) => a || (b.id == id), false),
+      skipObject: targetAnimation
+    });
+  }
+
   getUniqueLayerId(prefix, targetLayer = null) {
-    prefix = prefix || (targetLayer ? targetLayer.typeIdPrefix : 'layer');
-
-    let n = 0;
-    let id_ = () => prefix + (n ? `_${n}` : '');
-    while (true) {
-      let l = this.artwork.findLayerById(id_());
-      if (!l || l == targetLayer) {
-        break;
-      }
-
-      ++n;
-    }
-    return id_();
+    return ModelUtil.getUniqueId({
+      prefix: prefix || (targetLayer ? targetLayer.typeIdPrefix : 'layer'),
+      objectById: id => this.artwork.findLayerById(id),
+      skipObject: targetLayer
+    });
   }
 
   broadcastChanges_(changes) {
