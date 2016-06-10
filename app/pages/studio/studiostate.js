@@ -2,6 +2,7 @@ import {Artwork, Animation, AnimationBlock, BaseLayer} from 'avdstudio/model';
 import {AnimationRenderer} from 'avdstudio/animationrenderer';
 import {AvdSerializer} from 'avdstudio/avdserializer';
 import {ModelUtil} from 'avdstudio/modelutil';
+import {default as zip} from 'zipjs-browserify';
 
 
 const CHANGES_TAG = '$$studioState::CHANGES';
@@ -294,7 +295,10 @@ class StudioStateService {
 
   downloadFile_(content, filename) {
     let anchor = $('<a>').hide().appendTo(document.body);
-    let blob = new Blob([content], {type: 'octet/stream'});
+    let blob = content;
+    if (!(content instanceof Blob)) {
+      blob = new Blob([content], {type: 'octet/stream'});
+    }
     let url = window.URL.createObjectURL(blob);
     anchor.attr({
       href: url,
@@ -320,9 +324,36 @@ class StudioStateService {
 
   exportAVDs() {
     if (this.animations.length) {
-      let animation = this.animations[0];
-      let xmlStr = AvdSerializer.artworkAnimationToAvdXmlString(this.artwork, animation);
-      this.downloadFile_(xmlStr, `${this.artwork.id}_${animation.id}.xml`);
+      let exportedAnimations = this.animations.map(animation => ({
+        animation,
+        filename: `avd_${this.artwork.id}_${animation.id}.xml`,
+        xmlStr: AvdSerializer.artworkAnimationToAvdXmlString(this.artwork, animation)
+      }));
+
+      if (exportedAnimations.length == 1) {
+        // download a single XML
+        this.downloadFile_(exportedAnimations[0].xmlStr, exportedAnimations[0].filename);
+      } else {
+        // download a ZIP
+        zip.createWriter(new zip.BlobWriter(), writer => {
+          let i = -1;
+          let next_ = () => {
+            ++i;
+            if (i >= exportedAnimations.length) {
+              // close
+              writer.close(blob => this.downloadFile_(blob, `avd_${this.artwork.id}.zip`));
+            } else {
+              // add next file
+              let exportedAnimation = exportedAnimations[i];
+              writer.add(
+                  exportedAnimation.filename,
+                  new zip.TextReader(exportedAnimation.xmlStr),
+                  next_);
+            }
+          };
+          next_();
+        }, error => console.error(error));
+      }
     }
   }
 }
