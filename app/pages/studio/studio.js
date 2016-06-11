@@ -2,6 +2,8 @@ import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'avdstud
 import {SvgLoader} from 'avdstudio/svgloader';
 import {AvdSerializer} from 'avdstudio/avdserializer';
 
+import TEST_DATA from '../../../_sandbox/test_weirdpathdata.json';
+
 
 //const TEST_DATA = require('avdstudio/test_menutoback.json');
 
@@ -29,10 +31,10 @@ class StudioCtrl {
       animations: []
     });
 
-    // this.studioState_.load({
-    //   artwork: new Artwork(TEST_DATA.artwork),
-    //   animations: TEST_DATA.animations.map(anim => new Animation(anim))
-    // });
+    this.studioState_.load({
+      artwork: new Artwork(TEST_DATA.artwork),
+      animations: TEST_DATA.animations.map(anim => new Animation(anim))
+    });
 
     this.setupKeyboardAndUnloadEvents_();
   }
@@ -51,7 +53,7 @@ class StudioCtrl {
 
       } else if (event.keyCode == 8) {
         event.preventDefault(); // in case there's a JS error, never navigate away
-        this.deleteSelectedLayers_();
+        this.deletetLayers_();
         this.deleteSelectedAnimationBlocks_();
         this.deleteSelectedAnimations_();
         return false;
