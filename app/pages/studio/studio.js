@@ -2,9 +2,7 @@ import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'avdstud
 import {SvgLoader} from 'avdstudio/svgloader';
 import {AvdSerializer} from 'avdstudio/avdserializer';
 
-import TEST_DATA from '../../../_sandbox/test_weirdpathdata.json';
-
-
+//import TEST_DATA from '../../../_sandbox/test_weirdpathdata.json';
 //const TEST_DATA = require('avdstudio/test_menutoback.json');
 
 const BLANK_ARTWORK = {
