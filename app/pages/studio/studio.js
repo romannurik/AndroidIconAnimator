@@ -31,10 +31,10 @@ class StudioCtrl {
       animations: []
     });
 
-    this.studioState_.load({
-      artwork: new Artwork(TEST_DATA.artwork),
-      animations: TEST_DATA.animations.map(anim => new Animation(anim))
-    });
+    // this.studioState_.load({
+    //   artwork: new Artwork(TEST_DATA.artwork),
+    //   animations: TEST_DATA.animations.map(anim => new Animation(anim))
+    // });
 
     this.setupKeyboardAndUnloadEvents_();
   }
@@ -53,7 +53,7 @@ class StudioCtrl {
 
       } else if (event.keyCode == 8) {
         event.preventDefault(); // in case there's a JS error, never navigate away
-        this.deletetLayers_();
+        this.deleteSelectedLayers_();
         this.deleteSelectedAnimationBlocks_();
         this.deleteSelectedAnimations_();
         return false;

@@ -30,7 +30,7 @@ class LayerTimelineController {
 
     let $timeline = this.element_.find('.slt-timeline');
 
-    let tempHorizZoom = 0.5;
+    let tempHorizZoom = this.horizZoom;
 
     let settleZoomTimeout_ = null
 

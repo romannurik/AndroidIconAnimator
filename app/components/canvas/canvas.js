@@ -95,6 +95,20 @@ class CanvasController {
     ctx.scale(this.backingStoreScale_, this.backingStoreScale_);
     ctx.clearRect(0, 0, this.artwork.width, this.artwork.height);
 
+    let selectionStroke_ = extraSetupFn => {
+      ctx.save();
+      // ctx.globalCompositeOperation = 'exclusion';
+      extraSetupFn && extraSetupFn();
+      ctx.lineWidth = 6 / this.scale_; // 2px
+      ctx.strokeStyle = '#fff';
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.strokeStyle = '#2196f3';
+      ctx.lineWidth = 3 / this.scale_; // 2px
+      ctx.stroke();
+      ctx.restore();
+    };
+
     let transforms = [];
 
     let drawLayer_ = (layer, selectionMode) => {
@@ -111,6 +125,18 @@ class CanvasController {
         layer.layers.forEach(layer => drawLayer_(layer, selectionMode));
         ctx.restore();
 
+        if (selectionMode && layer.selected) {
+          let bounds = layer.computeBounds();
+          if (bounds) {
+            ctx.save();
+            transforms.forEach(t => t());
+            ctx.beginPath();
+            ctx.rect(bounds.l, bounds.t, bounds.r - bounds.l, bounds.b - bounds.t);
+            ctx.restore();
+            selectionStroke_();
+          }
+        }
+
         transforms.pop();
       } else if (layer instanceof MaskLayer) {
         ctx.save();
@@ -123,14 +149,7 @@ class CanvasController {
           ctx.clip();
         } else if (selectionMode && layer.selected) {
           // this layer is selected, draw the layer selection stuff
-          ctx.save();
-          ctx.globalCompositeOperation = 'difference';
-          ctx.strokeStyle = '#888';
-          ctx.lineWidth = 3 / this.scale_; // 2px
-          ctx.lineCap = 'butt';
-          ctx.setLineDash([5 / this.scale_, 5 / this.scale_]);
-          ctx.stroke();
-          ctx.restore();
+          selectionStroke_(() => ctx.setLineDash([5 / this.scale_, 5 / this.scale_]));
         }
 
       } else {
@@ -147,11 +166,12 @@ class CanvasController {
           ctx.lineCap = layer.strokeLinecap || 'butt';
 
           if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
+            let shownFraction = (layer.trimPathEnd - layer.trimPathStart);
             ctx.setLineDash([
-              (layer.trimPathEnd - layer.trimPathStart) * layer.pathData.length,
-              layer.pathData.length
+              shownFraction * layer.pathData.length,
+              (1 - shownFraction + 0.001) * layer.pathData.length
             ]);
-            ctx.lineDashOffset = -(layer.trimPathStart * layer.pathData.length);
+            ctx.lineDashOffset = -((layer.trimPathOffset + layer.trimPathStart) * layer.pathData.length);
           } else {
             ctx.setLineDash([]);
           }
@@ -164,13 +184,7 @@ class CanvasController {
           }
         } else if (selectionMode && layer.selected) {
           // this layer is selected, draw the layer selection stuff
-          ctx.save();
-          ctx.globalCompositeOperation = 'difference';
-          ctx.strokeStyle = '#888';
-          ctx.lineWidth = 2 / this.scale_; // 2px
-          ctx.lineCap = 'butt';
-          ctx.stroke();
-          ctx.restore();
+          selectionStroke_();
         }
       }
     };
