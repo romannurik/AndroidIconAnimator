@@ -47,7 +47,7 @@ class FileDropTargetController {
         })
         .on('dragover', event => {
           event.preventDefault();
-          event.originalEvent.dataTransfer.dropEffect = 'link';
+          event.originalEvent.dataTransfer.dropEffect = 'copy';
           return false;
         })
         .on('dragleave', event => {

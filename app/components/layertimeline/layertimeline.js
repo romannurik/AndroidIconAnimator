@@ -135,8 +135,9 @@ class LayerTimelineController {
       propertyName,
       startTime: this.studioState_.activeTime,
       endTime: this.studioState_.activeTime + 100,
-      fromValue: valueAtCurrentTime,
-      toValue: valueAtCurrentTime,
+      // TODO: Property.copyValue instead of this JSON hack
+      fromValue: JSON.parse(JSON.stringify(valueAtCurrentTime)), // deep copy
+      toValue: JSON.parse(JSON.stringify(valueAtCurrentTime)), // deep copy
     }));
     this.studioState_.animChanged();
   }
