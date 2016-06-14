@@ -1,13 +1,11 @@
-import {Artwork, Layer, LayerGroup, MaskLayer,
-        Animation,
-        Property, FractionProperty, IdProperty, EnumProperty} from 'avdstudio/model';
+import {Artwork, Animation} from 'avdstudio/model';
+import {Property, FractionProperty, IdProperty, EnumProperty} from 'avdstudio/modelproperties';
 import {ColorUtil} from 'avdstudio/colorutil';
 import {ModelUtil} from 'avdstudio/modelutil';
 
 
 class PropertyInspectorController {
   constructor($scope, $element, StudioStateService) {
-    console.error('hey');
     this.scope_ = $scope;
     this.element_ = $element;
 

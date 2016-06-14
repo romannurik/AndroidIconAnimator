@@ -18,13 +18,20 @@ class StudioStateService {
     this.artwork_ = obj.artwork;
     this.animations_ = obj.animations || [];
     this.activeTime_ = 0;
+    this.playing_ = false;
+    this.selection_ = null;
 
     this.activeAnimation_ = this.animations_.length ? this.animations_[0] : null;
 
     this.rebuildRenderer_();
 
-    this.artworkChanged();
-    this.animChanged();
+    this.broadcastChanges_({
+      artwork: true,
+      animations: true,
+      selection: true,
+      activeTime: true,
+      playing: true
+    });
 
     this.dirty_ = false;
   }

@@ -160,7 +160,7 @@ class LayerTimelineController {
         ? LayerGroup
         : ((type == 'mask')
             ? MaskLayer
-            : Layer);
+            : PathLayer);
     let newLayer = new cls();
     newLayer.id = this.studioState_.getUniqueLayerId(null, newLayer);
 

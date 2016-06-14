@@ -1,6 +1,6 @@
 import {LayerGroup, MaskLayer} from 'avdstudio/model';
 import {ColorUtil} from 'avdstudio/colorutil';
-import {SvgPathData} from 'avdstudio/svgpathparser';
+import {SvgPathData} from 'avdstudio/svgpathdata';
 import {ElementResizeWatcher} from 'avdstudio/elementresizewatcher';
 
 
