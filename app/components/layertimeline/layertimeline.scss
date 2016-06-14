@@ -231,7 +231,7 @@
   // timeline
 
   .slt-timeline {
-    background-color: material-color('grey', '400');
+    background-color: material-color('grey', '300');
     overflow-x: auto;
     overflow-y: hidden;
     flex: 1;
@@ -259,8 +259,8 @@
       overflow: hidden;
       flex: 0 0 auto;
       box-shadow:
-          1px 0 0 $thinBorderColor,
-          -1px 0 0 $thinBorderColor;
+          4px 0 0 material-color('grey', '500'),
+          -4px 0 0 material-color('grey', '500');
 
       opacity: .5;
 

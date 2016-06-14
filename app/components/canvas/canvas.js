@@ -160,9 +160,9 @@ class CanvasController {
 
         if (!selectionMode) {
           // draw the actual layer
-          ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor);
+          ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
           ctx.lineWidth = layer.strokeWidth;
-          ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor);
+          ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
           ctx.lineCap = layer.strokeLinecap || 'butt';
           ctx.lineJoin = layer.strokeLinejoin || 'miter';
           ctx.miterLimit = layer.miterLimit || 10;
