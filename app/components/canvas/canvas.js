@@ -1,6 +1,6 @@
 import {LayerGroup, MaskLayer} from 'avdstudio/model';
 import {ColorUtil} from 'avdstudio/colorutil';
-import {SvgPathParser} from 'avdstudio/svgpathparser';
+import {SvgPathData} from 'avdstudio/svgpathparser';
 import {ElementResizeWatcher} from 'avdstudio/elementresizewatcher';
 
 
@@ -141,7 +141,7 @@ class CanvasController {
       } else if (layer instanceof MaskLayer) {
         ctx.save();
         transforms.forEach(t => t());
-        SvgPathParser.execute(ctx, layer.pathData);
+        layer.pathData && layer.pathData.execute(ctx);
         ctx.restore();
 
         if (!selectionMode) {
@@ -155,7 +155,7 @@ class CanvasController {
       } else {
         ctx.save();
         transforms.forEach(t => t());
-        SvgPathParser.execute(ctx, layer.pathData);
+        layer.pathData && layer.pathData.execute(ctx);
         ctx.restore();
 
         if (!selectionMode) {

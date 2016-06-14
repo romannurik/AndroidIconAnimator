@@ -7,6 +7,7 @@ import {ModelUtil} from 'avdstudio/modelutil';
 
 class PropertyInspectorController {
   constructor($scope, $element, StudioStateService) {
+    console.error('hey');
     this.scope_ = $scope;
     this.element_ = $element;
 

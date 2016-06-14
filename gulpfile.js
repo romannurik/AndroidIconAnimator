@@ -49,7 +49,7 @@ function errorHandler(error) {
 
 // Lint JavaScript
 gulp.task('scripts', function () {
-  return browserify('app/node_modules/avdstudio/app.js')
+  return browserify('app/node_modules/avdstudio/app.js', {debug:true}) // debug generates sourcemap
       .transform('babelify', {presets: ['es2015']})
       .transform('require-globify')
       .bundle()

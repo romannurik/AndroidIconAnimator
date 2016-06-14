@@ -130,14 +130,14 @@ class LayerTimelineController {
   onAddTimelineBlock($event, layer, propertyName, animation) {
     let valueAtCurrentTime = this.studioState_.animationRenderer
         .getLayerPropertyValue(layer.id, propertyName);
+    let propertyObj = layer.animatableProperties[propertyName];
     animation.blocks.push(new AnimationBlock({
       layerId: layer.id,
       propertyName,
       startTime: this.studioState_.activeTime,
-      endTime: this.studioState_.activeTime + 100,
-      // TODO: Property.copyValue instead of this JSON hack
-      fromValue: JSON.parse(JSON.stringify(valueAtCurrentTime)), // deep copy
-      toValue: JSON.parse(JSON.stringify(valueAtCurrentTime)), // deep copy
+      endTime: this.studioState_.activeTime + 100, // TODO: don't overrun anim duration
+      fromValue: propertyObj.cloneValue(valueAtCurrentTime),
+      toValue: propertyObj.cloneValue(valueAtCurrentTime),
     }));
     this.studioState_.animChanged();
   }
