@@ -1,7 +1,7 @@
-import {Artwork, Animation} from 'avdstudio/model';
-import {Property, FractionProperty, IdProperty, EnumProperty} from 'avdstudio/modelproperties';
-import {ColorUtil} from 'avdstudio/colorutil';
-import {ModelUtil} from 'avdstudio/modelutil';
+import {Artwork, Animation} from 'model';
+import {Property, FractionProperty, IdProperty, EnumProperty} from 'modelproperties';
+import {ColorUtil} from 'colorutil';
+import {ModelUtil} from 'modelutil';
 
 
 class PropertyInspectorController {

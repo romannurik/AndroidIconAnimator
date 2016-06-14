@@ -1,5 +1,5 @@
-import {Artwork, Animation} from 'avdstudio/model';
-import {ModelUtil} from 'avdstudio/modelutil';
+import {Artwork, Animation} from 'model';
+import {ModelUtil} from 'modelutil';
 
 
 const DEFAULT_LAYER_PROPERTY_STATE = {

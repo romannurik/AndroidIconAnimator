@@ -9,7 +9,7 @@ angular.module('AVDStudio').controller('AppCtrl', class AppCtrl {
 });
 
 // all components
-require('../../components/**/*.js', {mode: 'expand'});
+require('../components/**/*.js', {mode: 'expand'});
 
 // all pages
-require('../../pages/**/*.js', {mode: 'expand'});
+require('../pages/**/*.js', {mode: 'expand'});

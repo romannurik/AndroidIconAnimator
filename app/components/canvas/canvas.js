@@ -1,7 +1,7 @@
-import {LayerGroup, MaskLayer} from 'avdstudio/model';
-import {ColorUtil} from 'avdstudio/colorutil';
-import {SvgPathData} from 'avdstudio/svgpathdata';
-import {ElementResizeWatcher} from 'avdstudio/elementresizewatcher';
+import {LayerGroup, MaskLayer} from 'model';
+import {ColorUtil} from 'colorutil';
+import {SvgPathData} from 'svgpathdata';
+import {ElementResizeWatcher} from 'elementresizewatcher';
 
 
 const CANVAS_MARGIN = 64; // pixels

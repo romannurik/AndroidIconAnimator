@@ -1,6 +1,6 @@
-import {Artwork, Layer, LayerGroup, MaskLayer, Animation, AnimationBlock} from 'avdstudio/model';
-import {ModelUtil} from 'avdstudio/modelutil';
-import {DragHelper} from 'avdstudio/draghelper';
+import {Artwork, Layer, LayerGroup, MaskLayer, Animation, AnimationBlock} from 'model';
+import {ModelUtil} from 'modelutil';
+import {DragHelper} from 'draghelper';
 
 
 const DRAG_SLOP = 4; // pixels

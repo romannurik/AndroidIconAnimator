@@ -1,4 +1,4 @@
-import {DragHelper} from 'avdstudio/draghelper';
+import {DragHelper} from 'draghelper';
 
 
 class SplitterController {

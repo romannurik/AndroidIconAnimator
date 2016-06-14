@@ -1,4 +1,4 @@
-import {DragHelper} from 'avdstudio/draghelper';
+import {DragHelper} from 'draghelper';
 
 
 const TIMELINE_ANIMATION_PADDING = 20; // 20px

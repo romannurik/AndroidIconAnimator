@@ -1,7 +1,7 @@
-import {Artwork, Animation, AnimationBlock, BaseLayer} from 'avdstudio/model';
-import {AnimationRenderer} from 'avdstudio/animationrenderer';
-import {AvdSerializer} from 'avdstudio/avdserializer';
-import {ModelUtil} from 'avdstudio/modelutil';
+import {Artwork, Animation, AnimationBlock, BaseLayer} from 'model';
+import {AnimationRenderer} from 'animationrenderer';
+import {AvdSerializer} from 'avdserializer';
+import {ModelUtil} from 'modelutil';
 import {default as zip} from 'zipjs-browserify';
 
 

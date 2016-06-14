@@ -1,9 +1,8 @@
-import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'avdstudio/model';
-import {SvgLoader} from 'avdstudio/svgloader';
-import {AvdSerializer} from 'avdstudio/avdserializer';
+import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'model';
+import {SvgLoader} from 'svgloader';
+import {AvdSerializer} from 'avdserializer';
 
 //import TEST_DATA from '../../../_sandbox/test_weirdpathdata.json';
-//const TEST_DATA = require('avdstudio/test_menutoback.json');
 
 const BLANK_ARTWORK = {
   id: new Artwork().typeIdPrefix,

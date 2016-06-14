@@ -49,13 +49,20 @@ function errorHandler(error) {
 
 // Lint JavaScript
 gulp.task('scripts', function () {
-  return browserify('app/node_modules/avdstudio/app.js', {debug:true}) // debug generates sourcemap
+  return browserify('./app/scripts/app.js', {
+        debug: true, // debug generates sourcemap
+        basedir: '.',
+        paths: [
+          './app/scripts/',
+          './node_modules/'
+        ]
+      })
       .transform('babelify', {presets: ['es2015']})
       .transform('require-globify')
       .bundle()
-      .on('error', errorHandler)
       .pipe(source('app.js'))
       .pipe(buffer())
+      .on('error', errorHandler)
       .pipe(gulp.dest('.tmp/scripts'))
       .pipe($.uglify({
         mangle:false
@@ -105,9 +112,7 @@ gulp.task('copy', function () {
   var s1 = gulp.src([
     'app/*',
     '!app/icons',
-    '!app/node_modules',
-    '!app/*.html',
-    'node_modules/apache-server-configs/dist/.htaccess'
+    '!app/*.html'
   ], {
     dot: true
   }).pipe(gulp.dest('dist'))
