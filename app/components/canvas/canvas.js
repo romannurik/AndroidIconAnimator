@@ -164,6 +164,8 @@ class CanvasController {
           ctx.lineWidth = layer.strokeWidth;
           ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor);
           ctx.lineCap = layer.strokeLinecap || 'butt';
+          ctx.lineJoin = layer.strokeLinejoin || 'miter';
+          ctx.miterLimit = layer.miterLimit || 10;
 
           if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
             let shownFraction = (layer.trimPathEnd - layer.trimPathStart);
