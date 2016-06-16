@@ -62,9 +62,9 @@ class LayerTimelineController {
     let $zoomStartActiveAnimation;
 
     $timeline.on('wheel', event => {
-      if (event.altKey) {
+      if (event.altKey || event.ctrlKey) { // chrome+mac trackpad pinch-zoom = ctrlKey
         event.preventDefault();
-        tempHorizZoom *= Math.pow(1.01, event.originalEvent.deltaY);
+        tempHorizZoom *= Math.pow(1.01, -event.originalEvent.deltaY);
         tempHorizZoom = Math.max(0.01, Math.min(10, tempHorizZoom));
         if (tempHorizZoom != this.horizZoom) {
           // zoom has changed
