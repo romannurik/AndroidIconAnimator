@@ -450,7 +450,7 @@ function commandsToString_(commands) {
       case 'closePath': tokens.push('Z'); break;
     }
 
-    tokens.splice(tokens.length, 0, ...args);
+    tokens.splice(tokens.length, 0, ...args.map(arg => Number(arg.toFixed(3)).toString()));
   });
 
   return tokens.join(' ');

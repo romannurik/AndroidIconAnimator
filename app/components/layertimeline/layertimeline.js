@@ -1,6 +1,7 @@
-import {Artwork, Layer, LayerGroup, MaskLayer, Animation, AnimationBlock} from 'model';
+import {Artwork, PathLayer, LayerGroup, MaskLayer, Animation, AnimationBlock} from 'model';
 import {ModelUtil} from 'modelutil';
 import {DragHelper} from 'draghelper';
+import TimelineConsts from './consts.js';
 
 
 const DRAG_SLOP = 4; // pixels
@@ -28,32 +29,7 @@ class LayerTimelineController {
 
     this.horizZoom = 1; // 1ms = 1px
 
-    let $timeline = this.element_.find('.slt-timeline');
-
-    let tempHorizZoom = this.horizZoom;
-
-    let settleZoomTimeout_ = null
-
-    let settleZoom_ = () => {
-      $timeline.css('transform', 'none');
-      this.horizZoom = tempHorizZoom;
-      $scope.$apply();
-    };
-
-    $timeline.on('wheel', event => {
-      if (event.altKey) {
-        event.preventDefault();
-        tempHorizZoom *= Math.pow(1.01, event.originalEvent.deltaY);
-        let scaleX = tempHorizZoom / this.horizZoom;
-        $timeline.css('transform-origin', `0% 0%`);
-        $timeline.css('transform', `scale(${scaleX}, 1)`);
-        if (settleZoomTimeout_) {
-          window.clearTimeout(settleZoomTimeout_);
-        }
-        settleZoomTimeout_ = window.setTimeout(() => settleZoom_(), 100);
-        return false;
-      }
-    });
+    this.setupMouseWheelZoom_();
 
     this.rebuild_();
   }
@@ -72,6 +48,69 @@ class LayerTimelineController {
 
   get activeAnimation() {
     return this.studioState_.activeAnimation;
+  }
+
+  /**
+   * Handles alt+mousewheel for zooming into and out of the timeline.
+   */
+  setupMouseWheelZoom_() {
+    let $timeline = this.element_.find('.slt-timeline');
+    let tempHorizZoom = this.horizZoom;
+    let performZoomRAF = null;
+    let endZoomTimeout = null;
+    let zoomStartTimeCursorPos;
+    let $zoomStartActiveAnimation;
+
+    $timeline.on('wheel', event => {
+      if (event.altKey) {
+        event.preventDefault();
+        tempHorizZoom *= Math.pow(1.01, event.originalEvent.deltaY);
+        tempHorizZoom = Math.max(0.01, Math.min(10, tempHorizZoom));
+        if (tempHorizZoom != this.horizZoom) {
+          // zoom has changed
+          if (performZoomRAF) {
+            window.cancelAnimationFrame(performZoomRAF);
+          }
+          performZoomRAF = window.requestAnimationFrame(() => performZoom_());
+
+          if (endZoomTimeout) {
+            window.clearTimeout(endZoomTimeout);
+          } else {
+            startZoom_();
+          }
+
+          endZoomTimeout = window.setTimeout(() => endZoom_(), 100);
+        }
+        return false;
+      }
+    });
+
+    let startZoom_ = () => {
+      $zoomStartActiveAnimation = $('.slt-timeline-animation.is-active');
+      zoomStartTimeCursorPos = $zoomStartActiveAnimation.position().left
+          + this.activeTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING;
+    };
+
+    let performZoom_ = () => {
+      this.horizZoom = tempHorizZoom;
+      this.scope_.$apply();
+
+      // set the scroll offset such that the time cursor remains at
+      // zoomStartTimeCursorPos
+      if ($zoomStartActiveAnimation) {
+        let newScrollLeft = $zoomStartActiveAnimation.position().left
+            + $timeline.scrollLeft()
+            + this.activeTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING
+            - zoomStartTimeCursorPos;
+        $timeline.scrollLeft(newScrollLeft);
+      }
+    };
+
+    let endZoom_ = () => {
+      zoomStartTimeCursorPos = 0;
+      $zoomStartActiveAnimation = null;
+      endZoomTimeout = null;
+    };
   }
 
   /**

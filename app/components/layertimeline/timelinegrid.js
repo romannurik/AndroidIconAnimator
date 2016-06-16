@@ -1,7 +1,5 @@
 import {DragHelper} from 'draghelper';
-
-
-const TIMELINE_ANIMATION_PADDING = 20; // 20px
+import TimelineConsts from './consts.js';
 
 
 const GRID_INTERVALS_MS = [
@@ -37,8 +35,8 @@ angular.module('AVDStudio').directive('studioTimelineGrid', function() {
       if ('onScrub' in attrs) {
         let scrubToX_ = x => {
           x -= $canvas.offset().left;
-          let time = (x - TIMELINE_ANIMATION_PADDING)
-              / ($canvas.width() - TIMELINE_ANIMATION_PADDING * 2)
+          let time = (x - TimelineConsts.TIMELINE_ANIMATION_PADDING)
+              / ($canvas.width() - TimelineConsts.TIMELINE_ANIMATION_PADDING * 2)
               * scope.animation.duration;
           time = Math.max(0, Math.min(time, scope.animation.duration));
           scope.onScrub({ animation: scope.animation, time });
@@ -67,7 +65,7 @@ angular.module('AVDStudio').directive('studioTimelineGrid', function() {
 
         let ctx = canvas.getContext('2d');
         ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-        ctx.translate(TIMELINE_ANIMATION_PADDING, 0);
+        ctx.translate(TimelineConsts.TIMELINE_ANIMATION_PADDING, 0);
 
         // compute grid spacing (40 = minimum grid spacing in pixels)
         let interval = 0;
@@ -102,7 +100,9 @@ angular.module('AVDStudio').directive('studioTimelineGrid', function() {
         } else {
           // grid lines
           ctx.fillStyle = 'rgba(0,0,0,0.1)';
-          for (let x = spacingPx; x < width - TIMELINE_ANIMATION_PADDING * 2; x += spacingPx) {
+          for (let x = spacingPx;
+               x < width - TimelineConsts.TIMELINE_ANIMATION_PADDING * 2;
+               x += spacingPx) {
             ctx.fillRect(x - 0.5, 0, 1, 1);
           }
 

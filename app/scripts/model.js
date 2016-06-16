@@ -545,8 +545,8 @@ const ENUM_INTERPOLATOR_OPTIONS = [
 Property.registerProperties(AnimationBlock, [
   {name: 'fromValue', property: 'auto'},
   {name: 'toValue', property: 'auto'},
-  {name: 'startTime', property: new NumberProperty()},
-  {name: 'endTime', property: new NumberProperty()},
+  {name: 'startTime', property: new NumberProperty({min:0, integer:true})},
+  {name: 'endTime', property: new NumberProperty({min:0, integer:true})},
   {name: 'interpolator', property: new EnumProperty(ENUM_INTERPOLATOR_OPTIONS, {storeEntireOption:true})}
 ]);
 
