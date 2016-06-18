@@ -3,20 +3,20 @@ export const ModelUtil = {
     let animationBlocksByLayerId = {};
 
     animation.blocks.forEach(block => {
-      let animations = animationBlocksByLayerId[block.layerId];
-      if (!animations) {
-        animations = {};
-        animationBlocksByLayerId[block.layerId] = animations;
+      let blocksByProperty = animationBlocksByLayerId[block.layerId];
+      if (!blocksByProperty) {
+        blocksByProperty = {};
+        animationBlocksByLayerId[block.layerId] = blocksByProperty;
       }
 
-      animations[block.propertyName] = animations[block.propertyName] || [];
-      animations[block.propertyName].push(block);
+      blocksByProperty[block.propertyName] = blocksByProperty[block.propertyName] || [];
+      blocksByProperty[block.propertyName].push(block);
     });
 
     for (let layerId in animationBlocksByLayerId) {
-      let animations = animationBlocksByLayerId[layerId];
-      for (let propertyName in animations) {
-        animations[propertyName].sort((a, b) => a.startTime - b.startTime);
+      let blocksByProperty = animationBlocksByLayerId[layerId];
+      for (let propertyName in blocksByProperty) {
+        blocksByProperty[propertyName].sort((a, b) => a.startTime - b.startTime);
       }
     }
 

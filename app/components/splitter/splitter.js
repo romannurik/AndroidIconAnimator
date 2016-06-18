@@ -45,6 +45,7 @@ class SplitterController {
     this.element_.on('mousedown', event => {
       this.downXY_ = event[this.clientXY_];
       this.downSize_ = this.sizeGetter_();
+      event.preventDefault();
 
       new DragHelper({
         downEvent: event,

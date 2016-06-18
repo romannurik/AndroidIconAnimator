@@ -42,6 +42,10 @@ var AUTOPREFIXER_BROWSERS = [
   'android >= 4.4'
 ];
 
+
+var DEV_MODE = false;
+
+
 function errorHandler(error) {
   console.error(error.stack);
   this.emit('end'); // http://stackoverflow.com/questions/23971388
@@ -64,9 +68,9 @@ gulp.task('scripts', function () {
       .pipe(buffer())
       .on('error', errorHandler)
       .pipe(gulp.dest('.tmp/scripts'))
-      .pipe($.uglify({
+      .pipe($.if(!DEV_MODE, $.uglify({
         mangle:false
-      }))
+      })))
       .pipe(gulp.dest('dist/scripts'));
 });
 
@@ -104,7 +108,6 @@ gulp.task('icons', function () {
     .pipe(gulp.dest('dist/images'))
     .pipe(gulp.dest('.tmp/images'))
     .pipe($.size({title: 'icons'}));
-
 });
 
 // Copy All Files At The Root Level (app) and lib
@@ -146,7 +149,7 @@ gulp.task('styles', function () {
     .pipe($.autoprefixer(AUTOPREFIXER_BROWSERS))
     .pipe(gulp.dest('.tmp/styles'))
     // Concatenate And Minify Styles
-    .pipe($.if('*.css', $.csso()))
+    .pipe($.if(!DEV_MODE, $.if('*.css', $.csso())))
     .pipe(gulp.dest('dist/styles'))
     .pipe($.size({title: 'styles'}));
 });
@@ -167,6 +170,8 @@ gulp.task('clean', function() {
 
 // Watch Files For Changes & Reload
 gulp.task('serve', ['styles', 'scripts', 'icons', 'bower'], function () {
+  DEV_MODE = true;
+
   browserSync({
     notify: false,
     // Run as an https by uncommenting 'https: true'

@@ -401,6 +401,15 @@ export class Animation {
     this.duration = obj.duration || 100;
   }
 
+  get blocks() {
+    return this.blocks_ || [];
+  }
+
+  set blocks(blocks) {
+    this.blocks_ = blocks;
+    this.blocks_.forEach(block => block.parent = this);
+  }
+
   get typeString() {
     return 'animation';
   }

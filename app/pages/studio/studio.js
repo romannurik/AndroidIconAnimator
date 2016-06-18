@@ -2,7 +2,7 @@ import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'model';
 import {SvgLoader} from 'svgloader';
 import {AvdSerializer} from 'avdserializer';
 
-//import TEST_DATA from '../../../_sandbox/test_weirdpathdata.json';
+import TEST_DATA from '../../../_sandbox/test_searchtoback.json';
 
 const BLANK_ARTWORK = {
   id: new Artwork().typeIdPrefix,
@@ -23,15 +23,17 @@ class StudioCtrl {
 
     this.studioState_ = StudioStateService;
 
-    this.studioState_.load({
-      artwork: new Artwork(BLANK_ARTWORK),
-      animations: []
-    });
-
     // this.studioState_.load({
-    //   artwork: new Artwork(TEST_DATA.artwork),
-    //   animations: TEST_DATA.animations.map(anim => new Animation(anim))
+    //   artwork: new Artwork(BLANK_ARTWORK),
+    //   animations: []
     // });
+
+    // prevent default behavior of dragging HTML content in the studio
+
+    this.studioState_.load({
+      artwork: new Artwork(TEST_DATA.artwork),
+      animations: TEST_DATA.animations.map(anim => new Animation(anim))
+    });
 
     this.setupKeyboardAndUnloadEvents_();
   }

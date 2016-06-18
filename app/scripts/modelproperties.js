@@ -261,8 +261,22 @@ export class NumberProperty extends Property {
   }
 
   setter_(obj, propertyName, value) {
-    if (typeof value == 'string') {
+    if (typeof value === 'string') {
       value = Number(value);
+    }
+
+    if (typeof value === 'number') {
+      if (!isNaN(value)) {
+        if ('min' in this.opts) {
+          value = Math.max(this.opts.min, value);
+        }
+        if ('max' in this.opts) {
+          value = Math.min(this.opts.max, value);
+        }
+        if (this.opts.integer) {
+          value = Math.floor(value);
+        }
+      }
     }
 
     let backingPropertyName = `${propertyName}_`;

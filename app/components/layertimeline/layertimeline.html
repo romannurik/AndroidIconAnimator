@@ -82,8 +82,7 @@
           </md-button>
           <md-menu-content>
             <md-menu-item ng-repeat="(propertyName, __) in layer._slt.availableProperties">
-              <md-button ng-click="ctrl.onAddTimelineBlock($event, layer, propertyName,
-                                                           ctrl.activeAnimation)">
+              <md-button ng-click="ctrl.onAddTimelineBlock($event, layer, propertyName)">
                 {{propertyName}}
               </md-button>
             </md-menu-item>
@@ -92,7 +91,16 @@
       </div>
       <div class="slt-properties"><div
             class="slt-property"
-            ng-repeat="(property, __) in layer._slt.blocksByProperty">{{property}}</div></div>
+            layout="row"
+            ng-repeat="(propertyName, __) in layer._slt.blocksByProperty">
+        <span flex>{{propertyName}}</span>
+        <md-button
+            class="md-icon-button"
+            ng-click="ctrl.onAddTimelineBlock($event, layer, propertyName)"
+            aria-label="Add property animation">
+          <md-icon class="material-icons">add</md-icon>
+        </md-button>
+      </div></div>
       <ul class="slt-children" ng-if="layer.layers">
         <li class="slt-layer-container"
             ng-repeat="layer in layer.layers"

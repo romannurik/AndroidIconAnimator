@@ -27,7 +27,7 @@ class LayerTimelineController {
       }
     }, $scope);
 
-    this.horizZoom = 1; // 1ms = 1px
+    this.horizZoom = .25; // 1ms = 1px
 
     this.setupMouseWheelZoom_();
 
@@ -133,18 +133,18 @@ class LayerTimelineController {
     });
 
     this.animations.forEach(animation => {
-      let animations = ModelUtil.getOrderedAnimationBlocksByLayerIdAndProperty(animation);
-      Object.keys(animations).forEach(layerId => {
+      let blocksByLayerId = ModelUtil.getOrderedAnimationBlocksByLayerIdAndProperty(animation);
+      Object.keys(blocksByLayerId).forEach(layerId => {
         let layer = this.artwork.findLayerById(layerId);
         if (!layer) {
           return;
         }
 
-        Object.keys(animations[layerId]).forEach(propertyName => {
+        Object.keys(blocksByLayerId[layerId]).forEach(propertyName => {
           layer._slt.blocksByProperty[propertyName]
               = layer._slt.blocksByProperty[propertyName] || {};
           layer._slt.blocksByProperty[propertyName][animation.id]
-              = animations[layerId][propertyName];
+              = blocksByLayerId[layerId][propertyName];
           delete layer._slt.availableProperties[propertyName];
         });
       });
@@ -162,22 +162,67 @@ class LayerTimelineController {
     this.studioState_.playing = false;
   }
 
+
   /**
-   * Called when adding a timeline block from the list of available properties for
-   * a given layer.
+   * Called when adding a new timeline block to a property that's already animated
    */
-  onAddTimelineBlock($event, layer, propertyName, animation) {
+  onAddTimelineBlock($event, layer, propertyName) {
+    let animation = this.studioState_.activeAnimation;
+
+    let newBlockDuration = 100; // min duration of 100ms
+
+    // find the right start time for the block, which should be a gap between
+    // neighboring blocks closest to the time cursor (activeTime), of a minimum size
+    let blocksByLayerId = ModelUtil.getOrderedAnimationBlocksByLayerIdAndProperty(animation);
+    let blockNeighbors = blocksByLayerId[layer.id][propertyName];
+    let gaps = [];
+    for (let i = 0; i < blockNeighbors.length; i++) {
+      gaps.push({
+        start: (i == 0) ? 0 : blockNeighbors[i - 1].endTime,
+        end: blockNeighbors[i].startTime
+      });
+    }
+    gaps.push({
+      start: blockNeighbors.length ? blockNeighbors[blockNeighbors.length - 1].endTime : 0,
+      end: animation.duration
+    });
+    gaps = gaps
+        .filter(gap => gap.end - gap.start > newBlockDuration)
+        .map(gap => Object.assign(gap, {
+          dist: Math.min(
+              Math.abs(gap.end - this.studioState_.activeTime),
+              Math.abs(gap.start - this.studioState_.activeTime))
+        }))
+        .sort((a, b) => a.dist - b.dist);
+
+    if (!gaps.length) {
+      // no available gaps, cancel
+      return;
+    }
+
+    let startTime = Math.max(this.studioState_.activeTime, gaps[0].start);
+    let endTime = Math.min(startTime + newBlockDuration, gaps[0].end);
+    if (endTime - startTime < newBlockDuration) {
+      startTime = endTime - newBlockDuration;
+    }
+
+    // generate the new block, cloning the current rendered property value
+    let propertyObj = layer.animatableProperties[propertyName];
     let valueAtCurrentTime = this.studioState_.animationRenderer
         .getLayerPropertyValue(layer.id, propertyName);
-    let propertyObj = layer.animatableProperties[propertyName];
-    animation.blocks.push(new AnimationBlock({
+    let newBlock = new AnimationBlock({
       layerId: layer.id,
       propertyName,
-      startTime: this.studioState_.activeTime,
-      endTime: this.studioState_.activeTime + 100, // TODO: don't overrun anim duration
+      startTime,
+      endTime,
       fromValue: propertyObj.cloneValue(valueAtCurrentTime),
       toValue: propertyObj.cloneValue(valueAtCurrentTime),
-    }));
+    });
+
+    // add the block
+    newBlock.parent = animation;
+    animation.blocks.push(newBlock);
+    this.studioState_.selection = [newBlock];
     this.studioState_.animChanged();
   }
 
@@ -287,15 +332,15 @@ class LayerTimelineController {
    * and scaling.
    */
   onTimelineBlockMouseDown(event, dragBlock, animation, layer) {
+    event.preventDefault(); // prevent html5 dragging
     let $target = $(event.target);
 
+    // some geometry and hit-testing basics
     let animRect = $(event.target).parents('.slt-property').get(0).getBoundingClientRect();
     let xToTime_ = x => (x - animRect.left) / animRect.width * animation.duration;
     let downTime = xToTime_(event.clientX);
 
-    let blockInfos = (dragBlock.selected_ ? this.studioState_.selectedAnimationBlocks : [dragBlock])
-        .map(block => ({block, downStartTime: block.startTime, downEndTime: block.endTime}));
-
+    // determine the action based on where the user clicked and the modifier keys
     let action = MouseActions.MOVING;
     if ($target.hasClass('slt-timeline-block-edge-end')) {
       action = event.altKey
@@ -306,6 +351,53 @@ class LayerTimelineController {
           ? MouseActions.SCALING_TOGETHER_START
           : MouseActions.SCALING_UNIFORM_START;
     }
+
+    // start up a cache of info for each selected block, calculating the left- and right-
+    // bounds for each selected block, based on adjacent non-dragging blocks
+    let activeAnimBlocksByLayerId = ModelUtil.getOrderedAnimationBlocksByLayerIdAndProperty(
+        this.studioState_.activeAnimation);
+    let draggingBlocks = (dragBlock.selected_
+        ? this.studioState_.selectedAnimationBlocks
+        : [dragBlock]); // either drag all selected blocks or just the mousedown'd block
+    let blockInfos = draggingBlocks
+        .filter(block => block.parent == this.studioState_.activeAnimation)
+        .map(block => {
+          // by default the block is only bound by the animation duration
+          let startBound = 0;
+          let endBound = block.parent.duration;
+
+          let blockNeighbors = activeAnimBlocksByLayerId[block.layerId][block.propertyName];
+          let indexIntoNeighbors = blockNeighbors.indexOf(block);
+
+          // find start time bound
+          if (indexIntoNeighbors > 0) {
+            for (let i = indexIntoNeighbors - 1; i >= 0; i--) {
+              let neighbor = blockNeighbors[i];
+              if (!draggingBlocks.includes(neighbor)
+                  || action == MouseActions.SCALING_UNIFORM_START) {
+                startBound = neighbor.endTime; // only be bound by neighbors not being dragged
+                                               // except when uniformly changing just start time
+                break;
+              }
+            }
+          }
+
+          // find end time bound
+          if (indexIntoNeighbors < blockNeighbors.length - 1) {
+            for (let i = indexIntoNeighbors + 1; i < blockNeighbors.length; i++) {
+              let neighbor = blockNeighbors[i];
+              if (!draggingBlocks.includes(neighbor)
+                  || action == MouseActions.SCALING_UNIFORM_END) {
+                endBound = neighbor.startTime; // only be bound by neighbors not being dragged
+                                               // except when uniformly changing just end time
+                break;
+              }
+            }
+          }
+
+          return {block, startBound, endBound,
+                  downStartTime: block.startTime, downEndTime: block.endTime};
+        });
 
     let dragBlockDownStartTime = dragBlock.startTime;
     let dragBlockDownEndTime = dragBlock.endTime;
@@ -320,6 +412,7 @@ class LayerTimelineController {
       maxEndTime = Math.max(maxEndTime, minStartTime + 10); // avoid divide by zero
     }
 
+    // set up drag handlers
     let dragHelper = new DragHelper({
       downEvent: event,
       direction: 'horizontal',
@@ -336,14 +429,14 @@ class LayerTimelineController {
             let constrainAdjust = 0;
             blockInfos.forEach(info => {
               let blockDuration  = (info.block.endTime - info.block.startTime);
-              info.block.startTime = info.downStartTime + timeDelta;
-              info.block.endTime = info.block.startTime + blockDuration;
-              constrainAdjust = Math.max(constrainAdjust, -info.block.startTime);
-              constrainAdjust = Math.min(constrainAdjust, animation.duration - info.block.endTime);
+              info.newStartTime = info.downStartTime + timeDelta;
+              info.newEndTime = info.newStartTime + blockDuration;
+              constrainAdjust = Math.max(constrainAdjust, info.startBound - info.newStartTime);
+              constrainAdjust = Math.min(constrainAdjust, info.endBound - info.newEndTime);
             });
             blockInfos.forEach(info => {
-              info.block.startTime += constrainAdjust;
-              info.block.endTime += constrainAdjust;
+              info.block.startTime = info.newStartTime + constrainAdjust;
+              info.block.endTime = info.newEndTime + constrainAdjust;
             });
             break;
           }
@@ -351,12 +444,12 @@ class LayerTimelineController {
           case MouseActions.SCALING_UNIFORM_START: {
             let constrainAdjust = 0;
             blockInfos.forEach(info => {
-              info.block.startTime = info.downStartTime + timeDelta;
-              constrainAdjust = Math.max(constrainAdjust, -info.block.startTime);
+              info.newStartTime = info.downStartTime + timeDelta;
+              constrainAdjust = Math.max(constrainAdjust, info.startBound - info.newStartTime);
               constrainAdjust = Math.min(constrainAdjust,
-                  info.block.endTime - info.block.startTime - 10);
+                  info.block.endTime - info.newStartTime - 10);
             });
-            blockInfos.forEach(info => info.block.startTime += constrainAdjust);
+            blockInfos.forEach(info => info.block.startTime = info.newStartTime + constrainAdjust);
             break;
           }
 
@@ -364,24 +457,34 @@ class LayerTimelineController {
             let scale = (dragBlockDownStartTime + timeDelta - maxEndTime)
                 / (dragBlockDownStartTime - maxEndTime);
             scale = Math.min(scale, maxEndTime / (maxEndTime - minStartTime));
+            let cancel = false;
             blockInfos.forEach(info => {
-              info.block.startTime = maxEndTime - (maxEndTime - info.downStartTime) * scale;
-              info.block.endTime = Math.max(
+              info.newStartTime = maxEndTime - (maxEndTime - info.downStartTime) * scale;
+              info.newEndTime = Math.max(
                   maxEndTime - (maxEndTime - info.downEndTime) * scale,
-                  info.block.startTime + 10);
+                  info.newStartTime + 10);
+              if (info.newStartTime < info.startBound || info.newEndTime > info.endBound) {
+                cancel = true;
+              }
             });
+            if (!cancel) {
+              blockInfos.forEach(info => {
+                info.block.startTime = info.newStartTime;
+                info.block.endTime = info.newEndTime;
+              });
+            }
             break;
           }
 
           case MouseActions.SCALING_UNIFORM_END: {
             let constrainAdjust = 0;
             blockInfos.forEach(info => {
-              info.block.endTime = info.downEndTime + timeDelta;
+              info.newEndTime = info.downEndTime + timeDelta;
               constrainAdjust = Math.max(constrainAdjust,
-                  info.block.startTime - info.block.endTime + 10);
-              constrainAdjust = Math.min(constrainAdjust, animation.duration - info.block.endTime);
+                  info.block.startTime - info.newEndTime + 10);
+              constrainAdjust = Math.min(constrainAdjust, info.endBound - info.newEndTime);
             });
-            blockInfos.forEach(info => info.block.endTime += constrainAdjust);
+            blockInfos.forEach(info => info.block.endTime = info.newEndTime + constrainAdjust);
             break;
           }
 
@@ -389,12 +492,22 @@ class LayerTimelineController {
             let scale = (dragBlockDownEndTime + timeDelta - minStartTime)
                 / (dragBlockDownEndTime - minStartTime);
             scale = Math.min(scale, (animation.duration - minStartTime) / (maxEndTime - minStartTime));
+            let cancel = false;
             blockInfos.forEach(info => {
-              info.block.startTime = minStartTime + (info.downStartTime - minStartTime) * scale;
-              info.block.endTime = Math.max(
+              info.newStartTime = minStartTime + (info.downStartTime - minStartTime) * scale;
+              info.newEndTime = Math.max(
                   minStartTime + (info.downEndTime - minStartTime) * scale,
-                  info.block.startTime + 10);
+                  info.newStartTime + 10);
+              if (info.newStartTime < info.startBound || info.newEndTime > info.endBound) {
+                cancel = true;
+              }
             });
+            if (!cancel) {
+              blockInfos.forEach(info => {
+                info.block.startTime = info.newStartTime;
+                info.block.endTime = info.newEndTime;
+              });
+            }
             break;
           }
         }
