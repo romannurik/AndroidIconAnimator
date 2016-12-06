@@ -12,3 +12,27 @@ Not intended to replace After Effects or other professional animation tools, but
 simple animations.
 
 ![Screen capture of tool](art/screencap.gif)
+
+## Build instructions
+
+If you want to contribute, you can build and serve the web app locally as follows:
+
+  1. First install [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/).
+
+  2. Install `bower` and `gulp`:
+
+    ```
+    $ npm install -g bower gulp
+    ```
+  
+  2. Clone the repository and in the root directory, run:
+
+    ```
+    $ npm install
+    ```
+
+  3. To build and serve the web app locally, run:
+
+    ```
+    $ gulp serve
+    ```
