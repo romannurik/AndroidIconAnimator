@@ -24,14 +24,14 @@ If you want to contribute, you can build and serve the web app locally as follow
     ```
     $ npm install -g bower gulp
     ```
-  
-  2. Clone the repository and in the root directory, run:
+
+  3. Clone the repository and in the root directory, run:
 
     ```
     $ npm install
     ```
 
-  3. To build and serve the web app locally, run:
+  4. To build and serve the web app locally, run:
 
     ```
     $ gulp serve
