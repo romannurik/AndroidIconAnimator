@@ -19,7 +19,7 @@ import {ColorUtil} from 'colorutil';
 import {SvgLoader} from 'svgloader';
 import {AvdSerializer} from 'avdserializer';
 
-import TEST_DATA from '../../../_sandbox/debug.iconanim.json';
+//import TEST_DATA from '../../../_sandbox/debug.iconanim.json';
 
 
 const PLAYBACK_SPEEDS = [.1, .25, .5, 1, 2, 3, 4, 8, 10];
@@ -78,13 +78,13 @@ class StudioCtrl {
         this.isLoaded = true;
       });
 
-    } else if (DEBUG) {
-      // load debug
-      this.studioState_.load({
-        artwork: new Artwork(TEST_DATA.artwork),
-        animations: TEST_DATA.animations.map(anim => new Animation(anim))
-      });
-      this.isLoaded = true;
+    // } else if (DEBUG) {
+    //   // load debug
+    //   this.studioState_.load({
+    //     artwork: new Artwork(TEST_DATA.artwork),
+    //     animations: TEST_DATA.animations.map(anim => new Animation(anim))
+    //   });
+    //   this.isLoaded = true;
 
     } else {
       // load empty artwork
