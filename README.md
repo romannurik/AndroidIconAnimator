@@ -1,5 +1,9 @@
 # Android Icon Animator
 
+**[Go to Live Version](https://romannurik.github.io/AndroidIconAnimator/)**
+
+-----
+
 A web-based tool that lets you design icon animations and other animated vector art for Android.
 Exports to [Android Vector Drawable](https://developer.android.com/reference/android/graphics/drawable/AnimatedVectorDrawable.html)
 format for Android.
