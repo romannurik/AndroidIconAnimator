@@ -1,0 +1,118 @@
+{
+  "artwork": {
+    "id": "vector",
+    "width": 24,
+    "height": 24,
+    "layers": [
+      {
+        "id": "page_1",
+        "type": "group",
+        "rotation": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "pivotX": 0,
+        "pivotY": 0,
+        "translateX": 0,
+        "translateY": 0,
+        "layers": [
+          {
+            "id": "artboard",
+            "type": "group",
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "pivotX": 0,
+            "pivotY": 0,
+            "translateX": 0,
+            "translateY": 0,
+            "layers": [
+              {
+                "id": "top_arrow",
+                "type": "path",
+                "pathData": "M4,12 L12,4",
+                "fillColor": null,
+                "fillAlpha": 1,
+                "strokeColor": "#ff979797",
+                "strokeAlpha": 1,
+                "strokeWidth": 2,
+                "strokeLinecap": "square",
+                "strokeLinejoin": "miter",
+                "strokeMiterLimit": 10,
+                "trimPathStart": 0,
+                "trimPathEnd": 0,
+                "trimPathOffset": 0
+              },
+              {
+                "id": "bottom_arrow",
+                "type": "path",
+                "pathData": "M 4 12 L 12 20",
+                "fillColor": null,
+                "fillAlpha": 1,
+                "strokeColor": "#ff979797",
+                "strokeAlpha": 1,
+                "strokeWidth": 2,
+                "strokeLinecap": "square",
+                "strokeLinejoin": "miter",
+                "strokeMiterLimit": 10,
+                "trimPathStart": 0,
+                "trimPathEnd": 0,
+                "trimPathOffset": 0
+              },
+              {
+                "id": "middle",
+                "type": "path",
+                "pathData": "M4.5,12 L20,12",
+                "fillColor": null,
+                "fillAlpha": 1,
+                "strokeColor": "#ff979797",
+                "strokeAlpha": 1,
+                "strokeWidth": 2,
+                "strokeLinecap": "butt",
+                "strokeLinejoin": "miter",
+                "strokeMiterLimit": 10,
+                "trimPathStart": 0,
+                "trimPathEnd": 1,
+                "trimPathOffset": 0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "animations": [
+    {
+      "id": "anim",
+      "duration": 2000,
+      "blocks": [
+        {
+          "layerId": "top_arrow",
+          "propertyName": "trimPathEnd",
+          "fromValue": 0,
+          "toValue": 1,
+          "startTime": 525,
+          "endTime": 1256,
+          "interpolator": "FAST_OUT_SLOW_IN"
+        },
+        {
+          "layerId": "bottom_arrow",
+          "propertyName": "trimPathEnd",
+          "fromValue": 0,
+          "toValue": 1,
+          "startTime": 525,
+          "endTime": 1256,
+          "interpolator": "FAST_OUT_SLOW_IN"
+        },
+        {
+          "layerId": "middle",
+          "propertyName": "trimPathStart",
+          "fromValue": 1,
+          "toValue": 0,
+          "startTime": 0,
+          "endTime": 550,
+          "interpolator": "FAST_OUT_SLOW_IN"
+        }
+      ]
+    }
+  ]
+}

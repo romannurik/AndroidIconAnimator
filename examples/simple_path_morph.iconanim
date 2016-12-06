@@ -1,0 +1,32 @@
+{
+  "artwork": {
+    "id": "pathmorphtest",
+    "width": 24,
+    "height": 24,
+    "layers": [
+      {
+        "id": "foo",
+        "strokeColor": "#f00",
+        "strokeWidth": 2,
+        "strokeLinecap": "round",
+        "pathData": "M16,3 C7,16 30,20 8,22"
+      }
+    ]
+  },
+  "animations": [
+    {
+      "id": "morph_test",
+      "duration": 1000,
+      "blocks": [
+        {
+          "layerId": "foo",
+          "propertyName": "pathData",
+          "startTime": 0,
+          "endTime": 1000,
+          "fromValue": "M16,3 C7,16 30,20 8,22",
+          "toValue": "M3,5 C12.3026934,-3 30,8 17,21"
+        }
+      ]
+    }
+  ]
+}

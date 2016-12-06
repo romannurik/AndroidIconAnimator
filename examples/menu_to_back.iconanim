@@ -1,0 +1,158 @@
+{
+  "artwork": {
+    "id": "menu_back",
+    "width": 24,
+    "height": 24,
+    "layers": [
+      {
+        "type": "group",
+        "id": "menu",
+        "pivotX": 12,
+        "pivotY": 12,
+        "layers": [
+          {
+            "type": "group",
+            "id": "bottom_container",
+            "pivotX": 20,
+            "pivotY": 17,
+            "layers": [
+              {
+                "id": "bottom",
+                "strokeWidth": 2,
+                "strokeColor": "#000",
+                "strokeLinecap": "square",
+                "pathData": "M4,17 L20,17"
+              }
+            ]
+          },
+          {
+            "type": "group",
+            "id": "stem_container",
+            "pivotX": 12,
+            "pivotY": 12,
+            "layers": [
+              {
+                "id": "stem",
+                "strokeWidth": 2,
+                "strokeColor": "#000",
+                "strokeLinecap": "square",
+                "pathData": "M4,12 L20,12"
+              }
+            ]
+          },
+          {
+            "type": "group",
+            "id": "top_container",
+            "pivotX": 20,
+            "pivotY": 7,
+            "layers": [
+              {
+                "id": "top",
+                "strokeWidth": 2,
+                "strokeColor": "#000",
+                "strokeLinecap": "square",
+                "pathData": "M4,7 L20,7"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "animations": [
+    {
+      "id": "menu_to_back",
+      "duration": 1600,
+      "blocks": [
+        {
+          "layerId": "top_container",
+          "propertyName": "translateX",
+          "fromValue": 0,
+          "toValue": -1.41421356,
+          "startTime": 500,
+          "endTime": 1200
+        },
+        {
+          "layerId": "top_container",
+          "propertyName": "translateY",
+          "fromValue": 0,
+          "toValue": 5,
+          "startTime": 500,
+          "endTime": 1200
+        },
+        {
+          "layerId": "top_container",
+          "propertyName": "scaleX",
+          "fromValue": 1,
+          "toValue": 0.5,
+          "startTime": 500,
+          "endTime": 1200
+        },
+        {
+          "layerId": "top_container",
+          "propertyName": "rotation",
+          "fromValue": 0,
+          "toValue": 45,
+          "startTime": 500,
+          "endTime": 1200
+        },
+        {
+          "layerId": "stem_container",
+          "propertyName": "scaleX",
+          "fromValue": 1,
+          "toValue": 0.8125,
+          "startTime": 500,
+          "endTime": 1200
+        },
+        {
+          "layerId": "stem_container",
+          "propertyName": "translateX",
+          "fromValue": 0,
+          "toValue": -0.5,
+          "startTime": 500,
+          "endTime": 1200
+        },
+        {
+          "layerId": "bottom_container",
+          "propertyName": "translateX",
+          "fromValue": 0,
+          "toValue": -1.41421356,
+          "startTime": 500,
+          "endTime": 1200
+        },
+        {
+          "layerId": "bottom_container",
+          "propertyName": "translateY",
+          "fromValue": 0,
+          "toValue": -5,
+          "startTime": 500,
+          "endTime": 1200
+        },
+        {
+          "layerId": "bottom_container",
+          "propertyName": "scaleX",
+          "fromValue": 1,
+          "toValue": 0.5,
+          "startTime": 500,
+          "endTime": 1200
+        },
+        {
+          "layerId": "bottom_container",
+          "propertyName": "rotation",
+          "fromValue": 0,
+          "toValue": -45,
+          "startTime": 500,
+          "endTime": 1200
+        },
+        {
+          "layerId": "menu",
+          "propertyName": "rotation",
+          "fromValue": 0,
+          "toValue": 180,
+          "startTime": 500,
+          "endTime": 1200
+        }
+      ]
+    }
+  ]
+}
