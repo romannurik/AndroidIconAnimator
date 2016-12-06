@@ -1,0 +1,9 @@
+_sandbox
+.sass-cache
+.tmp
+node_modules
+!app/node_modules
+bower_components
+dist
+.DS_Store
+.publish

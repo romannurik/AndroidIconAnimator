@@ -1,0 +1,65 @@
+.page-studio {
+  .preview-banner {
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 16px;
+    background-color: material-color('orange', '200');
+    color: rgba(material-color('deep-orange', '900'), .8);
+    box-shadow: material-shadow(1);
+    z-index: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .material-icons {
+      font-size: 16px;
+      margin-right: 8px;
+      color: rgba(material-color('deep-orange', '800'), .8);
+    }
+
+    a {
+      color: material-color('deep-orange', '900');
+      font-weight: 500;
+    }
+  }
+
+  .canvas-area {
+    position: relative;
+
+    .canvas-ruler {
+      transition: opacity $animTimeFast ease, visibility 0s linear $animTimeFast;
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    &:hover .canvas-ruler {
+      transition: opacity $animTimeFast ease;
+      opacity: 1;
+      visibility: visible;      
+    }
+
+  }
+
+  .floating-canvas-bar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    padding: 16px;
+
+    .md-fab {
+      margin: 0;
+    }
+  }
+
+  .preview-container {
+    position: relative;
+  }
+
+  .close-preview-button {
+    margin: 0;
+    position: absolute;
+    left: 16px;
+    top: 16px;
+  }
+}
