@@ -62,4 +62,18 @@
     left: 16px;
     top: 16px;
   }
+
+  .loading {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    margin: 0;
+    background-color: rgba(#fff, .9);
+  }
 }

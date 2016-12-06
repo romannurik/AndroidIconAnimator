@@ -29,30 +29,68 @@ const DEBUG = !!window.location.search.match(/debug/);
 
 
 class StudioCtrl {
-  constructor($scope, $mdToast, $mdDialog, $timeout, StudioStateService) {
+  constructor($scope, $http, $mdToast, $mdDialog, $timeout, StudioStateService) {
     this.scope_ = $scope;
+    this.http_ = $http;
     this.mdToast_ = $mdToast;
     this.mdDialog_ = $mdDialog;
     this.timeout_ = $timeout;
-
     this.studioState_ = StudioStateService;
 
     this.previewMode = false;
+    this.isLoaded = false;
 
-    if (DEBUG) {
+    this.setupKeyboardAndUnloadEvents_();
+    this.setupClipboardEvents_();
+
+    this.loadInitialArtwork_();
+  }
+
+  showError_(message, error) {
+    this.mdToast_.show(
+        this.mdToast_.simple()
+          .textContent(message)
+          .hideDelay(3000));
+    console.error(error);
+  }
+
+  loadInitialArtwork_() {
+    let exampleMatch = window.location.search.match(/example=(.+)/);
+    if (exampleMatch) {
+      // Load example
+      this.http_({
+        url: decodeURIComponent(exampleMatch[1])
+      }).then(response => {
+        try {
+          this.studioState_.load({
+            artwork: new Artwork(response.data.artwork),
+            animations: response.data.animations.map(anim => new Animation(anim))
+          });
+        } catch (e) {
+          this.showError_('Error parsing example artwork', e);
+          this.studioState_.new();
+        }
+        this.isLoaded = true;
+
+      }, error => {
+        this.showError_('Error loading example artwork', error);
+        this.studioState_.new();
+        this.isLoaded = true;
+      });
+
+    } else if (DEBUG) {
+      // load debug
       this.studioState_.load({
         artwork: new Artwork(TEST_DATA.artwork),
         animations: TEST_DATA.animations.map(anim => new Animation(anim))
       });
-      AvdSerializer.artworkAnimationToAvdXmlString(
-          this.studioState_.artwork,
-          this.studioState_.activeAnimation);
-    } else {
-      this.studioState_.new();
-    }
+      this.isLoaded = true;
 
-    this.setupKeyboardAndUnloadEvents_();
-    this.setupClipboardEvents_();
+    } else {
+      // load empty artwork
+      this.studioState_.new();
+      this.isLoaded = true;
+    }
   }
 
   setupClipboardEvents_() {

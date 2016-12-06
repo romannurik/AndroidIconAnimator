@@ -65,4 +65,8 @@
     </md-button>
     <studio-canvas ng-click="studioCtrl.restartPlayback()" flex preview-mode flex></studio-canvas>
   </div>
+
+  <div class="loading" ng-if="!studioCtrl.isLoaded">
+    <md-progress-circular></md-progress-circular>
+  </div>
 </main>
