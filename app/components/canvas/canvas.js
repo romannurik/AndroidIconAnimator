@@ -245,23 +245,22 @@ class CanvasController {
           ctx.miterLimit = layer.miterLimit || 10;
 
           if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
-            // Calculate the normalized length of the trimmed path. If trimPathStart
+            // Calculate the visible fraction of the trimmed path. If trimPathStart
             // is greater than trimPathEnd, then the result should be the combined
             // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
-            let trimPathLengthNormalized = layer.trimPathEnd - layer.trimPathStart;
+            let shownFraction = layer.trimPathEnd - layer.trimPathStart;
             if (layer.trimPathStart > layer.trimPathEnd) {
-              trimPathLengthNormalized += 1;
+              shownFraction += 1;
             }
-
-            // Calculate the absolute length of the trim path by multiplying the
-            // normalized length with the actual length of the path.
-            let trimPathLength = trimPathLengthNormalized * layer.pathData.length;
-
+            
             // Calculate the dash array. The first array element is the length of
             // the trimmed path and the second element is the gap, which is the
-            // difference in length between the total path length and the trimmed
-            // path length.
-            ctx.setLineDash([trimPathLength, (layer.pathData.length - trimPathLength)]);
+            // difference in length between the total path length and the visible
+            // trimmed path length.
+            ctx.setLineDash([
+              shownFraction * layer.pathData.length, 
+              layer.pathData.length * (1 - shownFraction)
+            ]);
 
             // The amount to offset the path is equal to the trimPathStart plus
             // trimPathOffset. We mod the result because the trimmed path
