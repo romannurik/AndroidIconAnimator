@@ -16,7 +16,7 @@
         "strokeWidth": 1,
         "strokeLinecap": "butt",
         "strokeLinejoin": "miter",
-        "strokeMiterLimit": 10,
+        "strokeMiterLimit": 4,
         "trimPathStart": 0,
         "trimPathEnd": 1,
         "trimPathOffset": 0
@@ -32,7 +32,7 @@
         "strokeWidth": 1,
         "strokeLinecap": "butt",
         "strokeLinejoin": "miter",
-        "strokeMiterLimit": 10,
+        "strokeMiterLimit": 4,
         "trimPathStart": 0,
         "trimPathEnd": 1,
         "trimPathOffset": 0
@@ -48,7 +48,7 @@
         "strokeWidth": 1,
         "strokeLinecap": "butt",
         "strokeLinejoin": "miter",
-        "strokeMiterLimit": 10,
+        "strokeMiterLimit": 4,
         "trimPathStart": 0,
         "trimPathEnd": 1,
         "trimPathOffset": 0

@@ -132,7 +132,7 @@ export const SvgLoader = {
           strokeWidth: context.strokeWidth || 0,
           strokeLinecap: context.strokeLinecap || 'butt',
           strokeLinejoin: context.strokeLinejoin || 'miter',
-          strokeMiterLimit: context.strokeMiterLimit || 10,
+          strokeMiterLimit: context.strokeMiterLimit || 4,
         });
       }
 

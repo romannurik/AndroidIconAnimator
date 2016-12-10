@@ -133,7 +133,7 @@ export class PathLayer extends BaseLayer {
     this.strokeWidth = obj.strokeWidth || 0;
     this.strokeLinecap = obj.strokeLinecap || 'butt';
     this.strokeLinejoin = obj.strokeLinejoin || 'miter';
-    this.strokeMiterLimit = obj.strokeMiterLimit || 10;
+    this.strokeMiterLimit = obj.strokeMiterLimit || 4;
     this.trimPathStart = obj.trimPathStart || 0;
     this.trimPathEnd = ('trimPathEnd' in obj && typeof obj.trimPathEnd == 'number')
         ? obj.trimPathEnd : 1;
