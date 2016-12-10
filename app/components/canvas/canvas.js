@@ -16,7 +16,6 @@
 
 import {LayerGroup, MaskLayer} from 'model';
 import {ColorUtil} from 'colorutil';
-import {SvgPathData} from 'svgpathdata';
 import {ElementResizeWatcher} from 'elementresizewatcher';
 
 
@@ -29,6 +28,7 @@ class CanvasController {
     this.element_ = $element;
     this.attrs_ = $attrs;
     this.canvas_ = $element.find('canvas');
+    this.offscreenCanvas_ = $(document.createElement('canvas'));
     this.studioState_ = StudioStateService;
     this.registeredRulers_ = [];
 
@@ -84,7 +84,7 @@ class CanvasController {
           let y = Math.round((event.pageY - canvasOffset.top) / this.scale_);
           this.registeredRulers_.forEach(r => r.showMousePosition(x, y));
         })
-        .on('mouseleave', event => {
+        .on('mouseleave', () => {
           this.registeredRulers_.forEach(r => r.hideMouse());
         });
   }
@@ -126,7 +126,6 @@ class CanvasController {
       let containerWidth = Math.max(1, this.element_.width() - CANVAS_MARGIN * 2);
       let containerHeight = Math.max(1, this.element_.height() - CANVAS_MARGIN * 2);
       let containerAspectRatio = containerWidth / containerHeight;
-
       let artworkAspectRatio = this.artwork.width / (this.artwork.height || 1);
 
       if (artworkAspectRatio > containerAspectRatio) {
@@ -137,19 +136,15 @@ class CanvasController {
     }
 
     this.scale_ = Math.max(1, Math.floor(this.scale_));
-
     this.backingStoreScale_ = this.scale_ * (window.devicePixelRatio || 1);
-    this.canvas_
-        .attr({
-          width: this.artwork.width * this.backingStoreScale_,
-          height: this.artwork.height * this.backingStoreScale_
-        })
-        .css({
-          width: this.artwork.width * this.scale_,
-          height: this.artwork.height * this.scale_,
-        });
-    this.drawCanvas_();
 
+    let width = this.artwork.width * this.backingStoreScale_;
+    let height = this.artwork.height * this.backingStoreScale_;
+    [this.canvas_, this.offscreenCanvas_].forEach(c => {
+      c.attr({width, height}).css({width, height});
+    });
+
+    this.drawCanvas_();
     this.redrawRulers_();
   }
 
@@ -188,7 +183,7 @@ class CanvasController {
 
     let transforms = [];
 
-    let drawLayer_ = (layer, selectionMode) => {
+    let drawLayer_ = (ctx, layer, selectionMode) => {
       if (layer instanceof LayerGroup) {
         transforms.push(() => {
           ctx.translate(layer.pivotX, layer.pivotY);
@@ -199,7 +194,7 @@ class CanvasController {
         });
 
         ctx.save();
-        layer.layers.forEach(layer => drawLayer_(layer, selectionMode));
+        layer.layers.forEach(layer => drawLayer_(ctx, layer, selectionMode));
         ctx.restore();
 
         if (selectionMode && layer.selected) {
@@ -289,17 +284,34 @@ class CanvasController {
     };
 
     // draw artwork
+    let offscreenCtx = this.offscreenCanvas_.get(0).getContext('2d');
+    let currentArtwork;
     if (this.studioState_.animationRenderer) {
       this.studioState_.animationRenderer.setAnimationTime(this.animTime || 0);
-      drawLayer_(this.studioState_.animationRenderer.renderedArtwork);
-      if (!this.isPreviewMode) {
-        drawLayer_(this.studioState_.animationRenderer.renderedArtwork, true);
-      }
+      currentArtwork = this.studioState_.animationRenderer.renderedArtwork;
     } else {
-      drawLayer_(this.studioState_.artwork);
-      if (!this.isPreviewMode) {
-        drawLayer_(this.studioState_.artwork, true);
-      }
+      currentArtwork = this.artwork;
+    }
+    let currentAlpha = currentArtwork.alpha;
+    if (currentAlpha != 1) {
+      offscreenCtx.save();
+      offscreenCtx.scale(this.backingStoreScale_, this.backingStoreScale_);
+      offscreenCtx.clearRect(0, 0, currentArtwork.width, currentArtwork.height);
+    }
+    let artworkCtx = currentAlpha == 1 ? ctx : offscreenCtx;
+    drawLayer_(artworkCtx, currentArtwork);
+    if (!this.isPreviewMode) {
+      drawLayer_(artworkCtx, currentArtwork, true);
+    }
+
+    if (currentArtwork.alpha != 1) {
+      let oldGlobalAlpha = ctx.globalAlpha;
+      ctx.globalAlpha = currentAlpha;
+      ctx.scale(1 / this.backingStoreScale_, 1 / this.backingStoreScale_);
+      ctx.drawImage(offscreenCtx.canvas, 0, 0);
+      ctx.scale(this.backingStoreScale_, this.backingStoreScale_);
+      ctx.globalAlpha = oldGlobalAlpha;
+      offscreenCtx.restore();
     }
 
     ctx.restore();
