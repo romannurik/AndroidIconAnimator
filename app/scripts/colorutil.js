@@ -63,13 +63,12 @@ export const ColorUtil = {
     if (color == 'none') {
       return null;
     }
-
-    color = tinycolor(color);
-    if (opacity) {
-      color.setAlpha(opacity);
+    if (!opacity) {
+      opacity = 1;
     }
-
-    return color.toHex8String();
+    let colorHex = tinycolor(color).toHex();
+    let opacityHex = Math.floor(opacity * 255).toString(16);
+    return '#' + opacityHex + colorHex;
   },
 
   androidToCssColor(androidColor, multAlpha) {
