@@ -28,13 +28,49 @@ export const SvgLoader = {
 
     let usedIds = {};
 
+    let defsChildMap = new Map();
+    let extractDefsMap_ = (node) => {
+      if (!node || !node.childNodes.length) {
+        return;
+      }
+      for (let i = 0; i < node.childNodes.length; i++) {
+        let child = node.childNodes[i];
+        if (child instanceof SVGDefsElement) {
+          for (let j = 0; j < child.childNodes.length; j++) {
+            let defsChild = child.childNodes[j];
+            if (defsChild.nodeType != Node.TEXT_NODE
+                && defsChild.nodeType != Node.COMMENT_NODE) {
+              defsChildMap.set(defsChild.id, defsChild);
+            }
+          }
+        } else {
+          extractDefsMap_(child);
+        }
+      }
+    };
+
     let nodeToLayerData_ = (node, context) => {
       if (!node) {
         return null;
       }
 
-      if (node.nodeType == Node.TEXT_NODE || node.nodeType == Node.COMMENT_NODE) {
+      if (node.nodeType == Node.TEXT_NODE
+        || node.nodeType == Node.COMMENT_NODE
+        || node instanceof SVGDefsElement) {
         return null;
+      }
+
+      if (node instanceof SVGUseElement) {
+        // TODO(alockwood): apparently xlink:href is deprecated... figure out what to do about that
+        let defChildId = node.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+        // TODO(alockwood): can we assume the href is formatted like '#idNameGoesHere'?
+        defChildId = defChildId.substring(1);
+        let replacementNode = defsChildMap.get(defChildId);
+        if (!replacementNode) {
+          return null;
+        }
+        node = replacementNode.cloneNode(true);
+        node.id = defChildId;
       }
 
       let makeFinalNodeId_ = typeIdPrefix => {
@@ -176,6 +212,7 @@ export const SvgLoader = {
       ];
     }
 
+    extractDefsMap_(doc.documentElement);
     let rootLayer = nodeToLayerData_(doc.documentElement, docElContext);
 
     let artwork = {

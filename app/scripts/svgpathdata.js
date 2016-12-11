@@ -79,7 +79,13 @@ export class SvgPathData {
   transform(pointTransformer) {
     this.commands_.forEach(({command, args}) => {
       if (command == '__arc__') {
-        // TODO: transform arcs
+        // TODO: apply the transformation to the middle indicies as well.
+        let transformed = pointTransformer({x:args[0], y:args[1]});
+        args[0] = transformed.x;
+        args[1] = transformed.y;
+        transformed = pointTransformer({x:args[7], y:args[8]});
+        args[7] = transformed.x;
+        args[8] = transformed.y;
         return;
       }
 
@@ -654,10 +660,10 @@ function arcToBeziers_(xf, yf, rx, ry, rotate, largeArcFlag, sweepFlag, xt, yt) 
   // This is to compensate for potential rounding errors/differences between SVG implementations.
   let radiiCheck = x1_sq / rx_sq + y1_sq / ry_sq;
   if (radiiCheck > 1) {
-     rx = Math.sqrt(radiiCheck) * rx;
-     ry = Math.sqrt(radiiCheck) * ry;
-     rx_sq = rx * rx;
-     ry_sq = ry * ry;
+    rx = Math.sqrt(radiiCheck) * rx;
+    ry = Math.sqrt(radiiCheck) * ry;
+    rx_sq = rx * rx;
+    ry_sq = ry * ry;
   }
 
   // Step 2 : Compute (cx1, cy1) - the transformed centre point
