@@ -125,9 +125,9 @@ export const SvgLoader = {
         return Object.assign(layerData, {
           id: makeFinalNodeId_('path'),
           pathData: path,
-          fillColor: ColorUtil.svgToAndroidColor(context.fillColor, context.fillOpacity),
+          fillColor: ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : null,
           fillAlpha: ('fillAlpha' in context) ? context.fillAlpha : 1,
-          strokeColor: ColorUtil.svgToAndroidColor(context.strokeColor, context.strokeOpacity),
+          strokeColor: ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : null,
           strokeAlpha: ('strokeAlpha' in context) ? context.strokeAlpha : 1,
           strokeWidth: context.strokeWidth || 0,
           strokeLinecap: context.strokeLinecap || 'butt',

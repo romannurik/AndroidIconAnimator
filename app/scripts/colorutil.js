@@ -59,16 +59,14 @@ export const ColorUtil = {
     return str;
   },
 
-  svgToAndroidColor(color, opacity) {
+  svgToAndroidColor(color) {
     if (color == 'none') {
       return null;
     }
-    if (!opacity) {
-      opacity = 1;
-    }
-    let colorHex = tinycolor(color).toHex();
-    let opacityHex = Math.floor(opacity * 255).toString(16);
-    return '#' + opacityHex + colorHex;
+    color = tinycolor(color);
+    let colorHex = color.toHex();
+    let alphaHex = color.toHex8().substr(6);
+    return '#' + alphaHex + colorHex;
   },
 
   androidToCssColor(androidColor, multAlpha) {
