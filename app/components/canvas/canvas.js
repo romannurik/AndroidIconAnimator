@@ -137,11 +137,16 @@ class CanvasController {
 
     this.scale_ = Math.max(1, Math.floor(this.scale_));
     this.backingStoreScale_ = this.scale_ * (window.devicePixelRatio || 1);
-
-    let width = this.artwork.width * this.backingStoreScale_;
-    let height = this.artwork.height * this.backingStoreScale_;
-    [this.canvas_, this.offscreenCanvas_].forEach(c => {
-      c.attr({width, height}).css({width, height});
+    [this.canvas_, this.offscreenCanvas_].forEach(canvas => {
+      canvas
+          .attr({
+            width: this.artwork.width * this.backingStoreScale_, 
+            height: this.artwork.height * this.backingStoreScale_,
+          })
+          .css({
+            width: this.artwork.width * this.scale_, 
+            height: this.artwork.height * this.scale_,
+          });
     });
 
     this.drawCanvas_();
