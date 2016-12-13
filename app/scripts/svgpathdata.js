@@ -79,13 +79,7 @@ export class SvgPathData {
   transform(pointTransformer) {
     this.commands_.forEach(({command, args}) => {
       if (command == '__arc__') {
-        // TODO: apply the transformation to the middle indicies as well.
-        let transformed = pointTransformer({x:args[0], y:args[1]});
-        args[0] = transformed.x;
-        args[1] = transformed.y;
-        transformed = pointTransformer({x:args[7], y:args[8]});
-        args[7] = transformed.x;
-        args[8] = transformed.y;
+        // TODO: transform arcs
         return;
       }
 
