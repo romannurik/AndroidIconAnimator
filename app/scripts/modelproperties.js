@@ -238,6 +238,20 @@ export class ColorProperty extends Property {
     });
   }
 
+  trySetEditedValue(obj, propertyName, value) {
+    if (!value) {
+      obj[propertyName] = null;
+      return;
+    }
+
+    let processedValue = ColorUtil.parseAndroidColor(value);
+    if (!processedValue) {
+      processedValue = ColorUtil.parseAndroidColor(ColorUtil.svgToAndroidColor(value));
+    }
+
+    obj[propertyName] = ColorUtil.toAndroidString(processedValue);
+  }
+
   get animatorValueType() {
     return 'colorType';
   }

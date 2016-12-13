@@ -22,7 +22,7 @@ const BRIGHTNESS_THRESHOLD = 130; // for isColorDark
 export const ColorUtil = {
   parseAndroidColor(val) {
     val = (val || '').replace(/^\s*#?|\s*$/g, '');
-    let dict = {r: 0, g: 0, b: 0, a: 255};
+    let dict = {a:255};
 
     if (val.length == 3) {
       dict.r = parseInt(val.substring(0, 1), 16) * 17;
@@ -42,9 +42,13 @@ export const ColorUtil = {
       dict.r = parseInt(val.substring(2, 4), 16);
       dict.g = parseInt(val.substring(4, 6), 16);
       dict.b = parseInt(val.substring(6, 8), 16);
+    } else {
+      return null;
     }
 
-    return dict;
+    return (isNaN(dict.r) || isNaN(dict.g) || isNaN(dict.b) || isNaN(dict.a))
+        ? null
+        : dict;
   },
 
   toAndroidString(dict) {
