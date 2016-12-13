@@ -15,5 +15,8 @@
     "angular-material": "~1.1",
     "jquery": "~2.1.4",
     "angular-route": "^1.5.5"
+  },
+  "resolutions": {
+    "angular": "1.6.0"
   }
 }
