@@ -256,7 +256,7 @@ class CanvasController {
             // trimmed path length.
             ctx.setLineDash([
               shownFraction * layer.pathData.length,
-              (1 - shownFraction) * layer.pathData.length
+              (1 - shownFraction + 0.001) * layer.pathData.length
             ]);
 
             // The amount to offset the path is equal to the trimPathStart plus
