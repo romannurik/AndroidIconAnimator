@@ -1,6 +1,6 @@
 {
-  "name": "avdstudio",
-  "main": "avdstudio",
+  "name": "AndroidIconAnimator",
+  "main": "AndroidIconAnimator",
   "version": "0.0.1",
   "authors": [],
   "ignore": [
@@ -11,9 +11,11 @@
     "tests"
   ],
   "dependencies": {
-    "angular": "~1.5.5",
+    "angular": "^1.5.8",
     "angular-material": "~1.1",
-    "jquery": "~2.1.4",
-    "angular-route": "^1.5.5"
+    "jquery": "~2.1.4"
+  },
+  "resolutions": {
+    "angular": "1.5.8"
   }
 }
