@@ -182,6 +182,7 @@ export const SvgLoader = {
       width,
       height,
       layers: (rootLayer ? rootLayer.layers : null) || [],
+      alpha: doc.documentElement.getAttribute('opacity') || 1,
     };
 
     return new Artwork(artwork);

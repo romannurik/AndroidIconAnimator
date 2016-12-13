@@ -17,7 +17,7 @@
 import {SvgPathData} from './svgpathdata';
 import {Property, EnumProperty, ColorProperty, PathDataProperty, FractionProperty,
         IdProperty, NumberProperty} from './modelproperties';
-import {default as BezierEasing} from 'bezier-easing';
+import {default as bezierEasing} from 'bezier-easing';
 
 
 /**
@@ -372,6 +372,7 @@ export class Artwork extends LayerGroup {
     this.canvasColor = obj.fillColor || null;
     this.width = obj.width || 100;
     this.height = obj.height || 100;
+    this.alpha = obj.alpha || 1;
   }
 
   computeBounds() {
@@ -390,12 +391,20 @@ export class Artwork extends LayerGroup {
     return 'artwork';
   }
 
+  findLayerById(id) {
+    if (this.id === id) {
+      return this;
+    }
+    return super.findLayerById(id);
+  }
+
   toJSON() {
     return {
       id: this.id,
       canvasColor: this.canvasColor,
       width: this.width,
       height: this.height,
+      alpha: this.alpha,
       layers: this.layers.map(layer => layer.toJSON())
     };
   }
@@ -406,7 +415,8 @@ Property.registerProperties(Artwork, [
   {name: 'id', property: new IdProperty()},
   {name: 'canvasColor', property: new ColorProperty()},
   {name: 'width', property: new NumberProperty({min:4, max:1024, integer:true})},
-  {name: 'height', property: new NumberProperty({min:4, max:1024, integer:true})}
+  {name: 'height', property: new NumberProperty({min:4, max:1024, integer:true})},
+  {name: 'alpha', property: new FractionProperty(), animatable: true},
 ], true);
 
 
@@ -513,9 +523,9 @@ export class AnimationBlock {
   }
 }
 
-const FAST_OUT_SLOW_IN_EASING = BezierEasing(.4, 0, .2, 1);
-const FAST_OUT_LINEAR_IN_EASING = BezierEasing(.4, 0, 1, 1);
-const LINEAR_OUT_SLOW_IN_EASING = BezierEasing(0, 0, .2, 1);
+const FAST_OUT_SLOW_IN_EASING = bezierEasing(.4, 0, .2, 1);
+const FAST_OUT_LINEAR_IN_EASING = bezierEasing(.4, 0, 1, 1);
+const LINEAR_OUT_SLOW_IN_EASING = bezierEasing(0, 0, .2, 1);
 
 const ENUM_INTERPOLATOR_OPTIONS = [
   {
