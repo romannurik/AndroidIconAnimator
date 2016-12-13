@@ -13,6 +13,7 @@
   "dependencies": {
     "angular": "^1.5.8",
     "angular-material": "~1.1",
+    "angular-route": "^1.5.8",
     "jquery": "~2.1.4"
   },
   "resolutions": {
