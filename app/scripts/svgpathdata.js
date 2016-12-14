@@ -76,25 +76,45 @@ export class SvgPathData {
     this.bounds = bounds;
   }
 
-  transform(pointTransformer) {
-    this.commands_.forEach(({command, args}) => {
+  transform(transforms) {
+    this.commands_.forEach(({ command, args }) => {
       if (command == '__arc__') {
-        // TODO: transform arcs
+        const start = transformPoint_({ x:args[0], y:args[1] }, transforms);
+        args[0] = start.x;
+        args[1] = start.y;
+        const arc = transformArc_({
+          rx: args[2],
+          ry: args[3],
+          xAxisRotation: args[4],
+          largeArcFlag: args[5],
+          sweepFlag: args[6],
+          endX: args[7],
+          endY: args[8],
+        },
+        transforms);
+        args[2] = arc.rx;
+        args[3] = arc.ry;
+        args[4] = arc.xAxisRotation;
+        args[5] = arc.largeArcFlag;
+        args[6] = arc.sweepFlag;
+        args[7] = arc.endX;
+        args[8] = arc.endY;
         return;
       }
 
       for (let i = 0; i < args.length; i += 2) {
-        let transformed = pointTransformer({x:args[i], y:args[i + 1]});
+        let transformed = transformPoint_({ x: args[i], y: args[i + 1] }, transforms);
         args[i] = transformed.x;
         args[i + 1] = transformed.y;
       }
     });
 
     this.string_ = commandsToString_(this.commands_);
-    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
+    let { length, bounds } = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
   }
+
 
   static interpolate(start, end, f) {
     if (!end || !start || !end.commands || !start.commands
@@ -654,10 +674,10 @@ function arcToBeziers_(xf, yf, rx, ry, rotate, largeArcFlag, sweepFlag, xt, yt) 
   // This is to compensate for potential rounding errors/differences between SVG implementations.
   let radiiCheck = x1_sq / rx_sq + y1_sq / ry_sq;
   if (radiiCheck > 1) {
-     rx = Math.sqrt(radiiCheck) * rx;
-     ry = Math.sqrt(radiiCheck) * ry;
-     rx_sq = rx * rx;
-     ry_sq = ry * ry;
+    rx = Math.sqrt(radiiCheck) * rx;
+    ry = Math.sqrt(radiiCheck) * ry;
+    rx_sq = rx * rx;
+    ry_sq = ry * ry;
   }
 
   // Step 2 : Compute (cx1, cy1) - the transformed centre point
@@ -790,4 +810,109 @@ function unitCircleArcToBeziers_(angleStart, angleExtent) {
   }
 
   return coords;
+}
+
+
+function transformPoint_(p, transformMatricies) {
+  return transformMatricies.reduce((p, transform) => {
+    const m = transform.matrix;
+    return {
+      // dot product
+      x: m.a * p.x + m.c * p.y + m.e * 1,
+      y: m.b * p.x + m.d * p.y + m.f * 1,
+    };
+  }, p);
+}
+
+// Code adapted from here:
+// https://gist.github.com/alexjlockwood/c037140879806fb4d9820b7e70195494#file-flatten-js-L441-L547
+function transformArc_(initialArc, transformMatricies) {
+  const isNearZero = n => Math.abs(n) < 0.0000000000000001;
+  return transformMatricies.reduce((arc, transform) => {
+    let {rx, ry, xAxisRotation, largeArcFlag, sweepFlag, endX, endY} = arc;
+
+    xAxisRotation = xAxisRotation * Math.PI / 180;
+
+    const s = parseFloat(Math.sin(xAxisRotation));
+    const c = parseFloat(Math.cos(xAxisRotation));
+
+    // Matrix representation of transformed ellipse.
+    let m = [];
+
+    // Build ellipse representation matrix (unit circle transformation).
+    // The 2x2 matrix multiplication with the upper 2x2 of a_mat is inlined.
+    const matrix = transform.matrix;
+    m[0] = matrix.a * +rx * c + matrix.c * rx * s;
+    m[1] = matrix.b * +rx * c + matrix.d * rx * s;
+    m[2] = matrix.a * -ry * s + matrix.c * ry * c;
+    m[3] = matrix.b * -ry * s + matrix.d * ry * c;
+
+    // To implict equation (centered).
+    const A = (m[0] * m[0]) + (m[2] * m[2]);
+    const C = (m[1] * m[1]) + (m[3] * m[3]);
+    const B = (m[0] * m[1] + m[2] * m[3]) * 2.0;
+
+    // Precalculate distance A to C.
+    const ac = A - C;
+
+    // Convert implicit equation to angle and halfaxis.
+    let A2, C2;
+    if (isNearZero(B)) {
+      xAxisRotation = 0;
+      A2 = A;
+      C2 = C;
+    } else {
+      if (isNearZero(ac)) {
+        A2 = A + B * 0.5;
+        C2 = A - B * 0.5;
+        xAxisRotation = Math.PI / 4.0;
+      } else {
+        // Precalculate radical.
+        let K = 1 + B * B / (ac * ac);
+
+        // Clamp (precision issues might need this... not likely, but better safe than sorry).
+        K = K < 0 ? 0 : Math.sqrt(K);
+
+        A2 = 0.5 * (A + C + K * ac);
+        C2 = 0.5 * (A + C - K * ac);
+        xAxisRotation = 0.5 * Math.atan2(B, ac);
+      }
+    }
+
+    // This can get slightly below zero due to rounding issues.
+    // It's safe to clamp to zero in this case (this yields a zero length halfaxis).
+    A2 = A2 < 0 ? 0 : Math.sqrt(A2);
+    C2 = C2 < 0 ? 0 : Math.sqrt(C2);
+
+    // Now A2 and C2 are half-axis.
+    if (ac <= 0) {
+      ry = A2;
+      rx = C2;
+    } else {
+      ry = C2;
+      rx = A2;
+    }
+
+    // If the transformation matrix contain a mirror-component
+    // winding order of the ellise needs to be changed.
+    if ((matrix.a * matrix.d) - (matrix.b * matrix.c) < 0) {
+      sweepFlag = sweepFlag ? 0 : 1;
+    }
+
+    // Finally, transform arc endpoint. This takes care about the
+    // translational part which we ignored at the whole math-showdown above.
+    const end = transformPoint_({ x: endX, y: endY }, [transform]);
+
+    xAxisRotation = xAxisRotation * 180 / Math.PI;
+
+    return {
+      rx,
+      ry,
+      xAxisRotation,
+      largeArcFlag,
+      sweepFlag,
+      endX: end.x,
+      endY: end.y,
+    };
+  }, initialArc);
 }
