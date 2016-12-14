@@ -140,11 +140,11 @@ class CanvasController {
     [this.canvas_, this.offscreenCanvas_].forEach(canvas => {
       canvas
           .attr({
-            width: this.artwork.width * this.backingStoreScale_, 
+            width: this.artwork.width * this.backingStoreScale_,
             height: this.artwork.height * this.backingStoreScale_,
           })
           .css({
-            width: this.artwork.width * this.scale_, 
+            width: this.artwork.width * this.scale_,
             height: this.artwork.height * this.scale_,
           });
     });
@@ -312,10 +312,9 @@ class CanvasController {
     if (currentAlpha != 1) {
       let oldGlobalAlpha = ctx.globalAlpha;
       ctx.globalAlpha = currentAlpha;
-      offscreenCtx.save();
       ctx.scale(1 / this.backingStoreScale_, 1 / this.backingStoreScale_);
       ctx.drawImage(offscreenCtx.canvas, 0, 0);
-      offscreenCtx.restore();
+      ctx.scale(this.backingStoreScale_, this.backingStoreScale_);
       ctx.globalAlpha = oldGlobalAlpha;
       offscreenCtx.restore();
     }
