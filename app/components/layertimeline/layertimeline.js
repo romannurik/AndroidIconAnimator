@@ -17,6 +17,7 @@
 import {Artwork, PathLayer, LayerGroup, MaskLayer, Animation, AnimationBlock} from 'model';
 import {ModelUtil} from 'modelutil';
 import {DragHelper} from 'draghelper';
+import {SvgLoader} from 'svgloader';
 import TimelineConsts from './consts.js';
 
 
@@ -344,6 +345,7 @@ class LayerTimelineController {
       }
     }
 
+    ga('send', 'event', 'file', 'newFile');
     this.studioState_.new();
   }
 
@@ -351,6 +353,13 @@ class LayerTimelineController {
    * Handles opening a file using a file open dialog
    */
   onOpenFile(fileInfo) {
+    if (this.studioState_.dirty) {
+      if (!window.confirm('You\'ve made changes but haven\'t saved. ' +
+                         'Really open this file?')) {
+        return;
+      }
+    }
+
     ga('send', 'event', 'file', 'openFile');
     let jsonObj = JSON.parse(fileInfo.textContent);
     this.studioState_.load({
@@ -365,6 +374,15 @@ class LayerTimelineController {
   onSaveFile() {
     ga('send', 'event', 'file', 'saveFile');
     this.studioState_.saveToFile();
+  }
+
+  /**
+   * Handles importing an SVG as layers.
+   */
+  onAddLayersFromSVG(fileInfo) {
+    ga('send', 'event', 'file', 'importSVG.addLayers');
+    let artwork = SvgLoader.loadArtworkFromSvgString(fileInfo.textContent);
+    this.studioState_.addLayers(artwork.layers);
   }
 
   /**

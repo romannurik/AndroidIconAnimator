@@ -443,6 +443,17 @@ class StudioStateService {
     window.URL.revokeObjectURL(url);
   }
 
+  addLayers(layers) {
+    (layers || []).forEach(layer => {
+      layer.parent = this.artwork;
+      layer.walk(layer => {
+        layer.id = this.getUniqueLayerId(layer.id, layer);
+      });
+      this.artwork.layers.push(layer);
+    });
+    this.artworkChanged();
+  }
+
   new() {
     this.load({
       artwork: new Artwork(BLANK_ARTWORK),

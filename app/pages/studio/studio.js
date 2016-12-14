@@ -140,6 +140,7 @@ class StudioCtrl {
 
       if (str.match(/<\/svg>\s*$/)) {
         // paste SVG
+        ga('send', 'event', 'paste', 'svg');
         let artwork = SvgLoader.loadArtworkFromSvgString(str);
         pasteLayers = artwork.layers;
 
@@ -154,7 +155,10 @@ class StudioCtrl {
         }
 
         if (parsed.clipboardType == 'layers') {
+          ga('send', 'event', 'paste', 'json.layers');
           pasteLayers = parsed.layers.map(l => BaseLayer.load(l));
+        } else {
+          ga('send', 'event', 'paste', 'json.unknown');
         }
       }
 
@@ -329,6 +333,7 @@ class StudioCtrl {
     };
 
     if (fileInfo.type == 'application/json' || fileInfo.name.match(/\.iconanim$/)) {
+      ga('send', 'event', 'file', 'openFile.dragDrop');
       if (!confirm_()) {
         return;
       }
@@ -347,6 +352,7 @@ class StudioCtrl {
           return;
         }
 
+        ga('send', 'event', 'file', 'importSVG.startFromScratch.dragDrop');
         this.studioState_.load({artwork});
       };
 
@@ -368,14 +374,8 @@ class StudioCtrl {
           };
 
           $scope.addLayers = () => {
-            artwork.layers.forEach(layer => {
-              layer.parent = this.studioState_.artwork;
-              layer.walk(layer => {
-                layer.id = this.studioState_.getUniqueLayerId(layer.id, layer);
-              });
-              this.studioState_.artwork.layers.push(layer);
-            });
-            this.studioState_.artworkChanged();
+            ga('send', 'event', 'file', 'importSVG.addLayers.dragDrop');
+            this.studioState_.addLayers(artwork.layers);
             $mdDialog.hide();
           };
         }
