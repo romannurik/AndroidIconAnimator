@@ -309,12 +309,13 @@ class CanvasController {
       drawLayer_(artworkCtx, currentArtwork, true);
     }
 
-    if (currentArtwork.alpha != 1) {
+    if (currentAlpha != 1) {
       let oldGlobalAlpha = ctx.globalAlpha;
       ctx.globalAlpha = currentAlpha;
+      offscreenCtx.save();
       ctx.scale(1 / this.backingStoreScale_, 1 / this.backingStoreScale_);
       ctx.drawImage(offscreenCtx.canvas, 0, 0);
-      ctx.scale(this.backingStoreScale_, this.backingStoreScale_);
+      offscreenCtx.restore();
       ctx.globalAlpha = oldGlobalAlpha;
       offscreenCtx.restore();
     }

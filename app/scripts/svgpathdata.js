@@ -40,7 +40,7 @@ export class SvgPathData {
   set pathString(value) {
     this.string_ = value;
     this.commands_ = parseCommands_(value);
-    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
+    let { length, bounds } = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
   }
@@ -55,7 +55,7 @@ export class SvgPathData {
 
   execute(ctx) {
     ctx.beginPath();
-    this.commands_.forEach(({command, args}) => {
+    this.commands_.forEach(({ command, args }) => {
       if (command == '__arc__') {
         executeArc_(ctx, args);
       } else {
@@ -71,34 +71,53 @@ export class SvgPathData {
   set commands(value) {
     this.commands_ = (value ? value.slice() : []);
     this.string_ = commandsToString_(this.commands_);
-    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
+    let { length, bounds } = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
   }
 
-  transform(pointTransformer) {
-    this.commands_.forEach(({command, args}) => {
+  transform(transforms) {
+    this.commands_.forEach(({ command, args }) => {
       if (command == '__arc__') {
-        // TODO: transform arcs
+        let start = transformPoint_({ x:args[0], y:args[1] }, transforms);
+        args[0] = start.x;
+        args[1] = start.y;
+        let arc = transformArc_({
+            rx: args[2],
+            ry: args[3],
+            xAxisRotation: args[4],
+            largeArcFlag: args[5],
+            sweepFlag: args[6],
+            endX: args[7],
+            endY: args[8],
+          },
+          transforms);
+        args[2] = arc.rx;
+        args[3] = arc.ry;
+        args[4] = arc.xAxisRotation;
+        args[5] = arc.largeArcFlag;
+        args[6] = arc.sweepFlag;
+        args[7] = arc.endX;
+        args[8] = arc.endY;
         return;
       }
 
       for (let i = 0; i < args.length; i += 2) {
-        let transformed = pointTransformer({x:args[i], y:args[i + 1]});
+        let transformed = transformPoint_({ x: args[i], y: args[i + 1] }, transforms);
         args[i] = transformed.x;
         args[i + 1] = transformed.y;
       }
     });
 
     this.string_ = commandsToString_(this.commands_);
-    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
+    let { length, bounds } = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
   }
 
+
   static interpolate(start, end, f) {
-    if (!end || !start || !end.commands || !start.commands
-        || end.commands.length != start.commands.length) {
+    if (!end || !start || !end.commands || !start.commands || end.commands.length != start.commands.length) {
       // TODO: show a warning
       return [];
     }
@@ -127,7 +146,6 @@ export class SvgPathData {
     return new SvgPathData(interpolatedCommands);
   }
 }
-
 
 let simpleInterpolate_ = (start, end, f) => start + (end - start) * f;
 
@@ -790,4 +808,110 @@ function unitCircleArcToBeziers_(angleStart, angleExtent) {
   }
 
   return coords;
+}
+
+
+function transformPoint_(p, transformMatricies) {
+  return transformMatricies.reduce((p, transform) => {
+    let m = transform.matrix;
+    return {
+      // dot product
+      x: m.a * p.x + m.c * p.y + m.e * 1,
+      y: m.b * p.x + m.d * p.y + m.f * 1,
+    };
+  }, p);
+}
+
+// Code adapted from here:
+// https://gist.github.com/alexjlockwood/c037140879806fb4d9820b7e70195494#file-flatten-js-L441-L547
+function transformArc_(initialArc, transformMatricies) {
+  let NEARZERO = n => Math.abs(n) < 0.0000000000000001;
+  return transformMatricies.reduce((arc, transform) => {
+    let {rx, ry, xAxisRotation, largeArcFlag, sweepFlag, endX, endY} = arc;
+
+    xAxisRotation = xAxisRotation * (Math.PI / 180); // deg->rad
+    let rot = xAxisRotation;
+
+    // sin and cos helpers (the former offset rotation.
+    let s = parseFloat(Math.sin(rot));
+    let c = parseFloat(Math.cos(rot));
+
+    // build ellipse representation matrix (unit circle transformation).
+    // the 2x2 matrix multiplication with the upper 2x2 of a_mat is inlined.
+    let m = []; // matrix representation of transformed ellipse
+    let matrix = transform.matrix;
+    m[0] = matrix.a * +rx * c + matrix.c * rx * s;
+    m[1] = matrix.b * +rx * c + matrix.d * rx * s;
+    m[2] = matrix.a * -ry * s + matrix.c * ry * c;
+    m[3] = matrix.b * -ry * s + matrix.d * ry * c;
+
+    // to implict equation (centered)
+    let A = (m[0] * m[0]) + (m[2] * m[2]);
+    let C = (m[1] * m[1]) + (m[3] * m[3]);
+    let B = (m[0] * m[1] + m[2] * m[3]) * 2.0;
+
+    // precalculate distance A to C
+    let ac = A - C;
+
+    // convert implicit equation to angle and halfaxis:
+    let A2, C2;
+    if (NEARZERO(B)) {
+      xAxisRotation = 0;
+      A2 = A;
+      C2 = C;
+    } else {
+      if (NEARZERO(ac)) {
+        A2 = A + B * 0.5;
+        C2 = A - B * 0.5;
+        xAxisRotation = Math.PI / 4.0;
+      } else {
+        // Precalculate radical:
+        let K = 1 + B * B / (ac * ac);
+
+        // Clamp (precision issues might need this.. not likely, but better safe than sorry)
+        K = K < 0 ? 0 : Math.sqrt(K);
+
+        A2 = 0.5 * (A + C + K * ac);
+        C2 = 0.5 * (A + C - K * ac);
+        xAxisRotation = 0.5 * Math.atan2(B, ac);
+      }
+    }
+
+    // This can get slightly below zero due to rounding issues.
+    // it's save to clamp to zero in this case (this yields a zero length halfaxis)
+    A2 = A2 < 0 ? 0 : Math.sqrt(A2);
+    C2 = C2 < 0 ? 0 : Math.sqrt(C2);
+
+    // now A2 and C2 are half-axis:
+    if (ac <= 0) {
+      ry = A2;
+      rx = C2;
+    } else {
+      ry = C2;
+      rx = A2;
+    }
+
+    // If the transformation matrix contain a mirror-component 
+    // winding order of the ellise needs to be changed.
+    if ((matrix.a * matrix.d) - (matrix.b * matrix.c) < 0) {
+      sweepFlag = sweepFlag ? 0 : 1;
+    }
+
+    // Finally, transform arc endpoint. This takes care about the
+    // translational part which we ignored at the whole math-showdown above.
+    let end = transformPoint_({ x: endX, y: endY }, [transform]);
+
+    // Radians back to degrees
+    xAxisRotation = xAxisRotation * 180 / Math.PI;
+
+    return {
+      rx,
+      ry,
+      xAxisRotation,
+      largeArcFlag,
+      sweepFlag,
+      endX: end.x,
+      endY: end.y,
+    };
+  }, initialArc);
 }
