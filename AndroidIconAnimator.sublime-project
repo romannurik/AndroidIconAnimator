@@ -3,7 +3,7 @@
 	[
 		{
 			"path": ".",
-			"folder_exclude_patterns": ["node_modules", ".tmp", "bower_components", "dist"],
+			"folder_exclude_patterns": ["node_modules/", ".tmp/", "bower_components/", "dist/"],
 	 		"file_exclude_patterns": ["*~"]
 		}
 	]
