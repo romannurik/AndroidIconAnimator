@@ -153,7 +153,7 @@ export const SvgLoader = {
         // transform all points
         if (context.transforms && context.transforms.length) {
           let pathData = new SvgPathData(path);
-          pathData.transform(p => transformPoint_(p, context.transforms));
+          pathData.transform(context.transforms);
           path = pathData.pathString;
         }
 
@@ -235,14 +235,3 @@ function lengthPx_(svgLength) {
   return svgLength.valueInSpecifiedUnits;
 }
 
-
-function transformPoint_(p, transforms) {
-  return transforms.reduce((p, transform) => {
-    let m = transform.matrix;
-    return {
-      // dot product
-      x: m.a * p.x + m.c * p.y + m.e * 1,
-      y: m.b * p.x + m.d * p.y + m.f * 1
-    };
-  }, p);
-}
