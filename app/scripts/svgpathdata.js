@@ -40,7 +40,7 @@ export class SvgPathData {
   set pathString(value) {
     this.string_ = value;
     this.commands_ = parseCommands_(value);
-    let { length, bounds } = computePathLengthAndBounds_(this.commands_);
+    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
   }
@@ -55,7 +55,7 @@ export class SvgPathData {
 
   execute(ctx) {
     ctx.beginPath();
-    this.commands_.forEach(({ command, args }) => {
+    this.commands_.forEach(({command, args}) => {
       if (command == '__arc__') {
         executeArc_(ctx, args);
       } else {
@@ -71,7 +71,7 @@ export class SvgPathData {
   set commands(value) {
     this.commands_ = (value ? value.slice() : []);
     this.string_ = commandsToString_(this.commands_);
-    let { length, bounds } = computePathLengthAndBounds_(this.commands_);
+    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
   }
@@ -117,7 +117,8 @@ export class SvgPathData {
 
 
   static interpolate(start, end, f) {
-    if (!end || !start || !end.commands || !start.commands || end.commands.length != start.commands.length) {
+    if (!end || !start || !end.commands || !start.commands 
+        || end.commands.length != start.commands.length) {
       // TODO: show a warning
       return [];
     }
@@ -146,6 +147,7 @@ export class SvgPathData {
     return new SvgPathData(interpolatedCommands);
   }
 }
+
 
 let simpleInterpolate_ = (start, end, f) => start + (end - start) * f;
 
@@ -825,7 +827,7 @@ function transformPoint_(p, transformMatricies) {
 // Code adapted from here:
 // https://gist.github.com/alexjlockwood/c037140879806fb4d9820b7e70195494#file-flatten-js-L441-L547
 function transformArc_(initialArc, transformMatricies) {
-  let NEARZERO = n => Math.abs(n) < 0.0000000000000001;
+  let isNearZero = n => Math.abs(n) < 0.0000000000000001;
   return transformMatricies.reduce((arc, transform) => {
     let {rx, ry, xAxisRotation, largeArcFlag, sweepFlag, endX, endY} = arc;
 
@@ -855,12 +857,12 @@ function transformArc_(initialArc, transformMatricies) {
 
     // convert implicit equation to angle and halfaxis:
     let A2, C2;
-    if (NEARZERO(B)) {
+    if (isNearZero(B)) {
       xAxisRotation = 0;
       A2 = A;
       C2 = C;
     } else {
-      if (NEARZERO(ac)) {
+      if (isNearZero(ac)) {
         A2 = A + B * 0.5;
         C2 = A - B * 0.5;
         xAxisRotation = Math.PI / 4.0;
