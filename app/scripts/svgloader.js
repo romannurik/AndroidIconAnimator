@@ -28,25 +28,25 @@ export const SvgLoader = {
 
     let usedIds = {};
 
+    // Construct a map of elements contained within <defs> tags, mapping
+    // their IDs to the element nodes.
     let defsChildMap = new Map();
-    let extractDefsMap_ = (node) => {
-      if (!node || !node.childNodes.length) {
+    let extractDefsMap_ = node => {
+      if (!node) {
         return;
       }
-      for (let i = 0; i < node.childNodes.length; i++) {
-        let child = node.childNodes[i];
+      node.childNodes.forEach(child => {
         if (child instanceof SVGDefsElement) {
-          for (let j = 0; j < child.childNodes.length; j++) {
-            let defsChild = child.childNodes[j];
-            if (defsChild.nodeType != Node.TEXT_NODE
-                && defsChild.nodeType != Node.COMMENT_NODE) {
-              defsChildMap.set(defsChild.id, defsChild);
+          child.childNodes.forEach(defsElement => {
+            if (defsElement.nodeType != Node.TEXT_NODE
+                && defsElement.nodeType != Node.COMMENT_NODE) {
+              defsChildMap.set(defsElement.id, defsElement);
             }
-          }
+          });
         } else {
           extractDefsMap_(child);
         }
-      }
+      });
     };
 
     let nodeToLayerData_ = (node, context) => {
@@ -60,6 +60,8 @@ export const SvgLoader = {
         return null;
       }
 
+      // If the node is a <use> element, then replace it with the element
+      // contained in the defs map constructed above.
       if (node instanceof SVGUseElement) {
         // TODO(alockwood): apparently xlink:href is deprecated... figure out what to do about that
         let defChildId = node.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
