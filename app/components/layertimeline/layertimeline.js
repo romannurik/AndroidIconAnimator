@@ -18,7 +18,8 @@ import {Artwork, PathLayer, LayerGroup, MaskLayer, Animation, AnimationBlock} fr
 import {ModelUtil} from 'modelutil';
 import {DragHelper} from 'draghelper';
 import {SvgLoader} from 'svgloader';
-import TimelineConsts from './consts.js';
+import {XmlLoader} from 'xmlloader';
+import {TimelineConsts} from './consts.js';
 
 
 const DRAG_SLOP = 4; // pixels
@@ -383,6 +384,15 @@ class LayerTimelineController {
     ga('send', 'event', 'file', 'importSVG.addLayers');
     let artwork = SvgLoader.loadArtworkFromSvgString(fileInfo.textContent);
     this.studioState_.addLayers(artwork.layers);
+  }
+
+  /**
+   * Handles importing a vector drawable from XML.
+   */
+  onImportVD(fileInfo) {
+    ga('send', 'event', 'file', 'importVD');
+    let artwork = XmlLoader.loadArtworkFromXmlString(fileInfo.textContent);
+    this.studioState_.load({artwork});
   }
 
   /**

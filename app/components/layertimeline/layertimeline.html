@@ -28,7 +28,6 @@
           </md-menu-item>
         </md-menu-content>
       </md-menu>
-
       <md-menu md-offset="0 40">
         <button class="slt-layers-menu-group-button" ng-click="$mdOpenMenu()">
           Import
@@ -38,6 +37,13 @@
             <md-button file-open-handler="ctrl.onAddLayersFromSVG(fileInfo)">
               Add layers from SVG
               <input type="file" accept=".svg">
+            </md-button>
+
+          </md-menu-item>
+          <md-menu-item>
+            <md-button file-open-handler="ctrl.onImportVD(fileInfo)">
+              Vector drawable
+              <input type="file" accept=".xml">
             </md-button>
           </md-menu-item>
         </md-menu-content>
