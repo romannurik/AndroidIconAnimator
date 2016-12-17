@@ -39,7 +39,9 @@ export class SvgPathData {
 
   set pathString(value) {
     this.string_ = value;
-    this.commands_ = parseCommands_(value);
+    let {commands, beziers} = parseCommands_(value);
+    this.commands_ = commands;
+    this.beziers_ = beziers;
     let {length, bounds} = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
@@ -62,6 +64,58 @@ export class SvgPathData {
         ctx[command](...args);
       }
     });
+  }
+
+  get beziers() {
+    return this.beziers_;
+  }
+
+  findBezierPoint(point, transformPointFn) {
+    let dist = (p1, p2) =>  Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+    let transformedPoint = {x:point.x, y:point.y};
+
+    let numBezierCurveCoordsEncountered = 0;
+    for (let i = 0; i < this.beziers_.length; i++) {
+      for (let j = 0; j < this.beziers_[i].points.length; j++) {
+        let p = this.beziers_[i].points[j];
+        let transformedBezPoint = transformPointFn(p);
+        let distance = dist(transformedPoint, transformedBezPoint);
+        console.log(transformedPoint, transformedBezPoint, distance);
+        if (distance <= 0.5) {
+          let commandArgs = null;
+          let xIndex = -1;
+          let yIndex = -1;
+          let numCommandCoordsEncountered = 0;
+          for (let k = 0; k < this.commands_.length; k++) {
+            for (let l = 0; l < this.commands_[k].args.length; l += 2) {
+              if (numCommandCoordsEncountered == numBezierCurveCoordsEncountered) {
+                commandArgs = this.commands_[k].args;
+                xIndex = l;
+                yIndex = l + 1;
+                break;
+              }
+              numCommandCoordsEncountered += 2;
+            }
+            if (xIndex >= 0 && yIndex >= 0) {
+              break;
+            }
+          }
+          return movePoint => {
+            console.log(movePoint);
+            let transformedMovePoint = transformPointFn(movePoint, true);
+            console.log(transformedMovePoint);
+            p.x = transformedMovePoint.x;
+            p.y = transformedMovePoint.y;
+            commandArgs[xIndex] = p.x;
+            commandArgs[yIndex] = p.y;
+            console.log(this.beziers_);
+            console.log(this.commands_);
+          };
+        }
+        numBezierCurveCoordsEncountered += 2;
+      }
+    }
+    return null;
   }
 
   get commands() {
@@ -160,9 +214,12 @@ const TOKEN_EOF = 4;
 
 function parseCommands_(pathString) {
   let commands = [];
+  let beziers = [];
   let pushCommandComplex_ = (command, ...args) => commands.push({command, args});
   let pushCommandPoints_ = (command, ...points) => commands.push({
-      command, args: points.reduce((arr, point) => arr.concat(point.x, point.y), [])});
+    command, args: points.reduce((arr, point) => arr.concat(point.x, point.y), [])});
+  let pushBezierCurve_ = (start, cp1, cp2, end) => beziers.push(
+    new Bezier(start.x, start.y, cp1.x, cp1.y, cp2.x, cp2.y, end.x, end.y));
 
   let currentPoint = {x:NaN, y:NaN};
   let currentControlPoint = null; // used for S and T commands
@@ -269,6 +326,7 @@ function parseCommands_(pathString) {
             }
           } else {
             pushCommandPoints_('lineTo', tempPoint1);
+            pushBezierCurve_(currentPoint, tempPoint1, tempPoint1, tempPoint1);
           }
         }
 
@@ -289,6 +347,7 @@ function parseCommands_(pathString) {
           consumePoint_(tempPoint2, relative);
           consumePoint_(tempPoint3, relative);
           pushCommandPoints_('bezierCurveTo', tempPoint1, tempPoint2, tempPoint3);
+          pushBezierCurve_(currentPoint, tempPoint1, tempPoint2, tempPoint3);
 
           currentControlPoint = Object.assign({}, tempPoint2);
           currentPoint = Object.assign({}, tempPoint3);
@@ -314,6 +373,7 @@ function parseCommands_(pathString) {
             Object.assign(tempPoint3, tempPoint1);
           }
           pushCommandPoints_('bezierCurveTo', tempPoint3, tempPoint1, tempPoint2);
+          pushBezierCurve_(currentPoint, tempPoint3, tempPoint1, tempPoint2);
 
           currentControlPoint = Object.assign({}, tempPoint1);
           currentPoint = Object.assign({}, tempPoint2);
@@ -333,6 +393,7 @@ function parseCommands_(pathString) {
           consumePoint_(tempPoint1, relative);
           consumePoint_(tempPoint2, relative);
           pushCommandPoints_('quadraticCurveTo', tempPoint1, tempPoint2);
+          pushBezierCurve_(currentPoint, tempPoint1, tempPoint2, tempPoint2);
 
           currentControlPoint = Object.assign({}, tempPoint1);
           currentPoint = Object.assign({}, tempPoint2);
@@ -357,6 +418,8 @@ function parseCommands_(pathString) {
             Object.assign(tempPoint2, tempPoint1);
           }
           pushCommandPoints_('quadraticCurveTo', tempPoint2, tempPoint1);
+          pushBezierCurve_(currentPoint, tempPoint2, tempPoint1, tempPoint1);
+
 
           currentControlPoint = Object.assign({}, tempPoint2);
           currentPoint = Object.assign({}, tempPoint1);
@@ -375,6 +438,7 @@ function parseCommands_(pathString) {
         while (advanceToNextToken_() === TOKEN_VALUE) {
           consumePoint_(tempPoint1, relative);
           pushCommandPoints_('lineTo', tempPoint1);
+          pushBezierCurve_(currentPoint, tempPoint1, tempPoint1, tempPoint1);
 
           currentControlPoint = null;
           currentPoint = Object.assign({}, tempPoint1);
@@ -398,6 +462,7 @@ function parseCommands_(pathString) {
           }
 
           pushCommandPoints_('lineTo', tempPoint1);
+          pushBezierCurve_(currentPoint, tempPoint1, tempPoint1, tempPoint1);
 
           currentControlPoint = null;
           currentPoint = Object.assign({}, tempPoint1);
@@ -449,6 +514,7 @@ function parseCommands_(pathString) {
             tempPoint1.y += currentPoint.y;
           }
           pushCommandPoints_('lineTo', tempPoint1);
+          pushBezierCurve_(currentPoint, tempPoint1, tempPoint1, tempPoint1);
 
           currentControlPoint = null;
           currentPoint = Object.assign({}, tempPoint1);
@@ -465,7 +531,7 @@ function parseCommands_(pathString) {
     }
   }
 
-  return commands;
+  return {commands, beziers};
 }
 
 

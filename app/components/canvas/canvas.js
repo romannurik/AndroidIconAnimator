@@ -17,6 +17,7 @@
 import {LayerGroup, MaskLayer} from 'model';
 import {ColorUtil} from 'colorutil';
 import {ElementResizeWatcher} from 'elementresizewatcher';
+import {default as Bezier} from 'bezier-js';
 
 
 const CANVAS_MARGIN = 72; // pixels
@@ -31,6 +32,7 @@ class CanvasController {
     this.offscreenCanvas_ = $(document.createElement('canvas'));
     this.studioState_ = StudioStateService;
     this.registeredRulers_ = [];
+    this.draggingBezierPoint_ = null;
 
     this.isPreviewMode = 'previewMode' in $attrs;
     if (this.isPreviewMode) {
@@ -78,20 +80,65 @@ class CanvasController {
 
   setupMouseEventHandlers_() {
     this.canvas_
-        .on('mousemove', event => {
-          let canvasOffset = this.canvas_.offset();
-          let x = Math.round((event.pageX - canvasOffset.left) / this.scale_);
-          let y = Math.round((event.pageY - canvasOffset.top) / this.scale_);
-          this.registeredRulers_.forEach(r => r.showMousePosition(x, y));
-        })
-        .on('mouseleave', () => {
-          this.registeredRulers_.forEach(r => r.hideMouse());
-        });
+      .on('mousedown', event => {
+        let canvasOffset = this.canvas_.offset();
+        let mX = (event.pageX - canvasOffset.left) / this.scale_;
+        let mY = (event.pageY - canvasOffset.top) / this.scale_;
+        let matrices = [];
+        let findSelectedPoint_ = layer => {
+          if (layer instanceof LayerGroup) {
+            matrices.push(this.createTransformMatrix_(layer));
+            layer.layers.forEach(layer => findSelectedPoint_(layer));
+            matrices.pop();
+          } else if (layer instanceof MaskLayer) {
+            // TODO(alockwood): implement this
+          } else {
+            if (layer.pathData && this.draggingBezierPoint_ == null) {
+              let point = {x:mX, y:mY};
+              let clonedMatrices = Array.from(matrices.reverse());
+              let clonedInverseMatrices = Array.from(matrices.reverse()).map(m => this.createInverseMatrix_(m));
+              this.draggingBezierPoint_ =
+                layer.pathData.findBezierPoint(point, (p, invert=false) => {
+                  let matricesToUse;
+                  if (invert) {
+                    matricesToUse = clonedInverseMatrices;
+                  } else {
+                    matricesToUse = clonedMatrices;
+                  }
+                  return this.transformPoint_(p, matricesToUse);
+                });
+            }
+          }
+        };
+        findSelectedPoint_(this.artwork);
+        this.drawCanvas_();
+      })
+      .on('mousemove', event => {
+        let canvasOffset = this.canvas_.offset();
+        let x = Math.round((event.pageX - canvasOffset.left) / this.scale_);
+        let y = Math.round((event.pageY - canvasOffset.top) / this.scale_);
+        this.registeredRulers_.forEach(r => r.showMousePosition(x, y));
+
+        if (this.draggingBezierPoint_) {
+          let mX = (event.pageX - canvasOffset.left) / this.scale_;
+          let mY = (event.pageY - canvasOffset.top) / this.scale_;
+          this.draggingBezierPoint_({x:mX, y:mY});
+          this.drawCanvas_();
+        }
+      })
+      .on('mouseup', () => {
+        this.draggingBezierPoint_ = null;
+      })
+      .on('mouseleave', () => {
+        this.registeredRulers_.forEach(r => r.hideMouse());
+        this.draggingBezierPoint_ = null;
+      });
   }
 
   get artwork() {
     return this.studioState_.artwork;
   }
+
 
   get animation() {
     return this.studioState_.activeAnimation;
@@ -140,17 +187,60 @@ class CanvasController {
     [this.canvas_, this.offscreenCanvas_].forEach(canvas => {
       canvas
           .attr({
-            width: this.artwork.width * this.backingStoreScale_, 
+            width: this.artwork.width * this.backingStoreScale_,
             height: this.artwork.height * this.backingStoreScale_,
           })
           .css({
-            width: this.artwork.width * this.scale_, 
+            width: this.artwork.width * this.scale_,
             height: this.artwork.height * this.scale_,
           });
     });
 
     this.drawCanvas_();
     this.redrawRulers_();
+  }
+
+  createTransformMatrix_(layer) {
+    let rotation = layer.rotation * Math.PI / 180;
+    let cosr = Math.cos(rotation);
+    let sinr = Math.sin(rotation);
+    return [
+      { a: 1, b: 0, c: 0, d: 1, e: layer.pivotX, f: layer.pivotY },
+      { a: 1, b: 0, c: 0, d: 1, e: layer.translateX, f: layer.translateY },
+      { a: cosr, b: sinr, c: -sinr, d: cosr, e: 0, f: 0 },
+      { a: layer.scaleX, b: 0, c: 0, d: layer.scaleY, e: 0, f: 0 },
+      { a: 1, b: 0, c: 0, d: 1, e: -layer.pivotX, f: -layer.pivotY }
+    ].reduce((m1, m2) => {
+      return {
+        a: m1.a * m2.a + m1.c * m2.b,
+        b: m1.a * m2.c + m1.c * m2.d,
+        c: m1.b * m2.a + m1.d * m2.b,
+        d: m1.b * m2.c + m1.d * m2.d,
+        e: m1.a * m2.e + m1.c * m2.f + m1.e * 1,
+        f: m1.b * m2.e + m1.d * m2.f + m1.f * 1,
+      };
+    });
+  }
+
+  createInverseMatrix_(m) {
+    return {
+      a: m.d / (m.a * m.d - m.b * m.c),
+      b: m.b / (m.b * m.c - m.a * m.d),
+      c: m.c / (m.b * m.c - m.a * m.d),
+      d: m.a / (m.a * m.d - m.b * m.c),
+      e: (m.d * m.e - m.c * m.f) / (m.b * m.c - m.a * m.d),
+      f: (m.b * m.e - m.a * m.f) / (m.a * m.d - m.b * m.c),
+    };
+  }
+
+  transformPoint_(p, matrices) {
+    return matrices.reduce((p, m) => {
+      return {
+        // dot product
+        x: m.a * p.x + m.c * p.y + m.e * 1,
+        y: m.b * p.x + m.d * p.y + m.f * 1,
+      };
+    }, p);
   }
 
   drawCanvas_() {
@@ -187,6 +277,7 @@ class CanvasController {
     };
 
     let transforms = [];
+    let matrices = [];
 
     let drawLayer_ = (ctx, layer, selectionMode) => {
       if (layer instanceof LayerGroup) {
@@ -197,6 +288,7 @@ class CanvasController {
           ctx.scale(layer.scaleX, layer.scaleY);
           ctx.translate(-layer.pivotX, -layer.pivotY);
         });
+        matrices.push(this.createTransformMatrix_(layer));
 
         ctx.save();
         layer.layers.forEach(layer => drawLayer_(ctx, layer, selectionMode));
@@ -214,6 +306,7 @@ class CanvasController {
           }
         }
 
+        matrices.pop();
         transforms.pop();
       } else if (layer instanceof MaskLayer) {
         ctx.save();
@@ -285,6 +378,24 @@ class CanvasController {
           // this layer is selected, draw the layer selection stuff
           selectionStroke_();
         }
+
+        ctx.save();
+        transforms.forEach(t => t());
+
+        if (layer.pathData) {
+          layer.pathData.beziers.forEach(bez => {
+            bez.points.forEach(p => {
+              let oldFillStyle = ctx.fillStyle;
+              ctx.fillStyle = 'green';
+              ctx.beginPath();
+              ctx.arc(p.x , p.y, 0.5, 0, 2 * Math.PI, false);
+              ctx.fill();
+              ctx.fillStyle = oldFillStyle;
+            });
+          });
+        }
+
+        ctx.restore();
       }
     };
 
