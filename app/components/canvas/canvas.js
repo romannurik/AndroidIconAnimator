@@ -17,7 +17,6 @@
 import {LayerGroup, MaskLayer} from 'model';
 import {ColorUtil} from 'colorutil';
 import {ElementResizeWatcher} from 'elementresizewatcher';
-import {default as Bezier} from 'bezier-js';
 
 
 const CANVAS_MARGIN = 72; // pixels
@@ -82,30 +81,24 @@ class CanvasController {
     this.canvas_
       .on('mousedown', event => {
         let canvasOffset = this.canvas_.offset();
-        let mX = (event.pageX - canvasOffset.left) / this.scale_;
-        let mY = (event.pageY - canvasOffset.top) / this.scale_;
+        let x = (event.pageX - canvasOffset.left) / this.scale_;
+        let y = (event.pageY - canvasOffset.top) / this.scale_;
         let matrices = [];
         let findSelectedPoint_ = layer => {
           if (layer instanceof LayerGroup) {
-            matrices.push(this.createTransformMatrix_(layer));
+            let transformMatrices = this.createTransformMatrices_(layer);
+            matrices.splice(matrices.length, 0, ...transformMatrices);
             layer.layers.forEach(layer => findSelectedPoint_(layer));
-            matrices.pop();
+            matrices.splice(-transformMatrices.length, transformMatrices.length);
           } else if (layer instanceof MaskLayer) {
             // TODO(alockwood): implement this
           } else {
             if (layer.pathData && this.draggingBezierPoint_ == null) {
-              let point = {x:mX, y:mY};
-              let clonedMatrices = Array.from(matrices.reverse());
-              let clonedInverseMatrices = Array.from(matrices.reverse()).map(m => this.createInverseMatrix_(m));
+              let reversedMatrices = Array.from(matrices).reverse();
+              let reversedInverseMatrices = Array.from(matrices).map(m => this.createInverseMatrix_(m));
               this.draggingBezierPoint_ =
-                layer.pathData.findBezierPoint(point, (p, invert=false) => {
-                  let matricesToUse;
-                  if (invert) {
-                    matricesToUse = clonedInverseMatrices;
-                  } else {
-                    matricesToUse = clonedMatrices;
-                  }
-                  return this.transformPoint_(p, matricesToUse);
+                layer.pathData.findBezierPoint({x, y}, (p, invert=false) => {
+                  return this.transformPoint_(p, invert ? reversedInverseMatrices : reversedMatrices);
                 });
             }
           }
@@ -115,23 +108,26 @@ class CanvasController {
       })
       .on('mousemove', event => {
         let canvasOffset = this.canvas_.offset();
-        let x = Math.round((event.pageX - canvasOffset.left) / this.scale_);
-        let y = Math.round((event.pageY - canvasOffset.top) / this.scale_);
-        this.registeredRulers_.forEach(r => r.showMousePosition(x, y));
-
+        let x = (event.pageX - canvasOffset.left) / this.scale_;
+        let y = (event.pageY - canvasOffset.top) / this.scale_;
+        this.registeredRulers_.forEach(r => r.showMousePosition(Math.round(x), Math.round(y)));
         if (this.draggingBezierPoint_) {
-          let mX = (event.pageX - canvasOffset.left) / this.scale_;
-          let mY = (event.pageY - canvasOffset.top) / this.scale_;
-          this.draggingBezierPoint_({x:mX, y:mY});
+          this.draggingBezierPoint_({x, y});
           this.drawCanvas_();
         }
       })
       .on('mouseup', () => {
-        this.draggingBezierPoint_ = null;
+        if (this.draggingBezierPoint_) {
+          this.draggingBezierPoint_ = null;
+          this.drawCanvas_();
+        }
       })
       .on('mouseleave', () => {
         this.registeredRulers_.forEach(r => r.hideMouse());
-        this.draggingBezierPoint_ = null;
+        if (this.draggingBezierPoint_) {
+          this.draggingBezierPoint_ = null;
+          this.drawCanvas_();
+        }
       });
   }
 
@@ -200,17 +196,7 @@ class CanvasController {
     this.redrawRulers_();
   }
 
-  createTransformMatrix_(layer) {
-    let rotation = layer.rotation * Math.PI / 180;
-    let cosr = Math.cos(rotation);
-    let sinr = Math.sin(rotation);
-    return [
-      { a: 1, b: 0, c: 0, d: 1, e: layer.pivotX, f: layer.pivotY },
-      { a: 1, b: 0, c: 0, d: 1, e: layer.translateX, f: layer.translateY },
-      { a: cosr, b: sinr, c: -sinr, d: cosr, e: 0, f: 0 },
-      { a: layer.scaleX, b: 0, c: 0, d: layer.scaleY, e: 0, f: 0 },
-      { a: 1, b: 0, c: 0, d: 1, e: -layer.pivotX, f: -layer.pivotY }
-    ].reduce((m1, m2) => {
+/*.reduce((m1, m2) => {
       return {
         a: m1.a * m2.a + m1.c * m2.b,
         b: m1.a * m2.c + m1.c * m2.d,
@@ -218,8 +204,17 @@ class CanvasController {
         d: m1.b * m2.c + m1.d * m2.d,
         e: m1.a * m2.e + m1.c * m2.f + m1.e * 1,
         f: m1.b * m2.e + m1.d * m2.f + m1.f * 1,
-      };
-    });
+      };*/
+  createTransformMatrices_(layer) {
+    let cosr = Math.cos(layer.rotation * Math.PI / 180);
+    let sinr = Math.sin(layer.rotation * Math.PI / 180);
+    return [
+      { a: 1, b: 0, c: 0, d: 1, e: layer.pivotX, f: layer.pivotY },
+      { a: 1, b: 0, c: 0, d: 1, e: layer.translateX, f: layer.translateY },
+      { a: cosr, b: sinr, c: -sinr, d: cosr, e: 0, f: 0 },
+      { a: layer.scaleX, b: 0, c: 0, d: layer.scaleY, e: 0, f: 0 },
+      { a: 1, b: 0, c: 0, d: 1, e: -layer.pivotX, f: -layer.pivotY }
+    ];
   }
 
   createInverseMatrix_(m) {
@@ -288,7 +283,8 @@ class CanvasController {
           ctx.scale(layer.scaleX, layer.scaleY);
           ctx.translate(-layer.pivotX, -layer.pivotY);
         });
-        matrices.push(this.createTransformMatrix_(layer));
+        let transformMatrices = this.createTransformMatrices_(layer);
+        matrices.splice(matrices.length, 0, ...transformMatrices);
 
         ctx.save();
         layer.layers.forEach(layer => drawLayer_(ctx, layer, selectionMode));
@@ -306,7 +302,7 @@ class CanvasController {
           }
         }
 
-        matrices.pop();
+        matrices.splice(-transformMatrices.length, transformMatrices.length);
         transforms.pop();
       } else if (layer instanceof MaskLayer) {
         ctx.save();
@@ -351,6 +347,7 @@ class CanvasController {
             // Calculate the dash array. The first array element is the length of
             // the trimmed path and the second element is the gap, which is the
             // difference in length between the total path length and the visible
+
             // trimmed path length.
             ctx.setLineDash([
               shownFraction * layer.pathData.length,
@@ -380,11 +377,10 @@ class CanvasController {
         }
 
         ctx.save();
-        transforms.forEach(t => t());
-
         if (layer.pathData) {
           layer.pathData.beziers.forEach(bez => {
             bez.points.forEach(p => {
+              p = this.transformPoint_(p, Array.from(matrices).reverse());
               let oldFillStyle = ctx.fillStyle;
               ctx.fillStyle = 'green';
               ctx.beginPath();
@@ -394,7 +390,6 @@ class CanvasController {
             });
           });
         }
-
         ctx.restore();
       }
     };

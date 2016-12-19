@@ -70,18 +70,14 @@ export class SvgPathData {
     return this.beziers_;
   }
 
-  findBezierPoint(point, transformPointFn) {
+  findBezierPoint(mouseDownPoint, transformPointFn) {
     let dist = (p1, p2) =>  Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-    let transformedPoint = {x:point.x, y:point.y};
 
     let numBezierCurveCoordsEncountered = 0;
     for (let i = 0; i < this.beziers_.length; i++) {
       for (let j = 0; j < this.beziers_[i].points.length; j++) {
-        let p = this.beziers_[i].points[j];
-        let transformedBezPoint = transformPointFn(p);
-        let distance = dist(transformedPoint, transformedBezPoint);
-        console.log(transformedPoint, transformedBezPoint, distance);
-        if (distance <= 0.5) {
+        let bezPoint = this.beziers_[i].points[j];
+        if (dist(mouseDownPoint, transformPointFn(bezPoint)) <= 0.5) {
           let commandArgs = null;
           let xIndex = -1;
           let yIndex = -1;
@@ -100,16 +96,12 @@ export class SvgPathData {
               break;
             }
           }
-          return movePoint => {
-            console.log(movePoint);
-            let transformedMovePoint = transformPointFn(movePoint, true);
-            console.log(transformedMovePoint);
-            p.x = transformedMovePoint.x;
-            p.y = transformedMovePoint.y;
-            commandArgs[xIndex] = p.x;
-            commandArgs[yIndex] = p.y;
-            console.log(this.beziers_);
-            console.log(this.commands_);
+          return mouseMovePoint => {
+            let transformedMovePoint = transformPointFn(mouseMovePoint, true);
+            bezPoint.x = transformedMovePoint.x;
+            bezPoint.y = transformedMovePoint.y;
+            commandArgs[xIndex] = transformedMovePoint.x;
+            commandArgs[yIndex] = transformedMovePoint.y;
           };
         }
         numBezierCurveCoordsEncountered += 2;
