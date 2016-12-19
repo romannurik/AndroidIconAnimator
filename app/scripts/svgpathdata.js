@@ -77,32 +77,23 @@ export class SvgPathData {
     for (let i = 0; i < this.beziers_.length; i++) {
       for (let j = 0; j < this.beziers_[i].points.length; j++) {
         let bezPoint = this.beziers_[i].points[j];
-        if (dist(mouseDownPoint, transformPointFn(bezPoint)) <= 0.5) {
-          let commandArgs = null;
-          let xIndex = -1;
-          let yIndex = -1;
+        if (dist(mouseDownPoint, transformPointFn(bezPoint)) <= .5) {
           let numCommandCoordsEncountered = 0;
           for (let k = 0; k < this.commands_.length; k++) {
             for (let l = 0; l < this.commands_[k].args.length; l += 2) {
               if (numCommandCoordsEncountered == numBezierCurveCoordsEncountered) {
-                commandArgs = this.commands_[k].args;
-                xIndex = l;
-                yIndex = l + 1;
-                break;
+                let commandArgs = this.commands_[k].args;
+                return mouseMovePoint => {
+                  let transformedMovePoint = transformPointFn(mouseMovePoint, true);
+                  bezPoint.x = transformedMovePoint.x;
+                  bezPoint.y = transformedMovePoint.y;
+                  commandArgs[l] = transformedMovePoint.x;
+                  commandArgs[l + 1] = transformedMovePoint.y;
+                };
               }
               numCommandCoordsEncountered += 2;
             }
-            if (xIndex >= 0 && yIndex >= 0) {
-              break;
-            }
           }
-          return mouseMovePoint => {
-            let transformedMovePoint = transformPointFn(mouseMovePoint, true);
-            bezPoint.x = transformedMovePoint.x;
-            bezPoint.y = transformedMovePoint.y;
-            commandArgs[xIndex] = transformedMovePoint.x;
-            commandArgs[yIndex] = transformedMovePoint.y;
-          };
         }
         numBezierCurveCoordsEncountered += 2;
       }

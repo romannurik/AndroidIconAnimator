@@ -95,10 +95,10 @@ class CanvasController {
           } else {
             if (layer.pathData && this.draggingBezierPoint_ == null) {
               let reversedMatrices = Array.from(matrices).reverse();
-              let reversedInverseMatrices = Array.from(matrices).map(m => this.createInverseMatrix_(m));
+              let inverseMatrices = Array.from(matrices).map(m => this.createInverseMatrix_(m));
               this.draggingBezierPoint_ =
                 layer.pathData.findBezierPoint({x, y}, (p, invert=false) => {
-                  return this.transformPoint_(p, invert ? reversedInverseMatrices : reversedMatrices);
+                  return this.transformPoint_(p, invert ? inverseMatrices : reversedMatrices);
                 });
             }
           }
@@ -124,10 +124,6 @@ class CanvasController {
       })
       .on('mouseleave', () => {
         this.registeredRulers_.forEach(r => r.hideMouse());
-        if (this.draggingBezierPoint_) {
-          this.draggingBezierPoint_ = null;
-          this.drawCanvas_();
-        }
       });
   }
 
@@ -196,15 +192,6 @@ class CanvasController {
     this.redrawRulers_();
   }
 
-/*.reduce((m1, m2) => {
-      return {
-        a: m1.a * m2.a + m1.c * m2.b,
-        b: m1.a * m2.c + m1.c * m2.d,
-        c: m1.b * m2.a + m1.d * m2.b,
-        d: m1.b * m2.c + m1.d * m2.d,
-        e: m1.a * m2.e + m1.c * m2.f + m1.e * 1,
-        f: m1.b * m2.e + m1.d * m2.f + m1.f * 1,
-      };*/
   createTransformMatrices_(layer) {
     let cosr = Math.cos(layer.rotation * Math.PI / 180);
     let sinr = Math.sin(layer.rotation * Math.PI / 180);
