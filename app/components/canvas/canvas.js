@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {LayerGroup, MaskLayer} from 'model';
+import {LayerGroup, MaskLayer, PathLayer} from 'model';
 import {ColorUtil} from 'colorutil';
 import {ElementResizeWatcher} from 'elementresizewatcher';
 
@@ -78,46 +78,44 @@ class CanvasController {
 
   setupMouseEventHandlers_() {
     this.canvas_
-      .on('mousedown', event => {
-        let canvasOffset = this.canvas_.offset();
-        let x = (event.pageX - canvasOffset.left) / this.scale_;
-        let y = (event.pageY - canvasOffset.top) / this.scale_;
-        let matrices = [];
-        let findSelectedPoint_ = layer => {
-          if (layer instanceof LayerGroup) {
-            let transformMatrices = this.createTransformMatrices_(layer);
-            matrices.splice(matrices.length, 0, ...transformMatrices);
-            layer.layers.forEach(layer => findSelectedPoint_(layer));
-            matrices.splice(-transformMatrices.length, transformMatrices.length);
-          } else if (layer instanceof MaskLayer) {
-            // TODO(alockwood): implement this
-          } else {
-            let shouldToggleSelection = false;
-            let transformPointFn = p => {
-              return this.transformPoint_(p, Array.from(matrices).reverse());
-            };
-            if (layer.pathData && layer.fillColor) {
-              shouldToggleSelection = layer.pathData.isFillSelected({x, y}, transformPointFn);
-            } else if (layer.pathData && layer.strokeColor) {
-              shouldToggleSelection = layer.pathData.isStrokeSelected({x, y}, transformPointFn, layer.strokeWidth);
+        .on('mousedown', event => {
+          let canvasOffset = this.canvas_.offset();
+          let x = (event.pageX - canvasOffset.left) / this.scale_;
+          let y = (event.pageY - canvasOffset.top) / this.scale_;
+          let matrices = [];
+          let toggleSelectedPath_ = layer => {
+            if (layer instanceof LayerGroup) {
+              let transformMatrices = this.createTransformMatrices_(layer);
+              matrices.splice(matrices.length, 0, ...transformMatrices);
+              layer.layers.forEach(layer => toggleSelectedPath_(layer));
+              matrices.splice(-transformMatrices.length, transformMatrices.length);
+            } else if (layer instanceof PathLayer && layer.pathData) {
+              let shouldToggleSelection = false;
+              let transformPointFn = p => {
+                return this.transformPoint_(p, Array.from(matrices).reverse());
+              };
+              if (layer.fillColor) {
+                shouldToggleSelection = layer.pathData.isFillSelected({x, y}, transformPointFn);
+              } else if (layer.strokeColor) {
+                shouldToggleSelection = layer.pathData.isStrokeSelected({x, y}, transformPointFn, layer.strokeWidth);
+              }
+              if (shouldToggleSelection) {
+                this.studioState_.toggleSelected(layer);
+              }
             }
-            if (shouldToggleSelection) {
-              this.studioState_.toggleSelected(layer);
-            }
-          }
-        };
-        findSelectedPoint_(this.artwork);
-        this.drawCanvas_();
-      })
-      .on('mousemove', event => {
-        let canvasOffset = this.canvas_.offset();
-        let x = (event.pageX - canvasOffset.left) / this.scale_;
-        let y = (event.pageY - canvasOffset.top) / this.scale_;
-        this.registeredRulers_.forEach(r => r.showMousePosition(Math.round(x), Math.round(y)));
-      })
-      .on('mouseleave', () => {
-        this.registeredRulers_.forEach(r => r.hideMouse());
-      });
+          };
+          toggleSelectedPath_(this.artwork);
+          this.drawCanvas_();
+        })
+        .on('mousemove', event => {
+          let canvasOffset = this.canvas_.offset();
+          let x = Math.round((event.pageX - canvasOffset.left) / this.scale_);
+          let y = Math.round((event.pageY - canvasOffset.top) / this.scale_);
+          this.registeredRulers_.forEach(r => r.showMousePosition(x, y));
+        })
+        .on('mouseleave', () => {
+          this.registeredRulers_.forEach(r => r.hideMouse());
+        });
   }
 
   get artwork() {
@@ -251,7 +249,6 @@ class CanvasController {
     };
 
     let transforms = [];
-    let matrices = [];
 
     let drawLayer_ = (ctx, layer, selectionMode) => {
       if (layer instanceof LayerGroup) {
@@ -262,8 +259,6 @@ class CanvasController {
           ctx.scale(layer.scaleX, layer.scaleY);
           ctx.translate(-layer.pivotX, -layer.pivotY);
         });
-        let transformMatrices = this.createTransformMatrices_(layer);
-        matrices.splice(matrices.length, 0, ...transformMatrices);
 
         ctx.save();
         layer.layers.forEach(layer => drawLayer_(ctx, layer, selectionMode));
@@ -281,7 +276,6 @@ class CanvasController {
           }
         }
 
-        matrices.splice(-transformMatrices.length, transformMatrices.length);
         transforms.pop();
       } else if (layer instanceof MaskLayer) {
         ctx.save();
@@ -326,7 +320,6 @@ class CanvasController {
             // Calculate the dash array. The first array element is the length of
             // the trimmed path and the second element is the gap, which is the
             // difference in length between the total path length and the visible
-
             // trimmed path length.
             ctx.setLineDash([
               shownFraction * layer.pathData.length,

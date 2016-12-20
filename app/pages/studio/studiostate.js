@@ -351,10 +351,6 @@ class StudioStateService {
     this.broadcastChanges_({selection: true});
   }
 
-  toggleSelectedCoordinate(x, y) {
-    console.log(x, y);
-  }
-
   deleteLayers(layersToDelete) {
     if (!Array.isArray(layersToDelete)) {
       layersToDelete = [layersToDelete];
