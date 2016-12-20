@@ -108,9 +108,8 @@ class CanvasController {
                 } else {
                   this.studioState_.selection = [layer];
                 }
-                return true;
               }
-              return false;
+              return shouldUpdateSelection;
             }
             return false;
           };
