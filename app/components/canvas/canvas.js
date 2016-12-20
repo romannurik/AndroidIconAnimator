@@ -204,7 +204,8 @@ class CanvasController {
     ];
   }
 
-  createInverseMatrix_(m) {
+  createInverseMatrix_(matrix) {
+    let m = matrix;
     return {
       a: m.d / (m.a * m.d - m.b * m.c),
       b: m.b / (m.b * m.c - m.a * m.d),

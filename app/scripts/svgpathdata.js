@@ -68,12 +68,19 @@ export class SvgPathData {
   }
 
   isStrokeSelected(transformedMouseDownPoint, strokeWidth) {
+    // If the shortest distance from the point to the path is less than half
+    // the stroke width, then select the path.
     return this.beziers
         .map(bez => bez.project(transformedMouseDownPoint))
         .reduce((proj, min) => proj.d < min.d ? proj : min).d <= (strokeWidth / 2);
   }
 
   isFillSelected(transformedMouseDownPoint) {
+    // We use the 'even-odd rule' to determine if the filled path is selected.
+    // We create a line from the mouse point to a point we know that is not
+    // inside the path (in this case, we use a coordinate outside the path's
+    // bounded box). The path should be selected if and only if the number of =
+    // intersections between the line and the path is odd.
     let x = this.bounds.r + 1;
     let y = this.bounds.b + 1;
     let line = {
