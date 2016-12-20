@@ -67,56 +67,23 @@ export class SvgPathData {
     });
   }
 
-  //get beziers() {
-  //  return this.beziers;
-  //}
-
   isStrokeSelected(mouseDownPoint, transformPointFn, strokeWidth) {
     let transformedPoint = transformPointFn(mouseDownPoint);
     return this.beziers
       .map(bez => bez.project(transformedPoint))
-      .reduce((proj, minProj) => proj.d < minProj.d ? proj : minProj).d <= (strokeWidth / 2);
+      .reduce((proj, min) => proj.d < min.d ? proj : min).d <= (strokeWidth / 2);
   }
 
   isFillSelected(mouseDownPoint, transformPointFn) {
+    let x = this.bounds.r + 1;
+    let y = this.bounds.b + 1;
     let line = {
       p1: transformPointFn(mouseDownPoint),
-      p2: {x:this.bounds.r+1, y:this.bounds.b+1},
+      p2: {x, y},
     };
     return this.beziers
       .map(bez => bez.intersects(line).length)
       .reduce((l, sum) => sum + l) % 2 != 0;
-  }
-
-  findBezierPoint(mouseDownPoint, transformPointFn) {
-    let dist = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-
-    let numBezierCurveCoordsEncountered = 0;
-    for (let i = 0; i < this.beziers.length; i++) {
-      for (let j = 0; j < this.beziers[i].points.length; j++) {
-        let bezPoint = this.beziers[i].points[j];
-        if (dist(mouseDownPoint, transformPointFn(bezPoint)) <= .5) {
-          let numCommandCoordsEncountered = 0;
-          for (let k = 0; k < this.commands_.length; k++) {
-            for (let l = 0; l < this.commands_[k].args.length; l += 2) {
-              if (numCommandCoordsEncountered == numBezierCurveCoordsEncountered) {
-                let commandArgs = this.commands_[k].args;
-                return mouseMovePoint => {
-                  let transformedMovePoint = transformPointFn(mouseMovePoint, true);
-                  bezPoint.x = transformedMovePoint.x;
-                  bezPoint.y = transformedMovePoint.y;
-                  commandArgs[l] = transformedMovePoint.x;
-                  commandArgs[l + 1] = transformedMovePoint.y;
-                };
-              }
-              numCommandCoordsEncountered += 2;
-            }
-          }
-        }
-        numBezierCurveCoordsEncountered += 2;
-      }
-    }
-    return null;
   }
 
   get commands() {

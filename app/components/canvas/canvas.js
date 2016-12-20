@@ -31,7 +31,6 @@ class CanvasController {
     this.offscreenCanvas_ = $(document.createElement('canvas'));
     this.studioState_ = StudioStateService;
     this.registeredRulers_ = [];
-    this.draggingBezierPoint_ = null;
 
     this.isPreviewMode = 'previewMode' in $attrs;
     if (this.isPreviewMode) {
@@ -93,14 +92,6 @@ class CanvasController {
           } else if (layer instanceof MaskLayer) {
             // TODO(alockwood): implement this
           } else {
-            if (layer.pathData && this.draggingBezierPoint_ == null) {
-              //let reversedMatrices = Array.from(matrices).reverse();
-              //let inverseMatrices = Array.from(matrices).map(m => this.createInverseMatrix_(m));
-              //this.draggingBezierPoint_ =
-              //  layer.pathData.findBezierPoint({x, y}, (p, invert=false) => {
-              //    return this.transformPoint_(p, invert ? inverseMatrices : reversedMatrices);
-              //});
-            }
             let shouldToggleSelection = false;
             let transformPointFn = p => {
               return this.transformPoint_(p, Array.from(matrices).reverse());
@@ -123,16 +114,6 @@ class CanvasController {
         let x = (event.pageX - canvasOffset.left) / this.scale_;
         let y = (event.pageY - canvasOffset.top) / this.scale_;
         this.registeredRulers_.forEach(r => r.showMousePosition(Math.round(x), Math.round(y)));
-        if (this.draggingBezierPoint_) {
-          this.draggingBezierPoint_({x, y});
-          this.drawCanvas_();
-        }
-      })
-      .on('mouseup', () => {
-        if (this.draggingBezierPoint_) {
-          this.draggingBezierPoint_ = null;
-          this.drawCanvas_();
-        }
       })
       .on('mouseleave', () => {
         this.registeredRulers_.forEach(r => r.hideMouse());
@@ -142,7 +123,6 @@ class CanvasController {
   get artwork() {
     return this.studioState_.artwork;
   }
-
 
   get animation() {
     return this.studioState_.activeAnimation;
@@ -374,33 +354,6 @@ class CanvasController {
           // this layer is selected, draw the layer selection stuff
           selectionStroke_();
         }
-
-        ctx.save();
-        if (layer.pathData && false) {
-          layer.pathData.beziers.forEach(bez => {
-            bez.points.forEach(p => {
-              p = this.transformPoint_(p, Array.from(matrices).reverse());
-              let oldFillStyle = ctx.fillStyle;
-              ctx.fillStyle = 'green';
-              ctx.beginPath();
-              ctx.arc(p.x , p.y, 0.5, 0, 2 * Math.PI, false);
-              ctx.fill();
-              ctx.fillStyle = oldFillStyle;
-            });
-            layer.pathData.beziers.forEach(bez => {
-              bez.split(0.5).span.forEach(p => {
-                p = this.transformPoint_(p, Array.from(matrices).reverse());
-                let oldFillStyle = ctx.fillStyle;
-                ctx.fillStyle = 'red';
-                ctx.beginPath();
-                ctx.arc(p.x , p.y, 0.25, 0, 2 * Math.PI, false);
-                ctx.fill();
-                ctx.fillStyle = oldFillStyle;
-              });
-            });
-          });
-        }
-        ctx.restore();
       }
     };
 
