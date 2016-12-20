@@ -94,12 +94,24 @@ class CanvasController {
             // TODO(alockwood): implement this
           } else {
             if (layer.pathData && this.draggingBezierPoint_ == null) {
-              let reversedMatrices = Array.from(matrices).reverse();
-              let inverseMatrices = Array.from(matrices).map(m => this.createInverseMatrix_(m));
-              this.draggingBezierPoint_ =
-                layer.pathData.findBezierPoint({x, y}, (p, invert=false) => {
-                  return this.transformPoint_(p, invert ? inverseMatrices : reversedMatrices);
-                });
+              //let reversedMatrices = Array.from(matrices).reverse();
+              //let inverseMatrices = Array.from(matrices).map(m => this.createInverseMatrix_(m));
+              //this.draggingBezierPoint_ =
+              //  layer.pathData.findBezierPoint({x, y}, (p, invert=false) => {
+              //    return this.transformPoint_(p, invert ? inverseMatrices : reversedMatrices);
+              //});
+            }
+            let shouldToggleSelection = false;
+            let transformPointFn = p => {
+              return this.transformPoint_(p, Array.from(matrices).reverse());
+            };
+            if (layer.pathData && layer.fillColor) {
+              shouldToggleSelection = layer.pathData.isFillSelected({x, y}, transformPointFn);
+            } else if (layer.pathData && layer.strokeColor) {
+              shouldToggleSelection = layer.pathData.isStrokeSelected({x, y}, transformPointFn, layer.strokeWidth);
+            }
+            if (shouldToggleSelection) {
+              this.studioState_.toggleSelected(layer);
             }
           }
         };
@@ -364,7 +376,7 @@ class CanvasController {
         }
 
         ctx.save();
-        if (layer.pathData) {
+        if (layer.pathData && false) {
           layer.pathData.beziers.forEach(bez => {
             bez.points.forEach(p => {
               p = this.transformPoint_(p, Array.from(matrices).reverse());
@@ -374,6 +386,17 @@ class CanvasController {
               ctx.arc(p.x , p.y, 0.5, 0, 2 * Math.PI, false);
               ctx.fill();
               ctx.fillStyle = oldFillStyle;
+            });
+            layer.pathData.beziers.forEach(bez => {
+              bez.split(0.5).span.forEach(p => {
+                p = this.transformPoint_(p, Array.from(matrices).reverse());
+                let oldFillStyle = ctx.fillStyle;
+                ctx.fillStyle = 'red';
+                ctx.beginPath();
+                ctx.arc(p.x , p.y, 0.25, 0, 2 * Math.PI, false);
+                ctx.fill();
+                ctx.fillStyle = oldFillStyle;
+              });
             });
           });
         }

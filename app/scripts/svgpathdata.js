@@ -21,6 +21,7 @@ export class SvgPathData {
   constructor(obj) {
     this.length = 0;
     this.bounds = null;
+    this.beziers = [];
 
     if (obj) {
       if (typeof obj == 'string') {
@@ -39,12 +40,12 @@ export class SvgPathData {
 
   set pathString(value) {
     this.string_ = value;
-    let {commands, beziers} = parseCommands_(value);
+    let commands = parseCommands_(value);
     this.commands_ = commands;
-    this.beziers_ = beziers;
-    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
+    let {length, bounds, beziers} = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
+    this.beziers = beziers;
   }
 
   toString() {
@@ -66,17 +67,34 @@ export class SvgPathData {
     });
   }
 
-  get beziers() {
-    return this.beziers_;
+  //get beziers() {
+  //  return this.beziers;
+  //}
+
+  isStrokeSelected(mouseDownPoint, transformPointFn, strokeWidth) {
+    let transformedPoint = transformPointFn(mouseDownPoint);
+    return this.beziers
+      .map(bez => bez.project(transformedPoint))
+      .reduce((proj, minProj) => proj.d < minProj.d ? proj : minProj).d <= (strokeWidth / 2);
+  }
+
+  isFillSelected(mouseDownPoint, transformPointFn) {
+    let line = {
+      p1: transformPointFn(mouseDownPoint),
+      p2: {x:this.bounds.r+1, y:this.bounds.b+1},
+    };
+    return this.beziers
+      .map(bez => bez.intersects(line).length)
+      .reduce((l, sum) => sum + l) % 2 != 0;
   }
 
   findBezierPoint(mouseDownPoint, transformPointFn) {
-    let dist = (p1, p2) =>  Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+    let dist = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
 
     let numBezierCurveCoordsEncountered = 0;
-    for (let i = 0; i < this.beziers_.length; i++) {
-      for (let j = 0; j < this.beziers_[i].points.length; j++) {
-        let bezPoint = this.beziers_[i].points[j];
+    for (let i = 0; i < this.beziers.length; i++) {
+      for (let j = 0; j < this.beziers[i].points.length; j++) {
+        let bezPoint = this.beziers[i].points[j];
         if (dist(mouseDownPoint, transformPointFn(bezPoint)) <= .5) {
           let numCommandCoordsEncountered = 0;
           for (let k = 0; k < this.commands_.length; k++) {
@@ -147,9 +165,10 @@ export class SvgPathData {
     });
 
     this.string_ = commandsToString_(this.commands_);
-    let { length, bounds } = computePathLengthAndBounds_(this.commands_);
+    let { length, bounds, beziers } = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
+    this.beziers = beziers;
   }
 
 
@@ -197,12 +216,9 @@ const TOKEN_EOF = 4;
 
 function parseCommands_(pathString) {
   let commands = [];
-  let beziers = [];
   let pushCommandComplex_ = (command, ...args) => commands.push({command, args});
   let pushCommandPoints_ = (command, ...points) => commands.push({
     command, args: points.reduce((arr, point) => arr.concat(point.x, point.y), [])});
-  let pushBezierCurve_ = (start, cp1, cp2, end) => beziers.push(
-    new Bezier(start.x, start.y, cp1.x, cp1.y, cp2.x, cp2.y, end.x, end.y));
 
   let currentPoint = {x:NaN, y:NaN};
   let currentControlPoint = null; // used for S and T commands
@@ -309,7 +325,6 @@ function parseCommands_(pathString) {
             }
           } else {
             pushCommandPoints_('lineTo', tempPoint1);
-            pushBezierCurve_(currentPoint, tempPoint1, tempPoint1, tempPoint1);
           }
         }
 
@@ -330,7 +345,6 @@ function parseCommands_(pathString) {
           consumePoint_(tempPoint2, relative);
           consumePoint_(tempPoint3, relative);
           pushCommandPoints_('bezierCurveTo', tempPoint1, tempPoint2, tempPoint3);
-          pushBezierCurve_(currentPoint, tempPoint1, tempPoint2, tempPoint3);
 
           currentControlPoint = Object.assign({}, tempPoint2);
           currentPoint = Object.assign({}, tempPoint3);
@@ -356,7 +370,6 @@ function parseCommands_(pathString) {
             Object.assign(tempPoint3, tempPoint1);
           }
           pushCommandPoints_('bezierCurveTo', tempPoint3, tempPoint1, tempPoint2);
-          pushBezierCurve_(currentPoint, tempPoint3, tempPoint1, tempPoint2);
 
           currentControlPoint = Object.assign({}, tempPoint1);
           currentPoint = Object.assign({}, tempPoint2);
@@ -376,7 +389,6 @@ function parseCommands_(pathString) {
           consumePoint_(tempPoint1, relative);
           consumePoint_(tempPoint2, relative);
           pushCommandPoints_('quadraticCurveTo', tempPoint1, tempPoint2);
-          pushBezierCurve_(currentPoint, tempPoint1, tempPoint2, tempPoint2);
 
           currentControlPoint = Object.assign({}, tempPoint1);
           currentPoint = Object.assign({}, tempPoint2);
@@ -401,8 +413,6 @@ function parseCommands_(pathString) {
             Object.assign(tempPoint2, tempPoint1);
           }
           pushCommandPoints_('quadraticCurveTo', tempPoint2, tempPoint1);
-          pushBezierCurve_(currentPoint, tempPoint2, tempPoint1, tempPoint1);
-
 
           currentControlPoint = Object.assign({}, tempPoint2);
           currentPoint = Object.assign({}, tempPoint1);
@@ -421,7 +431,6 @@ function parseCommands_(pathString) {
         while (advanceToNextToken_() === TOKEN_VALUE) {
           consumePoint_(tempPoint1, relative);
           pushCommandPoints_('lineTo', tempPoint1);
-          pushBezierCurve_(currentPoint, tempPoint1, tempPoint1, tempPoint1);
 
           currentControlPoint = null;
           currentPoint = Object.assign({}, tempPoint1);
@@ -445,7 +454,6 @@ function parseCommands_(pathString) {
           }
 
           pushCommandPoints_('lineTo', tempPoint1);
-          pushBezierCurve_(currentPoint, tempPoint1, tempPoint1, tempPoint1);
 
           currentControlPoint = null;
           currentPoint = Object.assign({}, tempPoint1);
@@ -469,10 +477,10 @@ function parseCommands_(pathString) {
           consumePoint_(tempPoint1, relative);
 
           pushCommandComplex_('__arc__',
-              currentPoint.x, currentPoint.y,
-              rx, ry,
-              xAxisRotation, largeArcFlag, sweepFlag,
-              tempPoint1.x, tempPoint1.y);
+            currentPoint.x, currentPoint.y,
+            rx, ry,
+            xAxisRotation, largeArcFlag, sweepFlag,
+            tempPoint1.x, tempPoint1.y);
 
           // pp.addMarkerAngle(halfWay, ah - dir * Math.PI / 2);
           // pp.addMarkerAngle(tempPoint1, ah - dir * Math.PI);
@@ -497,7 +505,6 @@ function parseCommands_(pathString) {
             tempPoint1.y += currentPoint.y;
           }
           pushCommandPoints_('lineTo', tempPoint1);
-          pushBezierCurve_(currentPoint, tempPoint1, tempPoint1, tempPoint1);
 
           currentControlPoint = null;
           currentPoint = Object.assign({}, tempPoint1);
@@ -514,7 +521,7 @@ function parseCommands_(pathString) {
     }
   }
 
-  return {commands, beziers};
+  return commands;
 }
 
 
@@ -548,8 +555,6 @@ function executeArc_(ctx, arcArgs) {
        largeArcFlag, sweepFlag,
        tempPoint1X, tempPoint1Y] = arcArgs;
 
-  xAxisRotation *= Math.PI / 180;
-
   if (currentPointX == tempPoint1X && currentPointY == tempPoint1Y) {
     // degenerate to point
     return;
@@ -576,6 +581,7 @@ function executeArc_(ctx, arcArgs) {
 function computePathLengthAndBounds_(commands) {
   let length = 0;
   let bounds = {l: Infinity, t: Infinity, r: -Infinity, b: -Infinity};
+  let beziers = [];
 
   let expandBounds_ = (x, y) => {
     bounds.l = Math.min(x, bounds.l);
@@ -613,6 +619,7 @@ function computePathLengthAndBounds_(commands) {
 
       case 'lineTo': {
         length += dist_(args[0], args[1], currentPoint.x, currentPoint.y);
+        beziers.push(new Bezier(currentPoint.x, currentPoint.y, args[0], args[1], args[0], args[1]));
         currentPoint.x = args[0];
         currentPoint.y = args[1];
         expandBounds_(args[0], args[1]);
@@ -622,6 +629,7 @@ function computePathLengthAndBounds_(commands) {
       case 'closePath': {
         if (firstPoint) {
           length += dist_(firstPoint.x, firstPoint.y, currentPoint.x, currentPoint.y);
+          beziers.push(new Bezier(currentPoint.x, currentPoint.y, firstPoint.x, firstPoint.y, firstPoint.x, firstPoint.y));
         }
         firstPoint = null;
         break;
@@ -633,6 +641,7 @@ function computePathLengthAndBounds_(commands) {
         length += bez.length();
         currentPoint.x = args[4];
         currentPoint.y = args[5];
+        beziers.push(bez);
         expandBoundsToBezier_(bez);
         break;
       }
@@ -642,6 +651,7 @@ function computePathLengthAndBounds_(commands) {
         length += bez.length();
         currentPoint.x = args[2];
         currentPoint.y = args[3];
+        beziers.push(bez);
         expandBoundsToBezier_(bez);
         break;
       }
@@ -651,8 +661,6 @@ function computePathLengthAndBounds_(commands) {
              rx, ry, xAxisRotation,
              largeArcFlag, sweepFlag,
              tempPoint1X, tempPoint1Y] = args;
-
-        xAxisRotation *= Math.PI / 180;
 
         if (currentPointX == tempPoint1X && currentPointY == tempPoint1Y) {
           // degenerate to point (0 length)
@@ -680,6 +688,7 @@ function computePathLengthAndBounds_(commands) {
           currentPoint.x = bezierCoords[i + 6];
           currentPoint.y = bezierCoords[i + 7];
           expandBoundsToBezier_(bez);
+          beziers.push(bez);
         }
         currentPoint.x = tempPoint1X;
         currentPoint.y = tempPoint1Y;
@@ -688,16 +697,17 @@ function computePathLengthAndBounds_(commands) {
     }
   });
 
-  return {length, bounds};
+  return {length, bounds, beziers};
 }
 
 
 // Based on code from https://code.google.com/archive/p/androidsvg
-function arcToBeziers_(xf, yf, rx, ry, rotate, largeArcFlag, sweepFlag, xt, yt) {
+function arcToBeziers_(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, xt, yt) {
   // Sign of the radii is ignored (behaviour specified by the spec)
   rx = Math.abs(rx);
   ry = Math.abs(ry);
 
+  let rotate = xAxisRotation * Math.PI / 180;
   let cosAngle = Math.cos(rotate);
   let sinAngle = Math.sin(rotate);
 
