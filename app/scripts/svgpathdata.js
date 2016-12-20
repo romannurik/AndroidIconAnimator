@@ -70,8 +70,8 @@ export class SvgPathData {
   isStrokeSelected(mouseDownPoint, transformPointFn, strokeWidth) {
     let transformedPoint = transformPointFn(mouseDownPoint);
     return this.beziers
-      .map(bez => bez.project(transformedPoint))
-      .reduce((proj, min) => proj.d < min.d ? proj : min).d <= (strokeWidth / 2);
+        .map(bez => bez.project(transformedPoint))
+        .reduce((proj, min) => proj.d < min.d ? proj : min).d <= (strokeWidth / 2);
   }
 
   isFillSelected(mouseDownPoint, transformPointFn) {
@@ -82,8 +82,8 @@ export class SvgPathData {
       p2: {x, y},
     };
     return this.beziers
-      .map(bez => bez.intersects(line).length)
-      .reduce((l, sum) => sum + l) % 2 != 0;
+        .map(bez => bez.intersects(line).length)
+        .reduce((l, sum) => sum + l) % 2 != 0;
   }
 
   get commands() {
@@ -185,7 +185,7 @@ function parseCommands_(pathString) {
   let commands = [];
   let pushCommandComplex_ = (command, ...args) => commands.push({command, args});
   let pushCommandPoints_ = (command, ...points) => commands.push({
-    command, args: points.reduce((arr, point) => arr.concat(point.x, point.y), [])});
+      command, args: points.reduce((arr, point) => arr.concat(point.x, point.y), [])});
 
   let currentPoint = {x:NaN, y:NaN};
   let currentControlPoint = null; // used for S and T commands
@@ -444,10 +444,10 @@ function parseCommands_(pathString) {
           consumePoint_(tempPoint1, relative);
 
           pushCommandComplex_('__arc__',
-            currentPoint.x, currentPoint.y,
-            rx, ry,
-            xAxisRotation, largeArcFlag, sweepFlag,
-            tempPoint1.x, tempPoint1.y);
+              currentPoint.x, currentPoint.y,
+              rx, ry,
+              xAxisRotation, largeArcFlag, sweepFlag,
+              tempPoint1.x, tempPoint1.y);
 
           // pp.addMarkerAngle(halfWay, ah - dir * Math.PI / 2);
           // pp.addMarkerAngle(tempPoint1, ah - dir * Math.PI);
@@ -586,7 +586,10 @@ function computePathLengthAndBounds_(commands) {
 
       case 'lineTo': {
         length += dist_(args[0], args[1], currentPoint.x, currentPoint.y);
-        beziers.push(new Bezier(currentPoint.x, currentPoint.y, args[0], args[1], args[0], args[1]));
+        beziers.push(new Bezier(
+          currentPoint.x, currentPoint.y,
+          args[0], args[1],
+          args[0], args[1]));
         currentPoint.x = args[0];
         currentPoint.y = args[1];
         expandBounds_(args[0], args[1]);
@@ -596,7 +599,10 @@ function computePathLengthAndBounds_(commands) {
       case 'closePath': {
         if (firstPoint) {
           length += dist_(firstPoint.x, firstPoint.y, currentPoint.x, currentPoint.y);
-          beziers.push(new Bezier(currentPoint.x, currentPoint.y, firstPoint.x, firstPoint.y, firstPoint.x, firstPoint.y));
+          beziers.push(new Bezier(
+            currentPoint.x, currentPoint.y,
+            firstPoint.x, firstPoint.y,
+            firstPoint.x, firstPoint.y));
         }
         firstPoint = null;
         break;
