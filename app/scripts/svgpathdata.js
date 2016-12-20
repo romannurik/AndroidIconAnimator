@@ -67,18 +67,17 @@ export class SvgPathData {
     });
   }
 
-  isStrokeSelected(mouseDownPoint, transformPointFn, strokeWidth) {
-    let transformedPoint = transformPointFn(mouseDownPoint);
+  isStrokeSelected(transformedMouseDownPoint, strokeWidth) {
     return this.beziers
-        .map(bez => bez.project(transformedPoint))
+        .map(bez => bez.project(transformedMouseDownPoint))
         .reduce((proj, min) => proj.d < min.d ? proj : min).d <= (strokeWidth / 2);
   }
 
-  isFillSelected(mouseDownPoint, transformPointFn) {
+  isFillSelected(transformedMouseDownPoint) {
     let x = this.bounds.r + 1;
     let y = this.bounds.b + 1;
     let line = {
-      p1: transformPointFn(mouseDownPoint),
+      p1: transformedMouseDownPoint,
       p2: {x, y},
     };
     return this.beziers

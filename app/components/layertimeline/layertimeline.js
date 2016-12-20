@@ -46,6 +46,14 @@ class LayerTimelineController {
       }
     }, $scope);
 
+    this.studioState_.onChange((event, changes) => {
+      if (changes.selection) {
+        // TODO(alockwood): ask roman about the correct way to trigger an invalidation in the layer timeline
+        // this feels like a hack...?
+        window.setTimeout(() => $scope.$apply(), 0);
+      }
+    }, $scope);
+
     this.horizZoom = 2; // 1ms = 1px
 
     this.setupMouseWheelZoom_();

@@ -83,29 +83,40 @@ class CanvasController {
           let x = (event.pageX - canvasOffset.left) / this.scale_;
           let y = (event.pageY - canvasOffset.top) / this.scale_;
           let matrices = [];
+          // TODO(alockwood): select clips and/or groups in addition to paths?
           let toggleSelectedPath_ = layer => {
             if (layer instanceof LayerGroup) {
               let transformMatrices = this.createTransformMatrices_(layer);
               matrices.splice(matrices.length, 0, ...transformMatrices);
-              layer.layers.forEach(layer => toggleSelectedPath_(layer));
+              let result = layer.layers.some(layer => toggleSelectedPath_(layer));
               matrices.splice(-transformMatrices.length, transformMatrices.length);
+              return result;
             } else if (layer instanceof PathLayer && layer.pathData) {
-              let shouldToggleSelection = false;
-              let transformPointFn = p => {
-                return this.transformPoint_(p, Array.from(matrices).reverse());
-              };
+              let shouldUpdateSelection = false;
+              let transformedMouseDownPoint =
+                  this.transformPoint_({x, y}, Array.from(matrices).reverse());
               if (layer.fillColor) {
-                shouldToggleSelection = layer.pathData.isFillSelected({x, y}, transformPointFn);
+                shouldUpdateSelection =
+                    layer.pathData.isFillSelected(transformedMouseDownPoint);
               } else if (layer.strokeColor) {
-                shouldToggleSelection = layer.pathData.isStrokeSelected({x, y}, transformPointFn, layer.strokeWidth);
+                shouldUpdateSelection =
+                    layer.pathData.isStrokeSelected(transformedMouseDownPoint, layer.strokeWidth);
               }
-              if (shouldToggleSelection) {
-                this.studioState_.toggleSelected(layer);
+              if (shouldUpdateSelection) {
+                if (event.metaKey || event.shiftKey) {
+                  this.studioState_.toggleSelected(layer);
+                } else {
+                  this.studioState_.selection = [layer];
+                }
+                return true;
               }
+              return false;
             }
+            return false;
           };
-          toggleSelectedPath_(this.artwork);
-          this.drawCanvas_();
+          if (!toggleSelectedPath_(this.artwork) && !(event.metaKey || event.shiftKey)) {
+            this.studioState_.selection = [];
+          }
         })
         .on('mousemove', event => {
           let canvasOffset = this.canvas_.offset();
