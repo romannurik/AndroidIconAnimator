@@ -21,6 +21,8 @@ export class SvgPathData {
   constructor(obj) {
     this.length = 0;
     this.bounds = null;
+
+    // TODO(alockwood): does this need to be updated if the path is ever interpolated?
     this.beziers = [];
 
     if (obj) {
