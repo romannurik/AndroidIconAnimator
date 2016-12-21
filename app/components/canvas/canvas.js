@@ -135,6 +135,28 @@ class CanvasController {
         });
   }
 
+  createTransformMatrices_(layer) {
+    let cosr = Math.cos(layer.rotation * Math.PI / 180);
+    let sinr = Math.sin(layer.rotation * Math.PI / 180);
+    return [
+      { a: 1, b: 0, c: 0, d: 1, e: layer.pivotX, f: layer.pivotY },
+      { a: 1, b: 0, c: 0, d: 1, e: layer.translateX, f: layer.translateY },
+      { a: cosr, b: sinr, c: -sinr, d: cosr, e: 0, f: 0 },
+      { a: layer.scaleX, b: 0, c: 0, d: layer.scaleY, e: 0, f: 0 },
+      { a: 1, b: 0, c: 0, d: 1, e: -layer.pivotX, f: -layer.pivotY }
+    ];
+  }
+
+  transformPoint_(p, matrices) {
+    return matrices.reduce((p, m) => {
+      return {
+        // dot product
+        x: m.a * p.x + m.c * p.y + m.e * 1,
+        y: m.b * p.x + m.d * p.y + m.f * 1,
+      };
+    }, p);
+  }
+
   get artwork() {
     return this.studioState_.artwork;
   }
@@ -197,40 +219,6 @@ class CanvasController {
 
     this.drawCanvas_();
     this.redrawRulers_();
-  }
-
-  createTransformMatrices_(layer) {
-    let cosr = Math.cos(layer.rotation * Math.PI / 180);
-    let sinr = Math.sin(layer.rotation * Math.PI / 180);
-    return [
-      { a: 1, b: 0, c: 0, d: 1, e: layer.pivotX, f: layer.pivotY },
-      { a: 1, b: 0, c: 0, d: 1, e: layer.translateX, f: layer.translateY },
-      { a: cosr, b: sinr, c: -sinr, d: cosr, e: 0, f: 0 },
-      { a: layer.scaleX, b: 0, c: 0, d: layer.scaleY, e: 0, f: 0 },
-      { a: 1, b: 0, c: 0, d: 1, e: -layer.pivotX, f: -layer.pivotY }
-    ];
-  }
-
-  createInverseMatrix_(matrix) {
-    let m = matrix;
-    return {
-      a: m.d / (m.a * m.d - m.b * m.c),
-      b: m.b / (m.b * m.c - m.a * m.d),
-      c: m.c / (m.b * m.c - m.a * m.d),
-      d: m.a / (m.a * m.d - m.b * m.c),
-      e: (m.d * m.e - m.c * m.f) / (m.b * m.c - m.a * m.d),
-      f: (m.b * m.e - m.a * m.f) / (m.a * m.d - m.b * m.c),
-    };
-  }
-
-  transformPoint_(p, matrices) {
-    return matrices.reduce((p, m) => {
-      return {
-        // dot product
-        x: m.a * p.x + m.c * p.y + m.e * 1,
-        y: m.b * p.x + m.d * p.y + m.f * 1,
-      };
-    }, p);
   }
 
   drawCanvas_() {
