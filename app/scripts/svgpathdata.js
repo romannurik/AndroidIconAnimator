@@ -21,8 +21,6 @@ export class SvgPathData {
   constructor(obj) {
     this.length = 0;
     this.bounds = null;
-
-    // TODO(alockwood): does this need to be updated if the path is ever interpolated?
     this.beziers = [];
 
     if (obj) {
@@ -69,27 +67,30 @@ export class SvgPathData {
     });
   }
 
-  isStrokeSelected(transformedMouseDownPoint, strokeWidth) {
+  isStrokeSelected(mouseDownPoint, pointTransformerFn, strokeWidth) {
     // If the shortest distance from the point to the path is less than half
     // the stroke width, then select the path.
     return this.beziers
-        .map(bez => bez.project(transformedMouseDownPoint))
+        .map(bez => new Bezier(bez.points.map(p => pointTransformerFn(p))))
+        .map(bez => bez.project(mouseDownPoint))
         .reduce((proj, min) => proj.d < min.d ? proj : min).d <= (strokeWidth / 2);
   }
 
-  isFillSelected(transformedMouseDownPoint) {
+  isFillSelected(mouseDownPoint, pointTransformerFn) {
     // We use the 'even-odd rule' to determine if the filled path is selected.
     // We create a line from the mouse point to a point we know that is not
     // inside the path (in this case, we use a coordinate outside the path's
     // bounded box). The path should be selected if and only if the number of =
     // intersections between the line and the path is odd.
-    let x = this.bounds.r + 1;
-    let y = this.bounds.b + 1;
     let line = {
-      p1: transformedMouseDownPoint,
-      p2: {x, y},
+      p1: mouseDownPoint,
+      p2: {
+        x: this.bounds.r + 1,
+        y: this.bounds.b + 1,
+      },
     };
     return this.beziers
+        .map(bez => new Bezier(bez.points.map(p => pointTransformerFn(p))))
         .map(bez => bez.intersects(line).length)
         .reduce((l, sum) => sum + l) % 2 != 0;
   }
@@ -101,9 +102,10 @@ export class SvgPathData {
   set commands(value) {
     this.commands_ = (value ? value.slice() : []);
     this.string_ = commandsToString_(this.commands_);
-    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
+    let {length, bounds, beziers} = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
+    this.beziers = beziers;
   }
 
   transform(transforms) {

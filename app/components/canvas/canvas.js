@@ -93,14 +93,13 @@ class CanvasController {
               return result;
             } else if (layer instanceof PathLayer && layer.pathData) {
               let shouldUpdateSelection = false;
-              let transformedMouseDownPoint =
-                  this.transformPoint_({x, y}, Array.from(matrices).reverse());
+              let reversedMatrices = Array.from(matrices).reverse();
+              let pointTransformerFn = p => this.transformPoint_(p, reversedMatrices);
               if (layer.fillColor) {
-                shouldUpdateSelection =
-                    layer.pathData.isFillSelected(transformedMouseDownPoint);
+                shouldUpdateSelection = layer.pathData.isFillSelected({x, y}, pointTransformerFn);
               } else if (layer.strokeColor) {
                 shouldUpdateSelection =
-                    layer.pathData.isStrokeSelected(transformedMouseDownPoint, layer.strokeWidth);
+                    layer.pathData.isStrokeSelected({x, y}, pointTransformerFn, layer.strokeWidth);
               }
               if (shouldUpdateSelection) {
                 if (event.metaKey || event.shiftKey) {
@@ -113,7 +112,15 @@ class CanvasController {
             }
             return false;
           };
-          if (!toggleSelectedPath_(this.artwork) && !(event.metaKey || event.shiftKey)) {
+          // TODO(alockwood): ask roman how to properly select paths that are being interpolated
+          let currentArtwork;
+          if (this.studioState_.animationRenderer) {
+            this.studioState_.animationRenderer.setAnimationTime(this.animTime || 0);
+            currentArtwork = this.studioState_.animationRenderer.renderedArtwork;
+          } else {
+            currentArtwork = this.artwork;
+          }
+          if (!toggleSelectedPath_(currentArtwork) && !(event.metaKey || event.shiftKey)) {
             this.studioState_.selection = [];
           }
         })
