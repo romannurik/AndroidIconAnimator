@@ -17,7 +17,7 @@
 import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'model';
 import {ColorUtil} from 'colorutil';
 import {SvgLoader} from 'svgloader';
-import {XmlLoader} from 'xmlloader';
+import {VectorDrawableLoader} from 'vectordrawableloader';
 import {AvdSerializer} from 'avdserializer';
 
 //import TEST_DATA from '../../../_sandbox/debug.iconanim.json';
@@ -148,7 +148,7 @@ class StudioCtrl {
       }  else if (str.match(/<\/vector>\s*$/)) {
         // paste VD
         ga('send', 'event', 'paste', 'vd');
-        let artwork = XmlLoader.loadArtworkFromXmlString(str);
+        let artwork = VectorDrawableLoader.loadArtworkFromXmlString(str);
         pasteLayers = artwork.layers;
 
       } else if (str.match(/\}\s*$/)) {
@@ -392,7 +392,7 @@ class StudioCtrl {
       if (!confirm_()) {
         return;
       }
-      let artwork = XmlLoader.loadArtworkFromXmlString(fileInfo.textContent);
+      let artwork = VectorDrawableLoader.loadArtworkFromXmlString(fileInfo.textContent);
       this.studioState_.load({artwork});
     }
   }

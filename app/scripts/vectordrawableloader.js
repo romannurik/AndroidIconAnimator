@@ -19,7 +19,7 @@ import { IdProperty } from './modelproperties';
 import { ModelUtil } from './modelutil';
 
 
-export const XmlLoader = {
+export const VectorDrawableLoader = {
   loadArtworkFromXmlString(xmlString) {
     let parser = new DOMParser();
     let doc = parser.parseFromString(xmlString, 'application/xml');
@@ -37,8 +37,8 @@ export const XmlLoader = {
       let makeFinalNodeId_ = (node, typeIdPrefix) => {
         let name = node.getAttribute('android:name');
         let finalId = ModelUtil.getUniqueId({
-          prefix: IdProperty.sanitize(name || typeIdPrefix),
-          objectById: id => usedIds[id],
+            prefix: IdProperty.sanitize(name || typeIdPrefix),
+            objectById: id => usedIds[id],
         });
         usedIds[finalId] = true;
         return finalId;
@@ -48,39 +48,39 @@ export const XmlLoader = {
 
       if (node.tagName === 'path') {
         return Object.assign(layerData, {
-          id: makeFinalNodeId_(node, 'path'),
-          pathData: node.getAttribute('android:pathData') || null,
-          fillColor: node.getAttribute('android:fillColor') || null,
-          fillAlpha: node.getAttribute('android:fillAlpha') || 1,
-          strokeColor: node.getAttribute('android:strokeColor') || null,
-          strokeAlpha: node.getAttribute('android:strokeAlpha') || 1,
-          strokeWidth: node.getAttribute('android:strokeWidth') || 0,
-          strokeLinecap: node.getAttribute('android:strokeLineCap') || 'butt',
-          strokeLinejoin: node.getAttribute('android:strokeLineJoin') || 'miter',
-          strokeMiterLimit: node.getAttribute('android:strokeMiterLimit') || 4,
-          trimPathStart: node.getAttribute('android:trimPathStart') || 0,
-          trimPathEnd: node.getAttribute('android:trimPathEnd') || 1,
-          trimPathOffset: node.getAttribute('android:trimPathOffset') || 0,
+            id: makeFinalNodeId_(node, 'path'),
+            pathData: node.getAttribute('android:pathData') || null,
+            fillColor: node.getAttribute('android:fillColor') || null,
+            fillAlpha: node.getAttribute('android:fillAlpha') || 1,
+            strokeColor: node.getAttribute('android:strokeColor') || null,
+            strokeAlpha: node.getAttribute('android:strokeAlpha') || 1,
+            strokeWidth: node.getAttribute('android:strokeWidth') || 0,
+            strokeLinecap: node.getAttribute('android:strokeLineCap') || 'butt',
+            strokeLinejoin: node.getAttribute('android:strokeLineJoin') || 'miter',
+            strokeMiterLimit: node.getAttribute('android:strokeMiterLimit') || 4,
+            trimPathStart: node.getAttribute('android:trimPathStart') || 0,
+            trimPathEnd: node.getAttribute('android:trimPathEnd') || 1,
+            trimPathOffset: node.getAttribute('android:trimPathOffset') || 0,
         });
       }
 
       if (node.childNodes.length) {
         let layers = Array.from(node.childNodes)
-          .map(child => nodeToLayerData_(child))
-          .filter(layer => !!layer);
+            .map(child => nodeToLayerData_(child))
+            .filter(layer => !!layer);
         if (layers && layers.length) {
           // create a group (there are valid children)
           return Object.assign(layerData, {
-            id: makeFinalNodeId_(node, 'group'),
-            type: 'group',
-            rotation: node.getAttribute('android:rotation') || 0,
-            scaleX: node.getAttribute('android:scaleX') || 1,
-            scaleY: node.getAttribute('android:scaleY') || 1,
-            pivotX: node.getAttribute('android:pivotX') || 0,
-            pivotY: node.getAttribute('android:pivotY') || 0,
-            translateX: node.getAttribute('android:translateX') || 0,
-            translateY: node.getAttribute('android:translateY') || 0,
-            layers,
+              id: makeFinalNodeId_(node, 'group'),
+              type: 'group',
+              rotation: node.getAttribute('android:rotation') || 0,
+              scaleX: node.getAttribute('android:scaleX') || 1,
+              scaleY: node.getAttribute('android:scaleY') || 1,
+              pivotX: node.getAttribute('android:pivotX') || 0,
+              pivotY: node.getAttribute('android:pivotY') || 0,
+              translateX: node.getAttribute('android:translateX') || 0,
+              translateY: node.getAttribute('android:translateY') || 0,
+              layers,
           });
         } else {
           return null;
@@ -95,11 +95,11 @@ export const XmlLoader = {
     let height = doc.documentElement.getAttribute('android:viewportHeight');
     let alpha = doc.documentElement.getAttribute('android:alpha') || 1;
     let artwork = {
-      id,
-      width,
-      height,
-      layers: (rootLayer ? rootLayer.layers : null) || [],
-      alpha,
+        id,
+        width,
+        height,
+        layers: (rootLayer ? rootLayer.layers : null) || [],
+        alpha,
     };
     return new Artwork(artwork);
   }

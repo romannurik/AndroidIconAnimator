@@ -18,7 +18,7 @@ import {Artwork, PathLayer, LayerGroup, MaskLayer, Animation, AnimationBlock} fr
 import {ModelUtil} from 'modelutil';
 import {DragHelper} from 'draghelper';
 import {SvgLoader} from 'svgloader';
-import {XmlLoader} from 'xmlloader';
+import {VectorDrawableLoader} from 'vectordrawableloader';
 import {TimelineConsts} from './consts.js';
 
 
@@ -391,7 +391,7 @@ class LayerTimelineController {
    */
   onImportVD(fileInfo) {
     ga('send', 'event', 'file', 'importVD');
-    let artwork = XmlLoader.loadArtworkFromXmlString(fileInfo.textContent);
+    let artwork = VectorDrawableLoader.loadArtworkFromXmlString(fileInfo.textContent);
     this.studioState_.load({artwork});
   }
 
