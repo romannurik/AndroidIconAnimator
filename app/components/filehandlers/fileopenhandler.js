@@ -38,7 +38,10 @@ class FileOpenHandlerController {
   handleDropFiles_(fileList) {
     fileList = Array.from(fileList || []);
     fileList = fileList.filter(file =>
-        (file.type == 'image/svg+xml' || file.type == 'application/json'
+        (file.type === 'image/svg+xml'
+          || file.type === 'application/json'
+          || file.type === 'application/xml'
+          || file.type === 'text/xml'
           || file.name.match(/\.iconanim$/)));
     if (!fileList.length) {
       return;
