@@ -214,6 +214,15 @@ gulp.task('default', ['clean'], function (cb) {
       cb);
 });
 
+// Tests
+gulp.task('test', function (cb) {
+  return gulp.src(['test/**/*.js'], {read: false})
+      .pipe($.mocha({
+        reporter: 'nyan',
+        require: ['babel-register'],
+      }));
+});
+
 // Deploy to GitHub pages
 gulp.task('deploy', function() {
   return gulp.src('dist/**/*', {dot: true})
