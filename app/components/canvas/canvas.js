@@ -304,9 +304,6 @@ class CanvasController {
     }
     let artworkCtx = currentAlpha == 1 ? ctx : offscreenCtx;
     drawLayer_(artworkCtx, currentArtwork);
-    if (!this.isPreviewMode) {
-      drawLayer_(artworkCtx, currentArtwork, true);
-    }
 
     if (currentArtwork.alpha != 1) {
       let oldGlobalAlpha = ctx.globalAlpha;
@@ -316,6 +313,9 @@ class CanvasController {
       ctx.scale(this.backingStoreScale_, this.backingStoreScale_);
       ctx.globalAlpha = oldGlobalAlpha;
       offscreenCtx.restore();
+    }
+    if (!this.isPreviewMode) {
+      drawLayer_(ctx, currentArtwork, true);
     }
 
     ctx.restore();
