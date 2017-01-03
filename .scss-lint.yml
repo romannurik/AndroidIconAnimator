@@ -1,5 +1,3 @@
-# From ACUX
-# https://cs.corp.google.com/#piper///depot/google3/ads/common/testing/linting_scss/default-scss-lint.yml
 linters:
   Comment:
     # 1. Copyright notices should be preserved in production CSS.
@@ -8,8 +6,6 @@ linters:
     # 3. Preserve CSSJanus "@noflip" annotations.
     allowed: '(Copyright)|(\.scss[ */]*$)|(@noflip)'
   DeclarationOrder:
-    # Some teams are putting @extend declarations specifically _not_ at the top
-    # of a list of rules.
     enabled: false
   DisableLinterReason:
     enabled: true
@@ -26,12 +22,10 @@ linters:
     # The default is 3. We're allowing 6 to keep some noise down.
     max_depth: 6
   PropertySortOrder:
-    # See go/linting-scss#speed-within-linter-service
     enabled: false
   QualifyingElement:
     enabled: false
   SelectorDepth:
-    # See go/linting-scss#speed-within-linter-service
     enabled: false
     # The default is 3. We're allowing 6 to keep some noise down.
     max_depth: 6
@@ -43,24 +37,19 @@ linters:
     enabled: false
   Shorthand:
     # 3 sides are less readable than 4.
-    # (prefer "1px 2px 3px 2px" over "1px 2px 3px")
     allowed_shorthands: [1,2,4]
   SpaceAfterPropertyColon:
-    # See go/linting-scss#speed-within-linter-service
     enabled: false
     # Since we have line length limits in place, sometimes (like with image
     # URLs) we need to newline after a property colon.
     style: one_space_or_newline
   TrailingSemicolon:
-    # See go/linting-scss#speed-within-linter-service
     enabled: false
   TransitionAll:
     enabled: true
   UnnecessaryMantissa:
     enabled: false
   UrlFormat:
-    # Dart SCSS files can have paths that start with "package:", which is caught
-    # by this linter, so disabling until we can get around.
     enabled: false
   VendorPrefix:
     enabled: false
