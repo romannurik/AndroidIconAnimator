@@ -652,7 +652,6 @@ class LayerTimelineController {
           // add a fake target for empty groups
           if (layer instanceof LayerGroup && !layer.layers.length) {
             rect = Object.assign({}, rect, {left: rect.left + LAYER_INDENT, top: rect.bottom});
-            console.log(rect);
             orderedLayerInfos.push({
               layer,
               element,
@@ -663,7 +662,6 @@ class LayerTimelineController {
         });
 
         orderedLayerInfos.sort((a, b) => a.localRect.top - b.localRect.top);
-        console.log(orderedLayerInfos);
 
         $dragIndicator = $('<div>')
             .addClass('slt-layers-list-drag-indicator')

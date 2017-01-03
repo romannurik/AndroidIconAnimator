@@ -182,6 +182,9 @@ gulp.task('serve', ['styles', 'scripts', 'icons', 'bower'], function () {
     // https: true,
     server: {
       baseDir: ['.tmp', 'app'],
+      routes: {
+        '/_sandbox': '_sandbox'
+      },
       middleware: [history()]
     }
   });

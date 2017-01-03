@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-module.exports = {
+export const TimelineConsts = {
   TIMELINE_ANIMATION_PADDING: 20, // 20px
 };

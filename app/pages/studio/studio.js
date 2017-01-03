@@ -56,7 +56,7 @@ class StudioCtrl {
   }
 
   loadInitialArtwork_() {
-    let exampleMatch = window.location.search.match(/example=(.+)/);
+    let exampleMatch = window.location.search.match(/(?:example|fileUrl)=(.+)/);
     if (exampleMatch) {
       // Load example
       this.http_({
@@ -78,14 +78,6 @@ class StudioCtrl {
         this.studioState_.new();
         this.isLoaded = true;
       });
-
-    // } else if (DEBUG) {
-    //   // load debug
-    //   this.studioState_.load({
-    //     artwork: new Artwork(TEST_DATA.artwork),
-    //     animations: TEST_DATA.animations.map(anim => new Animation(anim))
-    //   });
-    //   this.isLoaded = true;
 
     } else {
       // load empty artwork

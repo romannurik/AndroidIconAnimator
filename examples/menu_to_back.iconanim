@@ -1,57 +1,106 @@
 {
   "artwork": {
     "id": "menu_back",
+    "canvasColor": null,
     "width": 24,
     "height": 24,
+    "alpha": 1,
     "layers": [
       {
-        "type": "group",
         "id": "menu",
+        "type": "group",
+        "rotation": 0,
+        "scaleX": 1,
+        "scaleY": 1,
         "pivotX": 12,
         "pivotY": 12,
+        "translateX": 0,
+        "translateY": 0,
         "layers": [
           {
-            "type": "group",
             "id": "bottom_container",
+            "type": "group",
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
             "pivotX": 20,
             "pivotY": 17,
+            "translateX": 0,
+            "translateY": 0,
             "layers": [
               {
                 "id": "bottom",
-                "strokeWidth": 2,
+                "type": "path",
+                "pathData": "M4,17 L20,17",
+                "fillColor": null,
+                "fillAlpha": 1,
                 "strokeColor": "#000",
+                "strokeAlpha": 1,
+                "strokeWidth": 2,
                 "strokeLinecap": "square",
-                "pathData": "M4,17 L20,17"
+                "strokeLinejoin": "miter",
+                "strokeMiterLimit": 4,
+                "trimPathStart": 0,
+                "trimPathEnd": 1,
+                "trimPathOffset": 0
               }
             ]
           },
           {
-            "type": "group",
             "id": "stem_container",
+            "type": "group",
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
             "pivotX": 12,
             "pivotY": 12,
+            "translateX": 0,
+            "translateY": 0,
             "layers": [
               {
                 "id": "stem",
-                "strokeWidth": 2,
+                "type": "path",
+                "pathData": "M4,12 L20,12",
+                "fillColor": null,
+                "fillAlpha": 1,
                 "strokeColor": "#000",
+                "strokeAlpha": 1,
+                "strokeWidth": 2,
                 "strokeLinecap": "square",
-                "pathData": "M4,12 L20,12"
+                "strokeLinejoin": "miter",
+                "strokeMiterLimit": 4,
+                "trimPathStart": 0,
+                "trimPathEnd": 1,
+                "trimPathOffset": 0
               }
             ]
           },
           {
-            "type": "group",
             "id": "top_container",
+            "type": "group",
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
             "pivotX": 20,
             "pivotY": 7,
+            "translateX": 0,
+            "translateY": 0,
             "layers": [
               {
                 "id": "top",
-                "strokeWidth": 2,
+                "type": "path",
+                "pathData": "M4,7 L20,7",
+                "fillColor": null,
+                "fillAlpha": 1,
                 "strokeColor": "#000",
+                "strokeAlpha": 1,
+                "strokeWidth": 2,
                 "strokeLinecap": "square",
-                "pathData": "M4,7 L20,7"
+                "strokeLinejoin": "miter",
+                "strokeMiterLimit": 4,
+                "trimPathStart": 0,
+                "trimPathEnd": 1,
+                "trimPathOffset": 0
               }
             ]
           }
@@ -70,7 +119,8 @@
           "fromValue": 0,
           "toValue": -1.41421356,
           "startTime": 500,
-          "endTime": 1200
+          "endTime": 1200,
+          "interpolator": "ACCELERATE_DECELERATE"
         },
         {
           "layerId": "top_container",
@@ -78,15 +128,8 @@
           "fromValue": 0,
           "toValue": 5,
           "startTime": 500,
-          "endTime": 1200
-        },
-        {
-          "layerId": "top_container",
-          "propertyName": "scaleX",
-          "fromValue": 1,
-          "toValue": 0.5,
-          "startTime": 500,
-          "endTime": 1200
+          "endTime": 1200,
+          "interpolator": "ACCELERATE_DECELERATE"
         },
         {
           "layerId": "top_container",
@@ -94,23 +137,8 @@
           "fromValue": 0,
           "toValue": 45,
           "startTime": 500,
-          "endTime": 1200
-        },
-        {
-          "layerId": "stem_container",
-          "propertyName": "scaleX",
-          "fromValue": 1,
-          "toValue": 0.8125,
-          "startTime": 500,
-          "endTime": 1200
-        },
-        {
-          "layerId": "stem_container",
-          "propertyName": "translateX",
-          "fromValue": 0,
-          "toValue": -0.5,
-          "startTime": 500,
-          "endTime": 1200
+          "endTime": 1200,
+          "interpolator": "ACCELERATE_DECELERATE"
         },
         {
           "layerId": "bottom_container",
@@ -118,7 +146,8 @@
           "fromValue": 0,
           "toValue": -1.41421356,
           "startTime": 500,
-          "endTime": 1200
+          "endTime": 1200,
+          "interpolator": "ACCELERATE_DECELERATE"
         },
         {
           "layerId": "bottom_container",
@@ -126,15 +155,8 @@
           "fromValue": 0,
           "toValue": -5,
           "startTime": 500,
-          "endTime": 1200
-        },
-        {
-          "layerId": "bottom_container",
-          "propertyName": "scaleX",
-          "fromValue": 1,
-          "toValue": 0.5,
-          "startTime": 500,
-          "endTime": 1200
+          "endTime": 1200,
+          "interpolator": "ACCELERATE_DECELERATE"
         },
         {
           "layerId": "bottom_container",
@@ -142,7 +164,8 @@
           "fromValue": 0,
           "toValue": -45,
           "startTime": 500,
-          "endTime": 1200
+          "endTime": 1200,
+          "interpolator": "ACCELERATE_DECELERATE"
         },
         {
           "layerId": "menu",
@@ -150,7 +173,44 @@
           "fromValue": 0,
           "toValue": 180,
           "startTime": 500,
-          "endTime": 1200
+          "endTime": 1200,
+          "interpolator": "ACCELERATE_DECELERATE"
+        },
+        {
+          "layerId": "bottom",
+          "propertyName": "trimPathStart",
+          "fromValue": 0,
+          "toValue": 0.5,
+          "startTime": 500,
+          "endTime": 1200,
+          "interpolator": "ACCELERATE_DECELERATE"
+        },
+        {
+          "layerId": "top",
+          "propertyName": "trimPathStart",
+          "fromValue": 0,
+          "toValue": 0.5,
+          "startTime": 500,
+          "endTime": 1200,
+          "interpolator": "ACCELERATE_DECELERATE"
+        },
+        {
+          "layerId": "stem",
+          "propertyName": "trimPathEnd",
+          "fromValue": 1,
+          "toValue": 0.8,
+          "startTime": 500,
+          "endTime": 1200,
+          "interpolator": "ACCELERATE_DECELERATE"
+        },
+        {
+          "layerId": "stem_container",
+          "propertyName": "translateX",
+          "fromValue": 0,
+          "toValue": 1,
+          "startTime": 500,
+          "endTime": 1200,
+          "interpolator": "ACCELERATE_DECELERATE"
         }
       ]
     }
