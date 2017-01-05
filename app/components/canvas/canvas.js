@@ -80,22 +80,22 @@ class CanvasController {
   setupMouseEventHandlers_() {
     this.canvas_
         .on('mousedown', event => {
-          let canvasOffset = this.canvas_.offset();
-          let x = (event.pageX - canvasOffset.left) / this.scale_;
-          let y = (event.pageY - canvasOffset.top) / this.scale_;
-          let matrices = [];
+          const canvasOffset = this.canvas_.offset();
+          const x = (event.pageX - canvasOffset.left) / this.scale_;
+          const y = (event.pageY - canvasOffset.top) / this.scale_;
+          const matrices = [];
           // TODO(alockwood): select clips and/or groups in addition to paths?
-          let toggleSelectedPath_ = layer => {
+          const toggleSelectedPath_ = layer => {
             if (layer instanceof LayerGroup) {
-              let transformMatrices = this.createTransformMatrices_(layer);
+              const transformMatrices = this.createTransformMatrices_(layer);
               matrices.splice(matrices.length, 0, ...transformMatrices);
-              let result = layer.layers.some(layer => toggleSelectedPath_(layer));
+              const result = layer.layers.some(layer => toggleSelectedPath_(layer));
               matrices.splice(-transformMatrices.length, transformMatrices.length);
               return result;
             } else if (layer instanceof PathLayer && layer.pathData) {
               let shouldUpdateSelection = false;
-              let reversedMatrices = Array.from(matrices).reverse();
-              let pointTransformerFn = p => this.transformPoint_(p, reversedMatrices);
+              const reversedMatrices = Array.from(matrices).reverse();
+              const pointTransformerFn = p => this.transformPoint_(p, reversedMatrices);
               if (layer.fillColor) {
                 shouldUpdateSelection = layer.pathData.isFillSelected({x, y}, pointTransformerFn);
               } else if (layer.strokeColor) {
@@ -103,17 +103,20 @@ class CanvasController {
                     layer.pathData.isStrokeSelected({x, y}, pointTransformerFn, layer.strokeWidth);
               }
               if (shouldUpdateSelection) {
-                if (event.metaKey || event.shiftKey) {
-                  this.studioState_.toggleSelected(layer);
-                } else {
-                  this.studioState_.selection = [layer];
+                const selectedLayer = this.artwork.findLayerById(layer.id);
+                this.scope_.$apply(() => {
+                  if (event.metaKey || event.shiftKey) {
+                    this.studioState_.toggleSelected(selectedLayer);
+                  } else {
+                    this.studioState_.selection = [selectedLayer];
+                  }
                 }
               }
               return shouldUpdateSelection;
             }
             return false;
           };
-          // TODO(alockwood): ask roman how to properly select paths that are being interpolated
+
           let currentArtwork;
           if (this.studioState_.animationRenderer) {
             this.studioState_.animationRenderer.setAnimationTime(this.animTime || 0);
