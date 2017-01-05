@@ -18,7 +18,8 @@ import {Artwork, PathLayer, LayerGroup, MaskLayer, Animation, AnimationBlock} fr
 import {ModelUtil} from 'modelutil';
 import {DragHelper} from 'draghelper';
 import {SvgLoader} from 'svgloader';
-import TimelineConsts from './consts.js';
+import {VectorDrawableLoader} from 'vectordrawableloader';
+import {TimelineConsts} from './consts.js';
 
 
 const DRAG_SLOP = 4; // pixels
@@ -394,6 +395,15 @@ class LayerTimelineController {
   }
 
   /**
+   * Handles importing a vector drawable from XML.
+   */
+  onImportVD(fileInfo) {
+    ga('send', 'event', 'file', 'importVD');
+    let artwork = VectorDrawableLoader.loadArtworkFromXmlString(fileInfo.textContent);
+    this.studioState_.load({artwork});
+  }
+
+  /**
    * Handles export to animated vector drawable format.
    */
   onExportAVDs() {
@@ -650,7 +660,6 @@ class LayerTimelineController {
           // add a fake target for empty groups
           if (layer instanceof LayerGroup && !layer.layers.length) {
             rect = Object.assign({}, rect, {left: rect.left + LAYER_INDENT, top: rect.bottom});
-            console.log(rect);
             orderedLayerInfos.push({
               layer,
               element,
@@ -661,7 +670,6 @@ class LayerTimelineController {
         });
 
         orderedLayerInfos.sort((a, b) => a.localRect.top - b.localRect.top);
-        console.log(orderedLayerInfos);
 
         $dragIndicator = $('<div>')
             .addClass('slt-layers-list-drag-indicator')

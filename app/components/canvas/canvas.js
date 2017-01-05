@@ -16,6 +16,7 @@
 
 import {LayerGroup, MaskLayer, PathLayer} from 'model';
 import {ColorUtil} from 'colorutil';
+import {RenderUtil} from 'renderutil';
 import {ElementResizeWatcher} from 'elementresizewatcher';
 
 
@@ -258,13 +259,7 @@ class CanvasController {
 
     let drawLayer_ = (ctx, layer, selectionMode) => {
       if (layer instanceof LayerGroup) {
-        transforms.push(() => {
-          ctx.translate(layer.pivotX, layer.pivotY);
-          ctx.translate(layer.translateX, layer.translateY);
-          ctx.rotate(layer.rotation * Math.PI / 180);
-          ctx.scale(layer.scaleX, layer.scaleY);
-          ctx.translate(-layer.pivotX, -layer.pivotY);
-        });
+        transforms.push(RenderUtil.transformMatrixForLayer(layer));
 
         ctx.save();
         layer.layers.forEach(layer => drawLayer_(ctx, layer, selectionMode));
@@ -274,7 +269,7 @@ class CanvasController {
           let bounds = layer.computeBounds();
           if (bounds) {
             ctx.save();
-            transforms.forEach(t => t());
+            ctx.transform(...RenderUtil.flattenTransforms(transforms));
             ctx.beginPath();
             ctx.rect(bounds.l, bounds.t, bounds.r - bounds.l, bounds.b - bounds.t);
             ctx.restore();
@@ -285,7 +280,7 @@ class CanvasController {
         transforms.pop();
       } else if (layer instanceof MaskLayer) {
         ctx.save();
-        transforms.forEach(t => t());
+        ctx.transform(...RenderUtil.flattenTransforms(transforms));
         layer.pathData && layer.pathData.execute(ctx);
         ctx.restore();
 
@@ -298,15 +293,19 @@ class CanvasController {
         }
 
       } else {
+        let flattenedTransforms = RenderUtil.flattenTransforms(transforms);
+
         ctx.save();
-        transforms.forEach(t => t());
+        ctx.transform(...flattenedTransforms);
         layer.pathData && layer.pathData.execute(ctx);
         ctx.restore();
 
         if (!selectionMode) {
+          let strokeWidthMultiplier = RenderUtil.computeStrokeWidthMultiplier(flattenedTransforms);
+
           // draw the actual layer
           ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
-          ctx.lineWidth = layer.strokeWidth;
+          ctx.lineWidth = layer.strokeWidth * strokeWidthMultiplier;
           ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
           ctx.lineCap = layer.strokeLinecap || 'butt';
           ctx.lineJoin = layer.strokeLinejoin || 'miter';
@@ -373,9 +372,6 @@ class CanvasController {
     }
     let artworkCtx = currentAlpha == 1 ? ctx : offscreenCtx;
     drawLayer_(artworkCtx, currentArtwork);
-    if (!this.isPreviewMode) {
-      drawLayer_(artworkCtx, currentArtwork, true);
-    }
 
     if (currentArtwork.alpha != 1) {
       let oldGlobalAlpha = ctx.globalAlpha;
@@ -385,6 +381,9 @@ class CanvasController {
       ctx.scale(this.backingStoreScale_, this.backingStoreScale_);
       ctx.globalAlpha = oldGlobalAlpha;
       offscreenCtx.restore();
+    }
+    if (!this.isPreviewMode) {
+      drawLayer_(ctx, currentArtwork, true);
     }
 
     ctx.restore();

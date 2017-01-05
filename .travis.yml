@@ -1,0 +1,7 @@
+# https://docs.travis-ci.com/user/languages/javascript-with-nodejs/
+language: node_js
+node_js:
+  - "node"
+before_script:
+  - npm install -g gulp
+script: gulp

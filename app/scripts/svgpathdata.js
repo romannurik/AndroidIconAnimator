@@ -855,6 +855,7 @@ function unitCircleArcToBeziers_(angleStart, angleExtent) {
 }
 
 
+// TODO: refactor into a MatrixUtil
 function transformPoint_(p, transformMatricies) {
   return transformMatricies.reduce((p, transform) => {
     const m = transform.matrix;

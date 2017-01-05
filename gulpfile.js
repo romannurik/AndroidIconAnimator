@@ -182,6 +182,9 @@ gulp.task('serve', ['styles', 'scripts', 'icons', 'bower'], function () {
     // https: true,
     server: {
       baseDir: ['.tmp', 'app'],
+      routes: {
+        '/_sandbox': '_sandbox'
+      },
       middleware: [history()]
     }
   });
@@ -208,10 +211,19 @@ gulp.task('serve:dist', ['default'], function () {
 });
 
 // Build Production Files, the Default Task
-gulp.task('default', ['clean'], function (cb) {
+gulp.task('default', ['clean', 'test'], function (cb) {
   runSequence('styles',
       ['scripts', 'bower', 'html', 'images', 'icons', 'lib', 'copy'],
       cb);
+});
+
+// Tests
+gulp.task('test', function (cb) {
+  return gulp.src(['test/**/*.js'], {read: false})
+      .pipe($.mocha({
+        reporter: 'nyan',
+        require: ['babel-register'],
+      }));
 });
 
 // Deploy to GitHub pages

@@ -70,7 +70,7 @@ export const ColorUtil = {
     color = tinycolor(color);
     let colorHex = color.toHex();
     let alphaHex = color.toHex8().substr(6);
-    return '#' + alphaHex + colorHex;
+    return '#' + (alphaHex != 'ff' ? alphaHex : '') + colorHex;
   },
 
   androidToCssColor(androidColor, multAlpha) {

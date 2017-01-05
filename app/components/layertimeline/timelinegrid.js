@@ -15,7 +15,7 @@
  */
 
 import {DragHelper} from 'draghelper';
-import TimelineConsts from './consts.js';
+import {TimelineConsts} from './consts.js';
 
 
 const GRID_INTERVALS_MS = [
