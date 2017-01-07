@@ -614,6 +614,8 @@ function computePathLengthAndBounds_(commands) {
           // degenerate to line
           length += dist_(currentPointX, currentPointY, tempPoint1X, tempPoint1Y);
           expandBounds_(tempPoint1X, tempPoint1Y);
+          currentPoint.x = tempPoint1X;
+          currentPoint.y = tempPoint1Y;
           return;
         }
 
