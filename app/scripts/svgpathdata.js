@@ -543,7 +543,7 @@ function computePathLengthAndBounds_(commands) {
     expandBounds_(bbox.x.max, bbox.y.max);
   };
 
-  let firstPoint = null;
+  let lastMovePoint = null;
   let currentPoint = {x: 0, y: 0};
 
   let dist_ = (x1, y1, x2, y2) => {
@@ -553,9 +553,7 @@ function computePathLengthAndBounds_(commands) {
   commands.forEach(({command, args}) => {
     switch (command) {
       case 'moveTo': {
-        if (!firstPoint) {
-          firstPoint = {x:args[0], y:args[1]};
-        }
+        lastMovePoint = {x:args[0], y:args[1]};
         currentPoint.x = args[0];
         currentPoint.y = args[1];
         expandBounds_(args[0], args[1]);
@@ -571,10 +569,11 @@ function computePathLengthAndBounds_(commands) {
       }
 
       case 'closePath': {
-        if (firstPoint) {
-          length += dist_(firstPoint.x, firstPoint.y, currentPoint.x, currentPoint.y);
+        if (lastMovePoint) {
+          length += dist_(lastMovePoint.x, lastMovePoint.y, currentPoint.x, currentPoint.y);
+          currentPoint.x = lastMovePoint.x;
+          currentPoint.y = lastMovePoint.y;
         }
-        firstPoint = null;
         break;
       }
 

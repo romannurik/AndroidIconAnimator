@@ -165,9 +165,10 @@ gulp.task('html', function () {
 });
 
 // Clean Output Directory
-gulp.task('clean', function() {
-  del(['.tmp', 'dist']);
+gulp.task('clean', function(cb) {
+  del.sync(['.tmp', 'dist']);
   $.cache.clearAll();
+  cb();
 });
 
 // Watch Files For Changes & Reload
@@ -195,7 +196,6 @@ gulp.task('serve', ['styles', 'scripts', 'icons', 'bower'], function () {
   gulp.watch(['app/images/**/*'], reload);
   gulp.watch(['app/icons/**/*'], ['icons', reload]);
   gulp.watch(['app/assets/**/*'], reload);
-  gulp.watch(['app/**/*.html'], reload);
 });
 
 // Build and serve the output from the dist build
