@@ -186,6 +186,7 @@ class StudioStateService {
     this.activeAnimation_ = (this.animations_.length > 0 && state.activeAnimationIndex >= 0)
         ? this.animations_[state.activeAnimationIndex]
         : null;
+    this.selection = [];
     this.artworkChanged({noUndo:true});
     this.animChanged({noUndo:true});
   }

@@ -54,6 +54,25 @@ class PropertyInspectorController {
     return this.selectionInfo && this.selectionInfo.description;
   }
 
+  computeSharedPropertyNames_(items) {
+    if (!items || !items.length) {
+      return [];
+    }
+
+    let shared;
+    items.forEach(item => {
+      let names = Object.keys(item.inspectableProperties);
+      if (!shared) {
+        shared = names;
+      } else {
+        let namesSet = new Set(names);
+        shared = shared.filter(n => namesSet.has(n));
+      }
+    });
+
+    return shared;
+  }
+
   rebuildLayersSelection_() {
     this.selectionInfo = {
       type: 'layers',
@@ -61,12 +80,40 @@ class PropertyInspectorController {
     };
 
     if (this.studioState_.selection.length > 1) {
+      // batch layer editing
       let count = this.studioState_.selection.length;
       this.selectionInfo.multiple = true;
-      this.selectionInfo.icon = 'collections';
+      this.selectionInfo.icon = 'collection';
       this.selectionInfo.description = `${count} layers`;
 
+      let layers = this.studioState_.selection;
+      let sharedPropertyNames = this.computeSharedPropertyNames_(layers);
+      sharedPropertyNames.forEach(propertyName => {
+        let property = layers[0].inspectableProperties[propertyName];
+        if (property instanceof IdProperty) {
+          return;
+        }
+
+        this.selectionInfo.inspectedProperties.push(new InspectedProperty({
+          get value() {
+            return layers.reduce(
+                (v, layer) => (v == layer[propertyName]) ? v : null,
+                layers[0][propertyName]);
+          },
+          set value(val) {
+            layers.forEach(layer => layer[propertyName] = val);
+          },
+          propertyName,
+          property,
+          onChange: () => {
+            this.studioState_.animChanged();
+            this.studioState_.artworkChanged();
+          }
+        }));
+      });
+
     } else {
+      // edit a single layer
       let layer = this.studioState_.firstSelectedItem;
       this.selectionInfo.icon = layer.typeIcon;
       Object.defineProperty(this.selectionInfo, 'description', {
@@ -118,12 +165,46 @@ class PropertyInspectorController {
     };
 
     if (this.studioState_.selection.length > 1) {
+      // batch animation block editing
       let count = this.studioState_.selection.length;
       this.selectionInfo.multiple = true;
-      this.selectionInfo.icon = 'collections';
+      this.selectionInfo.icon = 'collection';
       this.selectionInfo.description = `${count} property animations`;
 
+      let blocks = this.studioState_.selection;
+      let sharedPropertyNames = this.computeSharedPropertyNames_(blocks);
+      sharedPropertyNames.forEach(propertyName => {
+        let property = blocks[0].inspectableProperties[propertyName];
+        if (property == 'auto') {
+          // fromValue and toValue only work when they're animating compatible property types
+          let properties = blocks.map(block =>
+              this.studioState_.artwork.findLayerById(block.layerId)
+                  .inspectableProperties[block.propertyName]);
+          let propertiesCompatible = properties.reduce(
+              (c, prop) => c && prop.constructor === properties[0].constructor,
+              true);
+          if (!propertiesCompatible) {
+            return;
+          }
+          property = properties[0];
+        }
+        this.selectionInfo.inspectedProperties.push(new InspectedProperty({
+          get value() {
+            return blocks.reduce(
+                (v, block) => (v == block[propertyName]) ? v : null,
+                blocks[0][propertyName]);
+          },
+          set value(val) {
+            blocks.forEach(block => block[propertyName] = val);
+          },
+          propertyName,
+          property,
+          onChange: () => this.studioState_.animChanged()
+        }));
+      });
+
     } else {
+      // edit a single animation block
       let block = this.studioState_.firstSelectedItem;
       this.selectionInfo.icon = 'animation_block';
       this.selectionInfo.description = `${block.propertyName}`;
@@ -151,12 +232,15 @@ class PropertyInspectorController {
     };
 
     if (this.studioState_.selection.length > 1) {
+      // batch animation editing
       let count = this.studioState_.selection.length;
       this.selectionInfo.multiple = true;
-      this.selectionInfo.icon = 'collections';
+      this.selectionInfo.icon = 'collection';
       this.selectionInfo.description = `${count} animations`;
+      // TODO
 
     } else {
+      // edit a single animation
       let animation = this.studioState_.firstSelectedItem;
       this.selectionInfo.icon = 'animation';
       Object.defineProperty(this.selectionInfo, 'description', {
