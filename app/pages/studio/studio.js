@@ -31,6 +31,8 @@ const DEBUG = !!window.location.search.match(/debug/);
 
 class StudioCtrl {
   constructor($scope, $http, $mdToast, $mdDialog, $timeout, StudioStateService) {
+    this.versionInfo = window.APP_VERSION_INFO;
+
     this.scope_ = $scope;
     this.http_ = $http;
     this.mdToast_ = $mdToast;

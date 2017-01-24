@@ -20,6 +20,11 @@
   </head>
   <body ng-controller="AppCtrl as appCtrl">
     <ng-view ng-cloak/>
+    <script>
+      window.APP_VERSION_INFO = {
+        version: '%%VERSION%%'
+      };
+    </script>
     <script src="scripts/app.js"></script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

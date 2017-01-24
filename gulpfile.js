@@ -44,7 +44,7 @@ var AUTOPREFIXER_BROWSERS = [
 
 
 var DEV_MODE = false;
-var BASE_HREF = DEV_MODE ? '/' : '/AndroidIconAnimator/';
+var BASE_HREF = '/AndroidIconAnimator/';
 
 
 function errorHandler(error) {
@@ -155,13 +155,32 @@ gulp.task('styles', function () {
     .pipe($.size({title: 'styles'}));
 });
 
-// Scan Your HTML For Assets & Optimize Them
-gulp.task('html', function () {
-  return gulp.src('app/**/*.html')
-    .pipe($.replace(/%%BASE_HREF%%/g, BASE_HREF))
-    .pipe($.if('*.html', $.minifyHtml({empty:true})))
-    .pipe(gulp.dest('dist'))
-    .pipe($.size({title: 'html'}));
+
+function currentVersionInfo() {
+  return new Promise((resolve, reject) => {
+    if (DEV_MODE) {
+      resolve({version: 'DEV_BUILD'});
+    } else {
+      $.git.revParse({args: '--short HEAD'}, (err, hash) => {
+        $.git.exec({args: 'describe --tags'}, (err, tag) => {
+          tag = tag.replace(/\s/g, '');
+          resolve({version: `${tag} (build ${hash})`});
+        });
+      });
+    }
+  });
+}
+
+
+gulp.task('html', function() {
+  return currentVersionInfo().then((versionInfo) =>
+      gulp.src('app/**/*.html')
+          .pipe($.replace(/%%BASE_HREF%%/g, BASE_HREF))
+          .pipe($.replace(/%%VERSION%%/g, versionInfo.version))
+          .pipe(gulp.dest('.tmp'))
+          .pipe($.if('*.html', $.minifyHtml({empty:true})))
+          .pipe(gulp.dest('dist'))
+          .pipe($.size({title: 'html'})));
 });
 
 // Clean Output Directory
@@ -172,9 +191,13 @@ gulp.task('clean', function(cb) {
 });
 
 // Watch Files For Changes & Reload
-gulp.task('serve', ['styles', 'scripts', 'icons', 'bower'], function () {
+gulp.task('serve', function (cb) {
   DEV_MODE = true;
+  BASE_HREF = '/';
+  runSequence('__serve__', cb);
+});
 
+gulp.task('__serve__', ['styles', 'scripts', 'icons', 'bower', 'html'], function () {
   browserSync({
     notify: false,
     // Run as an https by uncommenting 'https: true'
@@ -190,7 +213,7 @@ gulp.task('serve', ['styles', 'scripts', 'icons', 'bower'], function () {
     }
   });
 
-  gulp.watch(['app/**/*.html'], reload);
+  gulp.watch(['app/**/*.html'], ['html', reload]);
   gulp.watch(['app/**/*.{scss,css}'], ['styles', reload]);
   gulp.watch(['app/**/*.js'], ['scripts', reload]);
   gulp.watch(['app/images/**/*'], reload);

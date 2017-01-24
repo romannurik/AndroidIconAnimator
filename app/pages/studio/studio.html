@@ -6,13 +6,14 @@
 
   <div class="preview-banner">
     <i class="material-icons">info</i>
-    <span>
+    <span class="message-text">
       This is a preview release. This tool, along with the export format, will likely change.
       Download some <a href="https://dl.dropboxusercontent.com/u/231329/iconanimator_examples.zip">examples</a>
       if you don't know where to start.
       Message <a href="https://twitter.com/romannurik" target="_blank">@romannurik</a> with feedback.
       View the source code on <a href="https://github.com/romannurik/AndroidIconAnimator" target="_blank">GitHub</a>.
     </span>
+    <span class="version-info">{{ studioCtrl.versionInfo.version }}</span>
   </div>
 
   <div ng-if="!studioCtrl.previewMode" flex layout="column">

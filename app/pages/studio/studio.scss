@@ -21,6 +21,18 @@
       color: material-color('deep-orange', '900');
       font-weight: 500;
     }
+
+    .message-text {
+      flex: 1;
+    }
+
+    .version-info {
+      background-color: material-color('orange', '100');
+      color: material-color('deep-orange', '900');
+      font-weight: 500;
+      padding: 4px 6px;
+      border-radius: 2px;
+    }
   }
 
   .canvas-area {
