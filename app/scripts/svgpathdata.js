@@ -21,6 +21,7 @@ export class SvgPathData {
   constructor(obj) {
     this.length = 0;
     this.bounds = null;
+    this.beziers = [];
 
     if (obj) {
       if (typeof obj == 'string') {
@@ -39,10 +40,12 @@ export class SvgPathData {
 
   set pathString(value) {
     this.string_ = value;
-    this.commands_ = parseCommands_(value);
-    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
+    let commands = parseCommands_(value);
+    this.commands_ = commands;
+    let {length, bounds, beziers} = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
+    this.beziers = beziers;
   }
 
   toString() {
@@ -64,6 +67,34 @@ export class SvgPathData {
     });
   }
 
+  isStrokeSelected(mouseDownPoint, pointTransformerFn, strokeWidth) {
+    // If the shortest distance from the point to the path is less than half
+    // the stroke width, then select the path.
+    return this.beziers
+        .map(bez => new Bezier(bez.points.map(p => pointTransformerFn(p))))
+        .map(bez => bez.project(mouseDownPoint))
+        .reduce((proj, min) => proj.d < min.d ? proj : min).d <= (strokeWidth / 2);
+  }
+
+  isFillSelected(mouseDownPoint, pointTransformerFn) {
+    // We use the 'even-odd rule' to determine if the filled path is selected.
+    // We create a line from the mouse point to a point we know that is not
+    // inside the path (in this case, we use a coordinate outside the path's
+    // bounded box). The path should be selected if and only if the number of =
+    // intersections between the line and the path is odd.
+    let line = {
+      p1: mouseDownPoint,
+      p2: {
+        x: this.bounds.r + 1,
+        y: this.bounds.b + 1,
+      },
+    };
+    return this.beziers
+        .map(bez => new Bezier(bez.points.map(p => pointTransformerFn(p))))
+        .map(bez => bez.intersects(line).length)
+        .reduce((l, sum) => sum + l) % 2 != 0;
+  }
+
   get commands() {
     return this.commands_;
   }
@@ -71,9 +102,10 @@ export class SvgPathData {
   set commands(value) {
     this.commands_ = (value ? value.slice() : []);
     this.string_ = commandsToString_(this.commands_);
-    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
+    let {length, bounds, beziers} = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
+    this.beziers = beziers;
   }
 
   transform(transforms) {
@@ -110,9 +142,10 @@ export class SvgPathData {
     });
 
     this.string_ = commandsToString_(this.commands_);
-    let { length, bounds } = computePathLengthAndBounds_(this.commands_);
+    let { length, bounds, beziers } = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
+    this.beziers = beziers;
   }
 
 
@@ -499,8 +532,6 @@ function executeArc_(ctx, arcArgs) {
        largeArcFlag, sweepFlag,
        tempPoint1X, tempPoint1Y] = arcArgs;
 
-  xAxisRotation *= Math.PI / 180;
-
   if (currentPointX == tempPoint1X && currentPointY == tempPoint1Y) {
     // degenerate to point
     return;
@@ -527,6 +558,7 @@ function executeArc_(ctx, arcArgs) {
 function computePathLengthAndBounds_(commands) {
   let length = 0;
   let bounds = {l: Infinity, t: Infinity, r: -Infinity, b: -Infinity};
+  let beziers = [];
 
   let expandBounds_ = (x, y) => {
     bounds.l = Math.min(x, bounds.l);
@@ -562,6 +594,10 @@ function computePathLengthAndBounds_(commands) {
 
       case 'lineTo': {
         length += dist_(args[0], args[1], currentPoint.x, currentPoint.y);
+        beziers.push(new Bezier(
+          currentPoint.x, currentPoint.y,
+          args[0], args[1],
+          args[0], args[1]));
         currentPoint.x = args[0];
         currentPoint.y = args[1];
         expandBounds_(args[0], args[1]);
@@ -571,6 +607,10 @@ function computePathLengthAndBounds_(commands) {
       case 'closePath': {
         if (lastMovePoint) {
           length += dist_(lastMovePoint.x, lastMovePoint.y, currentPoint.x, currentPoint.y);
+          beziers.push(new Bezier(
+              currentPoint.x, currentPoint.y,
+              lastMovePoint.x, lastMovePoint.y,
+              lastMovePoint.x, lastMovePoint.y));
           currentPoint.x = lastMovePoint.x;
           currentPoint.y = lastMovePoint.y;
         }
@@ -583,6 +623,7 @@ function computePathLengthAndBounds_(commands) {
         length += bez.length();
         currentPoint.x = args[4];
         currentPoint.y = args[5];
+        beziers.push(bez);
         expandBoundsToBezier_(bez);
         break;
       }
@@ -592,6 +633,7 @@ function computePathLengthAndBounds_(commands) {
         length += bez.length();
         currentPoint.x = args[2];
         currentPoint.y = args[3];
+        beziers.push(bez);
         expandBoundsToBezier_(bez);
         break;
       }
@@ -601,8 +643,6 @@ function computePathLengthAndBounds_(commands) {
              rx, ry, xAxisRotation,
              largeArcFlag, sweepFlag,
              tempPoint1X, tempPoint1Y] = args;
-
-        xAxisRotation *= Math.PI / 180;
 
         if (currentPointX == tempPoint1X && currentPointY == tempPoint1Y) {
           // degenerate to point (0 length)
@@ -632,6 +672,7 @@ function computePathLengthAndBounds_(commands) {
           currentPoint.x = bezierCoords[i + 6];
           currentPoint.y = bezierCoords[i + 7];
           expandBoundsToBezier_(bez);
+          beziers.push(bez);
         }
         currentPoint.x = tempPoint1X;
         currentPoint.y = tempPoint1Y;
@@ -640,16 +681,17 @@ function computePathLengthAndBounds_(commands) {
     }
   });
 
-  return {length, bounds};
+  return {length, bounds, beziers};
 }
 
 
 // Based on code from https://code.google.com/archive/p/androidsvg
-function arcToBeziers_(xf, yf, rx, ry, rotate, largeArcFlag, sweepFlag, xt, yt) {
+function arcToBeziers_(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, xt, yt) {
   // Sign of the radii is ignored (behaviour specified by the spec)
   rx = Math.abs(rx);
   ry = Math.abs(ry);
 
+  let rotate = xAxisRotation * Math.PI / 180;
   let cosAngle = Math.cos(rotate);
   let sinAngle = Math.sin(rotate);
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {LayerGroup, MaskLayer} from 'model';
+import {LayerGroup, MaskLayer, PathLayer} from 'model';
 import {ColorUtil} from 'colorutil';
 import {RenderUtil} from 'renderutil';
 import {ElementResizeWatcher} from 'elementresizewatcher';
@@ -79,6 +79,55 @@ class CanvasController {
 
   setupMouseEventHandlers_() {
     this.canvas_
+        .on('mousedown', event => {
+          const canvasOffset = this.canvas_.offset();
+          const x = (event.pageX - canvasOffset.left) / this.scale_;
+          const y = (event.pageY - canvasOffset.top) / this.scale_;
+          const matrices = [];
+          // TODO(alockwood): select clips and/or groups in addition to paths?
+          const toggleSelectedPath_ = layer => {
+            if (layer instanceof LayerGroup) {
+              const transformMatrices = this.createTransformMatrices_(layer);
+              matrices.splice(matrices.length, 0, ...transformMatrices);
+              const result = layer.layers.some(layer => toggleSelectedPath_(layer));
+              matrices.splice(-transformMatrices.length, transformMatrices.length);
+              return result;
+            } else if (layer instanceof PathLayer && layer.pathData) {
+              let shouldUpdateSelection = false;
+              const reversedMatrices = Array.from(matrices).reverse();
+              const pointTransformerFn = p => this.transformPoint_(p, reversedMatrices);
+              if (layer.fillColor) {
+                shouldUpdateSelection = layer.pathData.isFillSelected({x, y}, pointTransformerFn);
+              } else if (layer.strokeColor) {
+                shouldUpdateSelection =
+                    layer.pathData.isStrokeSelected({x, y}, pointTransformerFn, layer.strokeWidth);
+              }
+              if (shouldUpdateSelection) {
+                const selectedLayer = this.artwork.findLayerById(layer.id);
+                this.scope_.$apply(() => {
+                  if (event.metaKey || event.shiftKey) {
+                    this.studioState_.toggleSelected(selectedLayer);
+                  } else {
+                    this.studioState_.selection = [selectedLayer];
+                  }
+                }
+              }
+              return shouldUpdateSelection;
+            }
+            return false;
+          };
+
+          let currentArtwork;
+          if (this.studioState_.animationRenderer) {
+            this.studioState_.animationRenderer.setAnimationTime(this.animTime || 0);
+            currentArtwork = this.studioState_.animationRenderer.renderedArtwork;
+          } else {
+            currentArtwork = this.artwork;
+          }
+          if (!toggleSelectedPath_(currentArtwork) && !(event.metaKey || event.shiftKey)) {
+            this.studioState_.selection = [];
+          }
+        })
         .on('mousemove', event => {
           let canvasOffset = this.canvas_.offset();
           let x = Math.round((event.pageX - canvasOffset.left) / this.scale_);
@@ -88,6 +137,28 @@ class CanvasController {
         .on('mouseleave', () => {
           this.registeredRulers_.forEach(r => r.hideMouse());
         });
+  }
+
+  createTransformMatrices_(layer) {
+    let cosr = Math.cos(layer.rotation * Math.PI / 180);
+    let sinr = Math.sin(layer.rotation * Math.PI / 180);
+    return [
+      { a: 1, b: 0, c: 0, d: 1, e: layer.pivotX, f: layer.pivotY },
+      { a: 1, b: 0, c: 0, d: 1, e: layer.translateX, f: layer.translateY },
+      { a: cosr, b: sinr, c: -sinr, d: cosr, e: 0, f: 0 },
+      { a: layer.scaleX, b: 0, c: 0, d: layer.scaleY, e: 0, f: 0 },
+      { a: 1, b: 0, c: 0, d: 1, e: -layer.pivotX, f: -layer.pivotY }
+    ];
+  }
+
+  transformPoint_(p, matrices) {
+    return matrices.reduce((p, m) => {
+      return {
+        // dot product
+        x: m.a * p.x + m.c * p.y + m.e * 1,
+        y: m.b * p.x + m.d * p.y + m.f * 1,
+      };
+    }, p);
   }
 
   get artwork() {
