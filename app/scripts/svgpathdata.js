@@ -67,23 +67,23 @@ export class SvgPathData {
     });
   }
 
-  isStrokeSelected(mouseDownPoint, pointTransformerFn, strokeWidth) {
+  hitTestStroke(point, pointTransformerFn, strokeWidth) {
     // If the shortest distance from the point to the path is less than half
     // the stroke width, then select the path.
     return this.beziers
         .map(bez => new Bezier(bez.points.map(p => pointTransformerFn(p))))
-        .map(bez => bez.project(mouseDownPoint))
+        .map(bez => bez.project(point))
         .reduce((proj, min) => proj.d < min.d ? proj : min).d <= (strokeWidth / 2);
   }
 
-  isFillSelected(mouseDownPoint, pointTransformerFn) {
+  hitTestFill(point, pointTransformerFn) {
     // We use the 'even-odd rule' to determine if the filled path is selected.
     // We create a line from the mouse point to a point we know that is not
     // inside the path (in this case, we use a coordinate outside the path's
     // bounded box). The path should be selected if and only if the number of =
     // intersections between the line and the path is odd.
     let line = {
-      p1: mouseDownPoint,
+      p1: point,
       p2: {
         x: this.bounds.r + 1,
         y: this.bounds.b + 1,
@@ -595,9 +595,9 @@ function computePathLengthAndBounds_(commands) {
       case 'lineTo': {
         length += dist_(args[0], args[1], currentPoint.x, currentPoint.y);
         beziers.push(new Bezier(
-          currentPoint.x, currentPoint.y,
-          args[0], args[1],
-          args[0], args[1]));
+            currentPoint.x, currentPoint.y,
+            args[0], args[1],
+            args[0], args[1]));
         currentPoint.x = args[0];
         currentPoint.y = args[1];
         expandBounds_(args[0], args[1]);

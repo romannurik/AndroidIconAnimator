@@ -77,45 +77,46 @@ class CanvasController {
     $timeout(() => this.resizeAndDrawCanvas_(), 0);
   }
 
+  hitTest_(point, rootLayer = null) {
+    rootLayer = rootLayer || this.artwork;
+
+    const matrices = [];
+
+    // TODO(alockwood): select clips and/or groups in addition to paths?
+    const hitTestLayer_ = layer => {
+      if (layer instanceof LayerGroup) {
+        const transformMatrices = this.createTransformMatrices_(layer);
+        matrices.splice(matrices.length, 0, ...transformMatrices);
+        // hitTestLayer || h and not the other way around because of reverse z-order
+        const result = layer.layers.reduce((h, layer) => hitTestLayer_(layer) || h, null);
+        matrices.splice(-transformMatrices.length, transformMatrices.length);
+        return result;
+
+      } else if (layer instanceof PathLayer && layer.pathData) {
+        const reversedMatrices = Array.from(matrices).reverse();
+        const pointTransformerFn = p => this.transformPoint_(p, reversedMatrices);
+        if ((layer.fillColor &&
+             layer.pathData.hitTestFill(point, pointTransformerFn)) ||
+            (layer.strokeColor &&
+             layer.pathData.hitTestStroke(point, pointTransformerFn, layer.strokeWidth))) {
+          return layer;
+        }
+
+        return null;
+      }
+
+      return null;
+    };
+
+    return hitTestLayer_(rootLayer);
+  }
+
   setupMouseEventHandlers_() {
     this.canvas_
         .on('mousedown', event => {
           const canvasOffset = this.canvas_.offset();
           const x = (event.pageX - canvasOffset.left) / this.scale_;
           const y = (event.pageY - canvasOffset.top) / this.scale_;
-          const matrices = [];
-          // TODO(alockwood): select clips and/or groups in addition to paths?
-          const toggleSelectedPath_ = layer => {
-            if (layer instanceof LayerGroup) {
-              const transformMatrices = this.createTransformMatrices_(layer);
-              matrices.splice(matrices.length, 0, ...transformMatrices);
-              const result = layer.layers.some(layer => toggleSelectedPath_(layer));
-              matrices.splice(-transformMatrices.length, transformMatrices.length);
-              return result;
-            } else if (layer instanceof PathLayer && layer.pathData) {
-              let shouldUpdateSelection = false;
-              const reversedMatrices = Array.from(matrices).reverse();
-              const pointTransformerFn = p => this.transformPoint_(p, reversedMatrices);
-              if (layer.fillColor) {
-                shouldUpdateSelection = layer.pathData.isFillSelected({x, y}, pointTransformerFn);
-              } else if (layer.strokeColor) {
-                shouldUpdateSelection =
-                    layer.pathData.isStrokeSelected({x, y}, pointTransformerFn, layer.strokeWidth);
-              }
-              if (shouldUpdateSelection) {
-                const selectedLayer = this.artwork.findLayerById(layer.id);
-                this.scope_.$apply(() => {
-                  if (event.metaKey || event.shiftKey) {
-                    this.studioState_.toggleSelected(selectedLayer);
-                  } else {
-                    this.studioState_.selection = [selectedLayer];
-                  }
-                }
-              }
-              return shouldUpdateSelection;
-            }
-            return false;
-          };
 
           let currentArtwork;
           if (this.studioState_.animationRenderer) {
@@ -124,9 +125,20 @@ class CanvasController {
           } else {
             currentArtwork = this.artwork;
           }
-          if (!toggleSelectedPath_(currentArtwork) && !(event.metaKey || event.shiftKey)) {
-            this.studioState_.selection = [];
-          }
+
+          let targetLayer = this.hitTest_({x, y}, currentArtwork);
+          this.scope_.$apply(() => {
+            if (targetLayer) {
+              targetLayer = this.artwork.findLayerById(targetLayer.id);
+              if (event.metaKey || event.shiftKey) {
+                this.studioState_.toggleSelected(targetLayer);
+              } else {
+                this.studioState_.selection = [targetLayer];
+              }
+            } else if (!event.metaKey && !event.shiftKey) {
+              this.studioState_.selection = [];
+            }
+          });
         })
         .on('mousemove', event => {
           let canvasOffset = this.canvas_.offset();
