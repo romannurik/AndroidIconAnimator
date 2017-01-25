@@ -16,6 +16,7 @@
 
 import {Artwork, PathLayer, LayerGroup, MaskLayer, Animation, AnimationBlock} from 'model';
 import {ModelUtil} from 'modelutil';
+import {UiUtil} from 'uiutil';
 import {DragHelper} from 'draghelper';
 import {SvgLoader} from 'svgloader';
 import {VectorDrawableLoader} from 'vectordrawableloader';
@@ -24,6 +25,10 @@ import {TimelineConsts} from './consts.js';
 
 const DRAG_SLOP = 4; // pixels
 const LAYER_INDENT = 20; // pixels
+
+
+const MAX_ZOOM = 10;
+const MIN_ZOOM = 0.01;
 
 
 const MouseActions = {
@@ -45,13 +50,25 @@ class LayerTimelineController {
       if (changes.artwork || changes.animations) {
         this.rebuild_();
       }
+      if (changes.isReset) {
+        this.autoZoomToAnimation();
+      }
     }, $scope);
 
-    this.horizZoom = 2; // 1ms = 1px
+    this.horizZoom = 2; // 1ms = 2px
 
     this.setupMouseWheelZoom_();
 
     this.rebuild_();
+    this.autoZoomToAnimation();
+  }
+
+  get horizZoom() {
+    return this.horizZoom_;
+  }
+
+  set horizZoom(val) {
+    this.horizZoom_ = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, val));
   }
 
   get artwork() {
@@ -75,18 +92,24 @@ class LayerTimelineController {
    */
   setupMouseWheelZoom_() {
     let $timeline = this.element_.find('.slt-timeline');
-    let tempHorizZoom = this.horizZoom;
+    let $zoomStartActiveAnimation;
+    let targetHorizZoom;
     let performZoomRAF = null;
     let endZoomTimeout = null;
     let zoomStartTimeCursorPos;
-    let $zoomStartActiveAnimation;
 
     $timeline.on('wheel', event => {
       if (event.altKey || event.ctrlKey) { // chrome+mac trackpad pinch-zoom = ctrlKey
+        if (!targetHorizZoom) {
+        // multiple changes can happen to targetHorizZoom before the
+        // actual zoom level is updated (see performZoom_)
+          targetHorizZoom = this.horizZoom;
+        }
+
         event.preventDefault();
-        tempHorizZoom *= Math.pow(1.01, -event.originalEvent.deltaY);
-        tempHorizZoom = Math.max(0.01, Math.min(10, tempHorizZoom));
-        if (tempHorizZoom != this.horizZoom) {
+        targetHorizZoom *= Math.pow(1.01, -event.originalEvent.deltaY);
+        targetHorizZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, targetHorizZoom));
+        if (targetHorizZoom != this.horizZoom) {
           // zoom has changed
           if (performZoomRAF) {
             window.cancelAnimationFrame(performZoomRAF);
@@ -112,7 +135,7 @@ class LayerTimelineController {
     };
 
     let performZoom_ = () => {
-      this.horizZoom = tempHorizZoom;
+      this.horizZoom = targetHorizZoom;
       this.scope_.$apply();
 
       // set the scroll offset such that the time cursor remains at
@@ -130,6 +153,7 @@ class LayerTimelineController {
       zoomStartTimeCursorPos = 0;
       $zoomStartActiveAnimation = null;
       endZoomTimeout = null;
+      targetHorizZoom = 0;
     };
   }
 
@@ -178,6 +202,20 @@ class LayerTimelineController {
         });
       });
     });
+  }
+
+  /**
+   * Zooms the timeline to fit the first animation.
+   */
+  autoZoomToAnimation() {
+    if (this.animations.length) {
+      UiUtil.waitForElementWidth_(this.element_.find('.slt-timeline'))
+          .then(width => {
+            width -= 100; // shave off a hundred pixels for safety
+            let zoom = width / this.animations[0].duration;
+            this.horizZoom = zoom;
+          });
+    }
   }
 
   /**

@@ -70,7 +70,8 @@ class StudioStateService {
       animations: true,
       selection: true,
       activeTime: true,
-      playing: true
+      playing: true,
+      isReset: true
     });
 
     this.dirty_ = false;
