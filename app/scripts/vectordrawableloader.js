@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { Artwork } from './model';
-import { IdProperty } from './modelproperties';
-import { ModelUtil } from './modelutil';
+import {Artwork, DefaultValues} from './model';
+import {IdProperty} from './modelproperties';
+import {ModelUtil} from './modelutil';
 
 
 export const VectorDrawableLoader = {
@@ -55,9 +55,10 @@ export const VectorDrawableLoader = {
             strokeColor: node.getAttribute('android:strokeColor') || null,
             strokeAlpha: node.getAttribute('android:strokeAlpha') || 1,
             strokeWidth: node.getAttribute('android:strokeWidth') || 0,
-            strokeLinecap: node.getAttribute('android:strokeLineCap') || 'butt',
-            strokeLinejoin: node.getAttribute('android:strokeLineJoin') || 'miter',
-            strokeMiterLimit: node.getAttribute('android:strokeMiterLimit') || 4,
+            strokeLinecap: node.getAttribute('android:strokeLineCap') || DefaultValues.LINECAP,
+            strokeLinejoin: node.getAttribute('android:strokeLineJoin') || DefaultValues.LINEJOIN,
+            strokeMiterLimit:
+                node.getAttribute('android:strokeMiterLimit') || DefaultValues.MITER_LIMIT,
             trimPathStart: node.getAttribute('android:trimPathStart') || 0,
             trimPathEnd: node.getAttribute('android:trimPathEnd') || 1,
             trimPathOffset: node.getAttribute('android:trimPathOffset') || 0,

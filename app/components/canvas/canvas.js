@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {LayerGroup, MaskLayer, PathLayer} from 'model';
+import {LayerGroup, MaskLayer, PathLayer, DefaultValues} from 'model';
 import {ColorUtil} from 'colorutil';
 import {RenderUtil} from 'renderutil';
 import {ElementResizeWatcher} from 'elementresizewatcher';
@@ -322,9 +322,9 @@ class CanvasController {
           ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
           ctx.lineWidth = layer.strokeWidth * strokeWidthMultiplier;
           ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
-          ctx.lineCap = layer.strokeLinecap || 'butt';
-          ctx.lineJoin = layer.strokeLinejoin || 'miter';
-          ctx.miterLimit = layer.miterLimit || 4;
+          ctx.lineCap = layer.strokeLinecap || DefaultValues.LINECAP;
+          ctx.lineJoin = layer.strokeLinejoin || DefaultValues.LINEJOIN;
+          ctx.miterLimit = layer.miterLimit || DefaultValues.MITER_LIMIT;
 
           if (layer.trimPathStart !== 0
               || layer.trimPathEnd !== 1

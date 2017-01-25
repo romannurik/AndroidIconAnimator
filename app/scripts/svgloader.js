@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Artwork} from './model';
+import {Artwork, DefaultValues} from './model';
 import {IdProperty} from './modelproperties';
 import {ColorUtil} from './colorutil';
 import {SvgPathData} from './svgpathdata';
@@ -130,9 +130,9 @@ export const SvgLoader = {
           strokeColor: ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : null,
           strokeAlpha: ('strokeAlpha' in context) ? context.strokeAlpha : 1,
           strokeWidth: context.strokeWidth || 0,
-          strokeLinecap: context.strokeLinecap || 'butt',
-          strokeLinejoin: context.strokeLinejoin || 'miter',
-          strokeMiterLimit: context.strokeMiterLimit || 4,
+          strokeLinecap: context.strokeLinecap || DefaultValues.LINECAP,
+          strokeLinejoin: context.strokeLinejoin || DefaultValues.LINEJOIN,
+          strokeMiterLimit: context.strokeMiterLimit || DefaultValues.MITER_LIMIT,
         });
       }
 

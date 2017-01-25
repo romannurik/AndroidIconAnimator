@@ -20,6 +20,9 @@ import {Property, EnumProperty, ColorProperty, PathDataProperty, FractionPropert
 import {default as bezierEasing} from 'bezier-easing';
 
 
+export const DefaultValues = {};
+
+
 /**
  * Base class for any node in the tree, including path layers, layer groups, and artworks.
  */
@@ -131,9 +134,9 @@ export class PathLayer extends BaseLayer {
     this.strokeColor = obj.strokeColor || '';
     this.strokeAlpha = ('strokeAlpha' in obj) ? obj.strokeAlpha : 1;
     this.strokeWidth = obj.strokeWidth || 0;
-    this.strokeLinecap = obj.strokeLinecap || 'butt';
-    this.strokeLinejoin = obj.strokeLinejoin || 'miter';
-    this.strokeMiterLimit = obj.strokeMiterLimit || 4;
+    this.strokeLinecap = obj.strokeLinecap || DefaultValues.LINECAP;
+    this.strokeLinejoin = obj.strokeLinejoin || DefaultValues.LINEJOIN;
+    this.strokeMiterLimit = obj.strokeMiterLimit || DefaultValues.MITER_LIMIT;
     this.trimPathStart = obj.trimPathStart || 0;
     this.trimPathEnd = ('trimPathEnd' in obj && typeof obj.trimPathEnd == 'number')
         ? obj.trimPathEnd : 1;
@@ -205,6 +208,11 @@ const ENUM_LINEJOIN_OPTIONS = [
     label: 'Bevel',
   }
 ];
+
+
+DefaultValues.LINECAP = 'butt';
+DefaultValues.LINEJOIN = 'miter';
+DefaultValues.MITER_LIMIT = 4;
 
 
 Property.registerProperties(PathLayer, [

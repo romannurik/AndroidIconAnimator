@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Artwork, PathLayer, LayerGroup, MaskLayer} from './model';
+import {Artwork, PathLayer, LayerGroup, MaskLayer, DefaultValues} from './model';
 import xmlserializer from 'xmlserializer';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
@@ -148,9 +148,11 @@ export const AvdSerializer = {
         conditionalAttr_(node, 'android:trimPathStart', layer.trimPathStart, 0);
         conditionalAttr_(node, 'android:trimPathEnd', layer.trimPathEnd, 1);
         conditionalAttr_(node, 'android:trimPathOffset', layer.trimPathOffset, 0);
-        conditionalAttr_(node, 'android:strokeLineCap', layer.strokeLinecap);
-        conditionalAttr_(node, 'android:strokeLineJoin', layer.strokeLinejoin);
-        conditionalAttr_(node, 'android:strokeMiterLimit', layer.strokeMiterLimit);
+        conditionalAttr_(node, 'android:strokeLineCap', layer.strokeLinecap, DefaultValues.LINECAP);
+        conditionalAttr_(node, 'android:strokeLineJoin', layer.strokeLinejoin,
+            DefaultValues.LINEJOIN);
+        conditionalAttr_(node, 'android:strokeMiterLimit', layer.strokeMiterLimit,
+            DefaultValues.MITER_LIMIT);
         parentNode.appendChild(node);
         return parentNode;
 
