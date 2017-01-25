@@ -16,6 +16,19 @@
             </md-button>
           </md-menu-item>
           <md-menu-item>
+            <md-button file-open-handler="ctrl.onNewFromSVG(fileInfo)">
+              New from SVG
+              <input type="file" accept=".svg">
+            </md-button>
+          </md-menu-item>
+          <md-menu-item>
+            <md-button file-open-handler="ctrl.onNewFromVD(fileInfo)">
+              New from vector drawable
+              <input type="file" accept=".xml">
+            </md-button>
+          </md-menu-item>
+          <md-menu-divider></md-menu-divider>
+          <md-menu-item>
             <md-button file-open-handler="ctrl.onOpenFile(fileInfo)">
               Open
               <input type="file" accept=".iconanim">
@@ -37,13 +50,6 @@
             <md-button file-open-handler="ctrl.onAddLayersFromSVG(fileInfo)">
               Add layers from SVG
               <input type="file" accept=".svg">
-            </md-button>
-
-          </md-menu-item>
-          <md-menu-item>
-            <md-button file-open-handler="ctrl.onImportVD(fileInfo)">
-              Vector drawable
-              <input type="file" accept=".xml">
             </md-button>
           </md-menu-item>
         </md-menu-content>

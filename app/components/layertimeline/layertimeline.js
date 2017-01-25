@@ -423,15 +423,21 @@ class LayerTimelineController {
     }
   }
 
+  dirtyCheck_() {
+    if (this.studioState_.dirty && !window.confirm(
+        `You've made changes but haven't saved. Are you sure you want to continue?`)) {
+      return true;
+    }
+
+    return false;
+  }
+
   /**
    * Handles creating a new file
    */
   onNewFile() {
-    if (this.studioState_.dirty) {
-      if (!window.confirm('You\'ve made changes but haven\'t saved. ' +
-                         'Really create a new file?')) {
-        return;
-      }
+    if (this.dirtyCheck_()) {
+      return;
     }
 
     ga('send', 'event', 'file', 'newFile');
@@ -442,11 +448,8 @@ class LayerTimelineController {
    * Handles opening a file using a file open dialog
    */
   onOpenFile(fileInfo) {
-    if (this.studioState_.dirty) {
-      if (!window.confirm('You\'ve made changes but haven\'t saved. ' +
-                         'Really open this file?')) {
-        return;
-      }
+    if (this.dirtyCheck_()) {
+      return;
     }
 
     ga('send', 'event', 'file', 'openFile');
@@ -475,10 +478,27 @@ class LayerTimelineController {
   }
 
   /**
+   * Handles importing an SVG as layers.
+   */
+  onNewFromSVG(fileInfo) {
+    if (this.dirtyCheck_()) {
+      return;
+    }
+
+    ga('send', 'event', 'file', 'importSVG.new');
+    let artwork = SvgLoader.loadArtworkFromSvgString(fileInfo.textContent);
+    this.studioState_.load({artwork});
+  }
+
+  /**
    * Handles importing a vector drawable from XML.
    */
-  onImportVD(fileInfo) {
-    ga('send', 'event', 'file', 'importVD');
+  onNewFromVD(fileInfo) {
+    if (this.dirtyCheck_()) {
+      return;
+    }
+
+    ga('send', 'event', 'file', 'importVD.new');
     let artwork = VectorDrawableLoader.loadArtworkFromXmlString(fileInfo.textContent);
     this.studioState_.load({artwork});
   }
