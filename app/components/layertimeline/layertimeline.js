@@ -23,9 +23,11 @@ import {VectorDrawableLoader} from 'vectordrawableloader';
 import {TimelineConsts} from './consts.js';
 
 
-const DRAG_SLOP = 4; // pixels
 const LAYER_INDENT = 20; // pixels
 
+const SNAP_PIXELS = 10; // distance in pixels from a snap point before snapping to the point
+
+const MIN_BLOCK_DURATION = 10; // 10ms
 
 const MAX_ZOOM = 10;
 const MIN_ZOOM = 0.01;
@@ -48,7 +50,8 @@ class LayerTimelineController {
     this.studioState_ = StudioStateService;
     this.studioState_.onChange((event, changes) => {
       if (changes.artwork || changes.animations) {
-        this.rebuild_();
+        this.rebuildModel_();
+        this.rebuildSnapTimes_();
       }
       if (changes.isReset) {
         this.autoZoomToAnimation();
@@ -59,7 +62,8 @@ class LayerTimelineController {
 
     this.setupMouseWheelZoom_();
 
-    this.rebuild_();
+    this.rebuildModel_();
+    this.rebuildSnapTimes_();
     this.autoZoomToAnimation();
   }
 
@@ -161,7 +165,7 @@ class LayerTimelineController {
    * Rebuilds internal layer/timeline related data structures (_slt) about the current
    * artwork and animations.
    */
-  rebuild_() {
+  rebuildModel_() {
     if (!this.artwork || !this.animations) {
       return;
     }
@@ -222,13 +226,59 @@ class LayerTimelineController {
    * Handles scrubbing (dragging) over the timeline header area, which should
    * change the time cursor.
    */
-  onTimelineHeaderScrub(animation, time) {
+  onTimelineHeaderScrub(animation, time, options) {
+    options = options || {};
+    if (!options.disableSnap) {
+      time = this.snapTime_(animation, time, false);
+    }
+
     this.studioState_.deselectItem(this.studioState_.activeAnimation);
     this.studioState_.activeAnimation = animation;
     this.studioState_.activeTime = time;
     this.studioState_.playing = false;
   }
 
+  /**
+   * Builds a cache of snap times for all available animations.
+   */
+  rebuildSnapTimes_() {
+    if (this.suppressRebuildSnapTimes_) {
+      return;
+    }
+
+    this.snapTimes_ = {};
+    if (this.animations) {
+      this.animations.forEach(animation => {
+        let snapTimes = new Set([]);
+        snapTimes.add(0);
+        snapTimes.add(animation.duration);
+        animation.blocks.forEach(block => {
+          snapTimes.add(block.startTime);
+          snapTimes.add(block.endTime);
+        });
+        this.snapTimes_[animation.id] = Array.from(snapTimes);
+      });
+    }
+  }
+
+  /**
+   * Returns a new time, possibly snapped to animation boundaries
+   */
+  snapTime_(animation, time, includeActiveTime = true) {
+    let snapTimes = this.snapTimes_[animation.id];
+    let snapDelta = SNAP_PIXELS / this.horizZoom;
+    let reducer_ = (bestSnapTime, snapTime) => {
+      let dist = Math.abs(time - snapTime);
+      return (dist < snapDelta && dist < Math.abs(time - bestSnapTime))
+          ? snapTime
+          : bestSnapTime;
+    };
+    let bestSnapTime = snapTimes.reduce(reducer_, Infinity);
+    if (includeActiveTime) {
+      bestSnapTime = reducer_(bestSnapTime, this.activeTime);
+    }
+    return isFinite(bestSnapTime) ? bestSnapTime : time;
+  }
 
   /**
    * Called when adding a new timeline block to a property that's already animated
@@ -518,7 +568,8 @@ class LayerTimelineController {
           }
 
           return {block, startBound, endBound,
-                  downStartTime: block.startTime, downEndTime: block.endTime};
+                  downStartTime: block.startTime,
+                  downEndTime: block.endTime};
         });
 
     let dragBlockDownStartTime = dragBlock.startTime;
@@ -540,38 +591,84 @@ class LayerTimelineController {
       direction: 'horizontal',
       draggingCursor: (action == MouseActions.MOVING) ? 'grabbing' : 'ew-resize',
 
-      onBeginDrag: event => this.scope_.$apply(() => this.suppressClick_ = true),
-      onDrop: event => this.timeout_(() => this.suppressClick_ = false, 0),
+      onBeginDrag: event => this.scope_.$apply(() => {
+        this.suppressClick_ = true;
+        this.suppressRebuildSnapTimes_ = true;
+      }),
+      onDrop: event => this.timeout_(() => {
+        this.suppressClick_ = false;
+        this.suppressRebuildSnapTimes_ = false;
+        this.rebuildSnapTimes_();
+      }, 0),
 
       onDrag: event => this.scope_.$apply(() => {
-        let timeDelta = xToTime_(event.clientX) - downTime;
+        let timeDelta = Math.round(xToTime_(event.clientX) - downTime);
+        let allowSnap = !event.altKey;
 
         switch (action) {
           case MouseActions.MOVING: {
-            let constrainAdjust = 0;
             blockInfos.forEach(info => {
-              let blockDuration  = (info.block.endTime - info.block.startTime);
-              info.newStartTime = info.downStartTime + timeDelta;
-              info.newEndTime = info.newStartTime + blockDuration;
-              constrainAdjust = Math.max(constrainAdjust, info.startBound - info.newStartTime);
-              constrainAdjust = Math.min(constrainAdjust, info.endBound - info.newEndTime);
+              // snap timedelta
+              if (allowSnap && info.block == dragBlock) {
+                let newStartTime = info.downStartTime + timeDelta;
+                let newStartTimeSnapDelta = this.snapTime_(animation, newStartTime) - newStartTime;
+                let newEndTime = info.downEndTime + timeDelta;
+                let newEndTimeSnapDelta = this.snapTime_(animation, newEndTime) - newEndTime;
+                if (newStartTimeSnapDelta) {
+                  if (newEndTimeSnapDelta) {
+                    timeDelta += Math.min(newStartTimeSnapDelta, newEndTimeSnapDelta);
+                  } else {
+                    timeDelta += newStartTimeSnapDelta;
+                  }
+                } else if (newEndTimeSnapDelta) {
+                  timeDelta += newEndTimeSnapDelta;
+                }
+              }
+              // constrain timeDelta
+              timeDelta = Math.min(timeDelta, info.endBound - info.downEndTime);
+              timeDelta = Math.max(timeDelta, info.startBound - info.downStartTime);
             });
             blockInfos.forEach(info => {
-              info.block.startTime = info.newStartTime + constrainAdjust;
-              info.block.endTime = info.newEndTime + constrainAdjust;
+              let blockDuration  = (info.block.endTime - info.block.startTime);
+              info.block.startTime = info.downStartTime + timeDelta;
+              info.block.endTime = info.block.startTime + blockDuration;
             });
             break;
           }
 
           case MouseActions.SCALING_UNIFORM_START: {
-            let constrainAdjust = 0;
             blockInfos.forEach(info => {
-              info.newStartTime = info.downStartTime + timeDelta;
-              constrainAdjust = Math.max(constrainAdjust, info.startBound - info.newStartTime);
-              constrainAdjust = Math.min(constrainAdjust,
-                  info.block.endTime - info.newStartTime - 10);
+              // snap timedelta
+              if (allowSnap && info.block == dragBlock) {
+                let newStartTime = info.downStartTime + timeDelta;
+                let newStartTimeSnapDelta = this.snapTime_(animation, newStartTime) - newStartTime;
+                if (newStartTimeSnapDelta) {
+                  timeDelta += newStartTimeSnapDelta;
+                }
+              }
+              // constrain timeDelta
+              timeDelta = Math.min(timeDelta, (info.block.endTime - MIN_BLOCK_DURATION) - info.downStartTime);
+              timeDelta = Math.max(timeDelta, info.startBound - info.downStartTime);
             });
-            blockInfos.forEach(info => info.block.startTime = info.newStartTime + constrainAdjust);
+            blockInfos.forEach(info => info.block.startTime = info.downStartTime + timeDelta);
+            break;
+          }
+
+          case MouseActions.SCALING_UNIFORM_END: {
+            blockInfos.forEach(info => {
+              // snap timedelta
+              if (allowSnap && info.block == dragBlock) {
+                let newEndTime = info.downEndTime + timeDelta;
+                let newEndTimeSnapDelta = this.snapTime_(animation, newEndTime) - newEndTime;
+                if (newEndTimeSnapDelta) {
+                  timeDelta += newEndTimeSnapDelta;
+                }
+              }
+              // constrain timeDelta
+              timeDelta = Math.min(timeDelta, info.endBound - info.downEndTime);
+              timeDelta = Math.max(timeDelta, (info.block.startTime + MIN_BLOCK_DURATION) - info.downEndTime);
+            });
+            blockInfos.forEach(info => info.block.endTime = info.downEndTime + timeDelta);
             break;
           }
 
@@ -584,7 +681,7 @@ class LayerTimelineController {
               info.newStartTime = maxEndTime - (maxEndTime - info.downStartTime) * scale;
               info.newEndTime = Math.max(
                   maxEndTime - (maxEndTime - info.downEndTime) * scale,
-                  info.newStartTime + 10);
+                  info.newStartTime + MIN_BLOCK_DURATION);
               if (info.newStartTime < info.startBound || info.newEndTime > info.endBound) {
                 cancel = true;
               }
@@ -598,18 +695,6 @@ class LayerTimelineController {
             break;
           }
 
-          case MouseActions.SCALING_UNIFORM_END: {
-            let constrainAdjust = 0;
-            blockInfos.forEach(info => {
-              info.newEndTime = info.downEndTime + timeDelta;
-              constrainAdjust = Math.max(constrainAdjust,
-                  info.block.startTime - info.newEndTime + 10);
-              constrainAdjust = Math.min(constrainAdjust, info.endBound - info.newEndTime);
-            });
-            blockInfos.forEach(info => info.block.endTime = info.newEndTime + constrainAdjust);
-            break;
-          }
-
           case MouseActions.SCALING_TOGETHER_END: {
             let scale = (dragBlockDownEndTime + timeDelta - minStartTime)
                 / (dragBlockDownEndTime - minStartTime);
@@ -619,7 +704,7 @@ class LayerTimelineController {
               info.newStartTime = minStartTime + (info.downStartTime - minStartTime) * scale;
               info.newEndTime = Math.max(
                   minStartTime + (info.downEndTime - minStartTime) * scale,
-                  info.newStartTime + 10);
+                  info.newStartTime + MIN_BLOCK_DURATION);
               if (info.newStartTime < info.startBound || info.newEndTime > info.endBound) {
                 cancel = true;
               }

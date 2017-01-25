@@ -45,23 +45,27 @@ angular.module('AVDStudio').directive('studioTimelineGrid', function() {
       scope.$watch(() => scope.redraw_());
 
       if ('onScrub' in attrs) {
-        let scrubToX_ = x => {
+        let handleScrubEvent_ = (event) => {
+          let x = event.clientX;
           x -= $canvas.offset().left;
           let time = (x - TimelineConsts.TIMELINE_ANIMATION_PADDING)
               / ($canvas.width() - TimelineConsts.TIMELINE_ANIMATION_PADDING * 2)
               * scope.animation.duration;
           time = Math.max(0, Math.min(time, scope.animation.duration));
-          scope.onScrub({ animation: scope.animation, time });
+          scope.onScrub({
+            animation: scope.animation,
+            time,
+            options: {disableSnap: !!event.altKey}
+          });
         };
 
         $canvas.on('mousedown', event => scope.$apply(() => {
-          scrubToX_(event.clientX);
+          handleScrubEvent_(event);
           new DragHelper({
             downEvent: event,
             direction: 'horizontal',
             skipSlopCheck: true,
-            onBeginDrag: event => scope.$apply(() => scrubToX_(event.clientX)),
-            onDrag: event => scope.$apply(() => scrubToX_(event.clientX)),
+            onDrag: event => scope.$apply(() => handleScrubEvent_(event)),
           });
           event.preventDefault();
           return false;
