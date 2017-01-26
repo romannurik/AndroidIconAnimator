@@ -15,10 +15,10 @@
  */
 
 import {Artwork, DefaultValues} from './model';
-import {IdProperty} from './modelproperties';
-import {ColorUtil} from './colorutil';
-import {SvgPathData} from './svgpathdata';
-import {ModelUtil} from './modelutil';
+import {IdProperty} from './model/properties';
+import {ColorUtil} from './ColorUtil';
+import {SvgPathData} from './SvgPathData';
+import {ModelUtil} from './ModelUtil';
 
 
 export const SvgLoader = {

@@ -15,7 +15,7 @@
  */
 
 import {Artwork, Animation} from 'model';
-import {ModelUtil} from 'modelutil';
+import {ModelUtil} from 'ModelUtil';
 
 
 const DEFAULT_LAYER_PROPERTY_STATE = {

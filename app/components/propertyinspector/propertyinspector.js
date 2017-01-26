@@ -15,9 +15,9 @@
  */
 
 import {Artwork, Animation} from 'model';
-import {Property, FractionProperty, IdProperty, EnumProperty} from 'modelproperties';
-import {ColorUtil} from 'colorutil';
-import {ModelUtil} from 'modelutil';
+import {Property, FractionProperty, IdProperty, EnumProperty} from 'model/properties';
+import {ColorUtil} from 'ColorUtil';
+import {ModelUtil} from 'ModelUtil';
 
 
 class PropertyInspectorController {

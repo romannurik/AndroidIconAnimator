@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {Artwork, PathLayer, LayerGroup, MaskLayer, DefaultValues} from './model';
 import xmlserializer from 'xmlserializer';
+
+import {Artwork, PathLayer, LayerGroup, MaskLayer, DefaultValues} from './model';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 const ANDROID_NS = 'http://schemas.android.com/apk/res/android';

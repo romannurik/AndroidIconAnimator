@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {DragHelper} from 'draghelper';
-import {TimelineConsts} from './consts.js';
+import {DragHelper} from 'DragHelper';
+
+import {TimelineConsts} from './consts';
 
 
 const GRID_INTERVALS_MS = [

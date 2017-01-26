@@ -15,9 +15,9 @@
  */
 
 import {LayerGroup, MaskLayer, PathLayer, DefaultValues} from 'model';
-import {ColorUtil} from 'colorutil';
-import {RenderUtil} from 'renderutil';
-import {ElementResizeWatcher} from 'elementresizewatcher';
+import {ColorUtil} from 'ColorUtil';
+import {RenderUtil} from 'RenderUtil';
+import {ElementResizeWatcher} from 'ElementResizeWatcher';
 
 
 const CANVAS_MARGIN = 72; // pixels

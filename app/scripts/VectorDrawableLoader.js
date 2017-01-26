@@ -15,8 +15,8 @@
  */
 
 import {Artwork, DefaultValues} from './model';
-import {IdProperty} from './modelproperties';
-import {ModelUtil} from './modelutil';
+import {IdProperty} from './model/properties';
+import {ModelUtil} from './ModelUtil';
 
 
 export const VectorDrawableLoader = {

@@ -15,12 +15,13 @@
  */
 
 import {Artwork, PathLayer, LayerGroup, MaskLayer, Animation, AnimationBlock} from 'model';
-import {ModelUtil} from 'modelutil';
-import {UiUtil} from 'uiutil';
-import {DragHelper} from 'draghelper';
-import {SvgLoader} from 'svgloader';
-import {VectorDrawableLoader} from 'vectordrawableloader';
-import {TimelineConsts} from './consts.js';
+import {ModelUtil} from 'ModelUtil';
+import {UiUtil} from 'UiUtil';
+import {DragHelper} from 'DragHelper';
+import {SvgLoader} from 'SvgLoader';
+import {VectorDrawableLoader} from 'VectorDrawableLoader';
+
+import {TimelineConsts} from './consts';
 
 
 const LAYER_INDENT = 20; // pixels

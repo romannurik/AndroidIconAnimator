@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import {Artwork, Animation, AnimationBlock, BaseLayer} from 'model';
-import {AnimationRenderer} from 'animationrenderer';
-import {AvdSerializer} from 'avdserializer';
-import {ModelUtil} from 'modelutil';
 import {default as zip} from 'zipjs-browserify';
+
+import {Artwork, Animation, AnimationBlock, BaseLayer} from 'model';
+import {AnimationRenderer} from 'AnimationRenderer';
+import {AvdSerializer} from 'AvdSerializer';
+import {ModelUtil} from 'ModelUtil';
 
 
 const CHANGES_TAG = '$$studioState::CHANGES';

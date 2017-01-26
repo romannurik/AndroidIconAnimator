@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {DragHelper} from 'draghelper';
+import {DragHelper} from 'DragHelper';
 
 
 class SplitterController {

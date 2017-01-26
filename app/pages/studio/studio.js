@@ -15,10 +15,10 @@
  */
 
 import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'model';
-import {ColorUtil} from 'colorutil';
-import {SvgLoader} from 'svgloader';
-import {VectorDrawableLoader} from 'vectordrawableloader';
-import {AvdSerializer} from 'avdserializer';
+import {ColorUtil} from 'ColorUtil';
+import {SvgLoader} from 'SvgLoader';
+import {VectorDrawableLoader} from 'VectorDrawableLoader';
+import {AvdSerializer} from 'AvdSerializer';
 
 //import TEST_DATA from '../../../_sandbox/debug.iconanim.json';
 
