@@ -20,6 +20,15 @@ import {BaseLayer} from './BaseLayer';
 /**
  * A group ('folder') containing other layers.
  */
+@Property.register([
+  {name: 'rotation', property: new NumberProperty(), animatable: true},
+  {name: 'scaleX', property: new NumberProperty(), animatable: true},
+  {name: 'scaleY', property: new NumberProperty(), animatable: true},
+  {name: 'pivotX', property: new NumberProperty(), animatable: true},
+  {name: 'pivotY', property: new NumberProperty(), animatable: true},
+  {name: 'translateX', property: new NumberProperty(), animatable: true},
+  {name: 'translateY', property: new NumberProperty(), animatable: true}
+])
 export class LayerGroup extends BaseLayer {
   constructor(obj = {}, opts = {}) {
     super(obj, opts);
@@ -107,16 +116,5 @@ export class LayerGroup extends BaseLayer {
     });
   }
 }
-
-
-Property.registerProperties(LayerGroup, [
-  {name: 'rotation', property: new NumberProperty(), animatable: true},
-  {name: 'scaleX', property: new NumberProperty(), animatable: true},
-  {name: 'scaleY', property: new NumberProperty(), animatable: true},
-  {name: 'pivotX', property: new NumberProperty(), animatable: true},
-  {name: 'pivotY', property: new NumberProperty(), animatable: true},
-  {name: 'translateX', property: new NumberProperty(), animatable: true},
-  {name: 'translateY', property: new NumberProperty(), animatable: true}
-]);
 
 BaseLayer.LAYER_CLASSES_BY_TYPE['group'] = LayerGroup;

@@ -40,6 +40,20 @@ const ENUM_LINEJOIN_OPTIONS = [
  * A path layer, which is the main building block for visible content in a vector
  * artwork.
  */
+@Property.register([
+  {name: 'pathData', property: new PathDataProperty(), animatable: true},
+  {name: 'fillColor', property: new ColorProperty(), animatable: true},
+  {name: 'fillAlpha', property: new FractionProperty(), animatable: true},
+  {name: 'strokeColor', property: new ColorProperty(), animatable: true},
+  {name: 'strokeAlpha', property: new FractionProperty(), animatable: true},
+  {name: 'strokeWidth', property: new NumberProperty({min:0}), animatable: true},
+  {name: 'strokeLinecap', property: new EnumProperty(ENUM_LINECAP_OPTIONS)},
+  {name: 'strokeLinejoin', property: new EnumProperty(ENUM_LINEJOIN_OPTIONS)},
+  {name: 'strokeMiterLimit', property: new NumberProperty({min:1})},
+  {name: 'trimPathStart', property: new FractionProperty(), animatable: true},
+  {name: 'trimPathEnd', property: new FractionProperty(), animatable: true},
+  {name: 'trimPathOffset', property: new FractionProperty(), animatable: true}
+])
 export class PathLayer extends BaseLayer {
   constructor(obj = {}, opts = {}) {
     super(obj, opts);
@@ -91,20 +105,5 @@ export class PathLayer extends BaseLayer {
     });
   }
 }
-
-Property.registerProperties(PathLayer, [
-  {name: 'pathData', property: new PathDataProperty(), animatable: true},
-  {name: 'fillColor', property: new ColorProperty(), animatable: true},
-  {name: 'fillAlpha', property: new FractionProperty(), animatable: true},
-  {name: 'strokeColor', property: new ColorProperty(), animatable: true},
-  {name: 'strokeAlpha', property: new FractionProperty(), animatable: true},
-  {name: 'strokeWidth', property: new NumberProperty({min:0}), animatable: true},
-  {name: 'strokeLinecap', property: new EnumProperty(ENUM_LINECAP_OPTIONS)},
-  {name: 'strokeLinejoin', property: new EnumProperty(ENUM_LINEJOIN_OPTIONS)},
-  {name: 'strokeMiterLimit', property: new NumberProperty({min:1})},
-  {name: 'trimPathStart', property: new FractionProperty(), animatable: true},
-  {name: 'trimPathEnd', property: new FractionProperty(), animatable: true},
-  {name: 'trimPathOffset', property: new FractionProperty(), animatable: true}
-]);
 
 BaseLayer.LAYER_CLASSES_BY_TYPE['path'] = PathLayer;

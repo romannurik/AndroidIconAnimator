@@ -22,6 +22,13 @@ import {LayerGroup} from './LayerGroup';
  * An artwork is the root layer group for a vector, defined mostly by
  * a width, height, and its children.
  */
+@Property.register([
+  {name: 'id', property: new IdProperty()},
+  {name: 'canvasColor', property: new ColorProperty()},
+  {name: 'width', property: new NumberProperty({min:4, max:1024, integer:true})},
+  {name: 'height', property: new NumberProperty({min:4, max:1024, integer:true})},
+  {name: 'alpha', property: new FractionProperty(), animatable: true},
+], {reset:true})
 export class Artwork extends LayerGroup {
   constructor(obj = {}, opts = {}) {
     super(obj, opts);
@@ -66,14 +73,5 @@ export class Artwork extends LayerGroup {
     };
   }
 }
-
-
-Property.registerProperties(Artwork, [
-  {name: 'id', property: new IdProperty()},
-  {name: 'canvasColor', property: new ColorProperty()},
-  {name: 'width', property: new NumberProperty({min:4, max:1024, integer:true})},
-  {name: 'height', property: new NumberProperty({min:4, max:1024, integer:true})},
-  {name: 'alpha', property: new FractionProperty(), animatable: true},
-], true);
 
 BaseLayer.LAYER_CLASSES_BY_TYPE['artwork'] = Artwork;

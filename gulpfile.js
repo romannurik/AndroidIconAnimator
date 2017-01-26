@@ -62,7 +62,10 @@ gulp.task('scripts', function () {
           './node_modules/'
         ]
       })
-      .transform('babelify', {presets: ['es2015']})
+      .transform('babelify', {
+        presets: ['es2015'],
+        plugins: ['transform-decorators-legacy']
+      })
       .transform('require-globify')
       .bundle()
       .on('error', errorHandler)

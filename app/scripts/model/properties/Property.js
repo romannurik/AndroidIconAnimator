@@ -45,49 +45,51 @@ export class Property {
     return val;
   }
 
-  static registerProperties(cls, props, reset = false) {
-    props.forEach(prop => {
-      let propertyObj = prop.property;
-      if (propertyObj instanceof Property) {
-        Object.defineProperty(cls.prototype, prop.name, {
-          get() {
-            return propertyObj.getter_(this, prop.name);
-          },
-          set(value) {
-            propertyObj.setter_(this, prop.name, value);
-          }
-        });
-      }
-    });
-
-    let animatableProperties = {};
-    let inspectableProperties = {};
-
-    if (!reset) {
-      Object.assign(animatableProperties, cls.prototype.animatableProperties);
-      Object.assign(inspectableProperties, cls.prototype.inspectableProperties);
-    }
-
-    props.forEach(p => {
-      if (p.animatable) {
-        animatableProperties[p.name] = p.property;
-      }
-
-      if (!p.inspectable) {
-        inspectableProperties[p.name] = p.property;
-      }
-    });
-
-    Object.defineProperty(cls.prototype, 'animatableProperties', {
-      get: () => Object.assign({}, animatableProperties)
-    });
-
-    Object.defineProperty(cls.prototype, 'inspectableProperties', {
-      get: () => Object.assign({}, inspectableProperties)
-    });
-  }
-
   static simpleInterpolate(start, end, f) {
     return start + (end - start) * f;
+  }
+
+  static register(props, {reset = false} = {}) {
+    return function(cls) {
+      props.forEach(prop => {
+        let propertyObj = prop.property;
+        if (propertyObj instanceof Property) {
+          Object.defineProperty(cls.prototype, prop.name, {
+            get() {
+              return propertyObj.getter_(this, prop.name);
+            },
+            set(value) {
+              propertyObj.setter_(this, prop.name, value);
+            }
+          });
+        }
+      });
+
+      let animatableProperties = {};
+      let inspectableProperties = {};
+
+      if (!reset) {
+        Object.assign(animatableProperties, cls.prototype.animatableProperties);
+        Object.assign(inspectableProperties, cls.prototype.inspectableProperties);
+      }
+
+      props.forEach(p => {
+        if (p.animatable) {
+          animatableProperties[p.name] = p.property;
+        }
+
+        if (!p.inspectable) {
+          inspectableProperties[p.name] = p.property;
+        }
+      });
+
+      Object.defineProperty(cls.prototype, 'animatableProperties', {
+        get: () => Object.assign({}, animatableProperties)
+      });
+
+      Object.defineProperty(cls.prototype, 'inspectableProperties', {
+        get: () => Object.assign({}, inspectableProperties)
+      });
+    };
   }
 }

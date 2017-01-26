@@ -19,62 +19,6 @@ import {default as bezierEasing} from 'bezier-easing';
 import {SvgPathData} from '../SvgPathData';
 import {Property, NumberProperty, EnumProperty} from './properties';
 
-/**
- * An animation block is an individual layer property tween (property animation).
- */
-export class AnimationBlock {
-  constructor(obj = {}) {
-    this.layerId = obj.layerId || null;
-    this.propertyName = obj.propertyName || null;
-    let isPathData = (this.propertyName == 'pathData');
-    if ('fromValue' in obj) {
-      this.fromValue = isPathData ? new SvgPathData(obj.fromValue) : obj.fromValue;
-    }
-    this.toValue = isPathData ? new SvgPathData(obj.toValue) : obj.toValue;
-    this.startTime = obj.startTime || 0;
-    this.endTime = obj.endTime || 0;
-    if (this.startTime > this.endTime) {
-      let tmp = this.endTime;
-      this.endTime = this.startTime;
-      this.startTime = tmp;
-    }
-    this.interpolator = obj.interpolator || 'ACCELERATE_DECELERATE';
-  }
-
-  get typeString() {
-    return 'block';
-  }
-
-  get typeIdPrefix() {
-    return 'block';
-  }
-
-  get typeIcon() {
-    return 'animation_block';
-  }
-
-  toJSON() {
-    return {
-      layerId: this.layerId,
-      propertyName: this.propertyName,
-      fromValue: valueToJson_(this.fromValue),
-      toValue: valueToJson_(this.toValue),
-      startTime: this.startTime,
-      endTime: this.endTime,
-      interpolator: this.interpolator.value,
-    };
-  }
-}
-
-function valueToJson_(val) {
-  if (typeof val == 'object' && 'toJSON' in val) {
-    return val.toJSON();
-  }
-
-  return val;
-}
-
-
 const FAST_OUT_SLOW_IN_EASING = bezierEasing(.4, 0, .2, 1);
 const FAST_OUT_LINEAR_IN_EASING = bezierEasing(.4, 0, 1, 1);
 const LINEAR_OUT_SLOW_IN_EASING = bezierEasing(0, 0, .2, 1);
@@ -138,11 +82,64 @@ const ENUM_INTERPOLATOR_OPTIONS = [
   //PATH: https://android.googlesource.com/platform/frameworks/base/+/refs/heads/master/core/java/android/view/animation/PathInterpolator.java
 ];
 
-
-Property.registerProperties(AnimationBlock, [
+/**
+ * An animation block is an individual layer property tween (property animation).
+ */
+@Property.register([
   {name: 'fromValue', property: 'auto'},
   {name: 'toValue', property: 'auto'},
   {name: 'startTime', property: new NumberProperty({min:0, integer:true})},
   {name: 'endTime', property: new NumberProperty({min:0, integer:true})},
   {name: 'interpolator', property: new EnumProperty(ENUM_INTERPOLATOR_OPTIONS, {storeEntireOption:true})}
-]);
+])
+export class AnimationBlock {
+  constructor(obj = {}) {
+    this.layerId = obj.layerId || null;
+    this.propertyName = obj.propertyName || null;
+    let isPathData = (this.propertyName == 'pathData');
+    if ('fromValue' in obj) {
+      this.fromValue = isPathData ? new SvgPathData(obj.fromValue) : obj.fromValue;
+    }
+    this.toValue = isPathData ? new SvgPathData(obj.toValue) : obj.toValue;
+    this.startTime = obj.startTime || 0;
+    this.endTime = obj.endTime || 0;
+    if (this.startTime > this.endTime) {
+      let tmp = this.endTime;
+      this.endTime = this.startTime;
+      this.startTime = tmp;
+    }
+    this.interpolator = obj.interpolator || 'ACCELERATE_DECELERATE';
+  }
+
+  get typeString() {
+    return 'block';
+  }
+
+  get typeIdPrefix() {
+    return 'block';
+  }
+
+  get typeIcon() {
+    return 'animation_block';
+  }
+
+  toJSON() {
+    return {
+      layerId: this.layerId,
+      propertyName: this.propertyName,
+      fromValue: valueToJson_(this.fromValue),
+      toValue: valueToJson_(this.toValue),
+      startTime: this.startTime,
+      endTime: this.endTime,
+      interpolator: this.interpolator.value,
+    };
+  }
+}
+
+function valueToJson_(val) {
+  if (typeof val == 'object' && 'toJSON' in val) {
+    return val.toJSON();
+  }
+
+  return val;
+}

@@ -21,6 +21,9 @@ import {BaseLayer} from './BaseLayer';
  * A mask layer (mask defined by a path) that clips/masks layers that follow it
  * within its layer group.
  */
+@Property.register([
+  {name: 'pathData', property: new PathDataProperty(), animatable: true}
+])
 export class MaskLayer extends BaseLayer {
   constructor(obj = {}, opts = {}) {
     super(obj, opts);
@@ -49,10 +52,5 @@ export class MaskLayer extends BaseLayer {
     });
   }
 }
-
-
-Property.registerProperties(MaskLayer, [
-  {name: 'pathData', property: new PathDataProperty(), animatable: true}
-]);
 
 BaseLayer.LAYER_CLASSES_BY_TYPE['mask'] = MaskLayer;

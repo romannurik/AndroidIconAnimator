@@ -19,6 +19,9 @@ import {Property, IdProperty} from './properties';
 /**
  * Base class for any node in the tree, including path layers, layer groups, and artworks.
  */
+@Property.register([
+  {name: 'id', property: new IdProperty()}
+])
 export class BaseLayer {
   constructor(obj = {}, opts = {}) {
     this.parent = null;
@@ -112,11 +115,6 @@ export class BaseLayer {
     return new BaseLayer.LAYER_CLASSES_BY_TYPE[obj.type || 'path'](obj, opts);
   }
 }
-
-
-Property.registerProperties(BaseLayer, [
-  {name: 'id', property: new IdProperty()}
-]);
 
 // filled in by derived classes
 BaseLayer.LAYER_CLASSES_BY_TYPE = {};
