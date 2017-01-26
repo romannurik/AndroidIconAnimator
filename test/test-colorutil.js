@@ -15,7 +15,7 @@
  */
 
 import assert from 'assert';
-import {ColorUtil} from '../app/scripts/colorutil';
+import {ColorUtil} from '../app/scripts/ColorUtil';
 
 describe('ColorUtil', () => {
   let TESTS_ANDROID_RAW = [
