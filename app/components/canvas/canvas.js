@@ -251,6 +251,10 @@ class CanvasController {
 
     let drawLayer_ = (ctx, layer, selectionMode) => {
       if (layer instanceof LayerGroup) {
+        if (!selectionMode && !layer.visible) {
+          return;
+        }
+
         transforms.push(RenderUtil.transformMatrixForLayer(layer));
 
         ctx.save();
@@ -285,6 +289,10 @@ class CanvasController {
         }
 
       } else {
+        if (!selectionMode && !layer.visible) {
+          return;
+        }
+
         let flattenedTransforms = RenderUtil.flattenTransforms(transforms);
 
         ctx.save();

@@ -33,6 +33,10 @@ export class BaseLayer {
     if (opts && opts.linkSelectedState) {
       this.selectedStateLinkedObj_ = obj;
     }
+
+    // meta
+    this.visible = ('visible' in obj) ? obj.visible : true;
+    this.expanded = true;
   }
 
   get selected() {
@@ -103,6 +107,7 @@ export class BaseLayer {
     return {
       id: this.id,
       type: this.typeString,
+      visible: this.visible,
     };
   }
 
@@ -245,6 +250,9 @@ export class LayerGroup extends BaseLayer {
     this.pivotY = obj.pivotY || 0;
     this.translateX = obj.translateX || 0;
     this.translateY = obj.translateY || 0;
+
+    // meta
+    this.expanded = ('expanded' in obj) ? obj.expanded : true;
   }
 
   computeBounds() {
@@ -313,7 +321,8 @@ export class LayerGroup extends BaseLayer {
       pivotY: this.pivotY,
       translateX: this.translateX,
       translateY: this.translateY,
-      layers: this.layers.map(layer => layer.toJSON())
+      layers: this.layers.map(layer => layer.toJSON()),
+      expanded: this.expanded,
     });
   }
 }

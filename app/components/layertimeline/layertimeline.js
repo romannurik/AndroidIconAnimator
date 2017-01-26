@@ -387,6 +387,40 @@ class LayerTimelineController {
   }
 
   /**
+   * Handle toggling expanded/collapsed visual state for a layer.
+   */
+  onLayerToggleExpanded($event, layer) {
+    if (!(layer instanceof LayerGroup)) {
+      return;
+    }
+
+    let expand = !layer.expanded;
+    if ($event.altKey) {
+      // recursive expand/collapse
+      layer.walk(layer => {
+        if (layer instanceof LayerGroup) {
+          layer.expanded = expand;
+        }
+      });
+
+    } else {
+      // expand/collapse just this layer
+      layer.expanded = expand;
+    }
+
+    $event.stopPropagation();
+  }
+
+  /**
+   * Handle toggling of visible/invisible state.
+   */
+  onLayerToggleVisibility($event, layer) {
+    layer.visible = !layer.visible;
+    this.studioState_.artworkChanged();
+    $event.stopPropagation();
+  }
+
+  /**
    * Creates a new empty animation to the list of animations.
    */
   onAddNewAnimation($event) {

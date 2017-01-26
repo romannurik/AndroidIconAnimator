@@ -112,15 +112,28 @@
           class="slt-layer slt-layer-type-{{ layer._slt.layerType }}"
           ng-class="{'is-selected': layer.selected_}"
           ng-click="ctrl.onLayerClick($event, layer)"
+          ng-dblclick="ctrl.onLayerToggleExpanded($event, layer)"
           ng-mousedown="ctrl.onLayerMouseDown($event, layer)"
           layout="row">
+        <md-button
+            class="md-icon-button slt-layer-expanded-toggle"
+            ng-class="{'is-visible':layer._slt.layerType == 'group'}"
+            ng-click="ctrl.onLayerToggleExpanded($event, layer)">
+          <md-icon class="material-icons">{{layer.expanded ? 'expand_more' : 'chevron_right'}}</md-icon>
+        </md-button>
         <md-icon md-svg-icon="avdstudio:{{ layer.typeIcon }}"></md-icon>
-        <span flex class="slt-layer-id">{{ layer.id }}</span>
+        <span class="slt-layer-id">{{ layer.id }}</span>
+        <md-button
+            class="md-icon-button slt-layer-action-button slt-layer-visibility-toggle"
+            ng-class="{'is-checked':layer.visible}"
+            ng-click="ctrl.onLayerToggleVisibility($event, layer)">
+          <md-icon class="material-icons">{{layer.visible ? 'visibility' : 'visibility_off'}}</md-icon>
+        </md-button>
         <md-menu
             class="slt-layer-add-property-menu"
             ng-if="ctrl.activeAnimation && layer._slt.hasAvailableProperties">
           <md-button
-              class="md-icon-button"
+              class="md-icon-button slt-layer-action-button"
               ng-click="$mdOpenMenu($event)"
               aria-label="Animate this layer">
             <md-icon md-svg-icon="avdstudio:animation_block"></md-icon>
@@ -135,11 +148,11 @@
           </md-menu-content>
         </md-menu>
       </div>
-      <div class="slt-properties"><div
+      <div class="slt-properties" ng-show="layer.expanded"><div
             class="slt-property"
             layout="row"
             ng-repeat="(propertyName, __) in layer._slt.blocksByProperty">
-        <span flex>{{propertyName}}</span>
+        <span class="slt-property-name">{{propertyName}}</span>
         <md-button
             class="md-icon-button"
             ng-click="ctrl.onAddTimelineBlock($event, layer, propertyName)"
@@ -148,7 +161,7 @@
           <md-tooltip>Add another animation</md-tooltip>
         </md-button>
       </div></div>
-      <ul class="slt-children" ng-if="layer.layers">
+      <ul class="slt-children" ng-if="layer.layers" ng-show="layer.expanded">
         <li class="slt-layer-container"
             ng-repeat="layer in layer.layers"
             data-layer-id="{{layer.id}}"
@@ -201,7 +214,7 @@
       <script type="text/ng-template" id="timelineRow">
         <div class="slt-layer slt-layer-type-{{ layer._slt.layerType }}"></div>
 
-        <div class="slt-properties"><div
+        <div class="slt-properties" ng-show="layer.expanded"><div
               class="slt-property"
               ng-repeat="(property, blocks) in layer._slt.blocksByProperty">
           <div
@@ -218,7 +231,7 @@
           </div>
         </div></div>
 
-        <ul class="slt-children" ng-if="layer.layers">
+        <ul class="slt-children" ng-if="layer.layers" ng-show="layer.expanded">
           <li ng-repeat="layer in layer.layers" ng-include="'timelineRow'"></li>
         </ul>
       </script>
