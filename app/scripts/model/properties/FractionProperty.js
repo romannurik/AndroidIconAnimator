@@ -17,10 +17,10 @@
 import {NumberProperty} from './NumberProperty';
 
 export class FractionProperty extends NumberProperty {
-  constructor(opts = {}) {
-    opts.min = 0;
-    opts.max = 1;
-    super(opts);
+  constructor(name, config = {}) {
+    config.min = 0;
+    config.max = 1;
+    super(name, config);
   }
 
   get animatorValueType() {

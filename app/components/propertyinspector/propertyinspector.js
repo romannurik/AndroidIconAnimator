@@ -15,7 +15,7 @@
  */
 
 import {Artwork, Animation} from 'model';
-import {Property, FractionProperty, IdProperty, EnumProperty} from 'model/properties';
+import {Property, StubProperty, FractionProperty, IdProperty, EnumProperty} from 'model/properties';
 import {ColorUtil} from 'ColorUtil';
 import {ModelUtil} from 'ModelUtil';
 
@@ -175,7 +175,7 @@ class PropertyInspectorController {
       let sharedPropertyNames = this.computeSharedPropertyNames_(blocks);
       sharedPropertyNames.forEach(propertyName => {
         let property = blocks[0].inspectableProperties[propertyName];
-        if (property == 'auto') {
+        if (property instanceof StubProperty) {
           // fromValue and toValue only work when they're animating compatible property types
           let properties = blocks.map(block =>
               this.studioState_.artwork.findLayerById(block.layerId)
@@ -211,7 +211,7 @@ class PropertyInspectorController {
       this.selectionInfo.subDescription = `for '${block.layerId}'`;
       Object.keys(block.inspectableProperties).forEach(propertyName => {
         let property = block.inspectableProperties[propertyName];
-        if (property == 'auto') {
+        if (property instanceof StubProperty) {
           property = this.studioState_.artwork.findLayerById(block.layerId)
               .inspectableProperties[block.propertyName];
         }

@@ -22,7 +22,7 @@ import {BaseLayer} from './BaseLayer';
  * within its layer group.
  */
 @Property.register([
-  {name: 'pathData', property: new PathDataProperty(), animatable: true}
+  new PathDataProperty('pathData', {animatable: true}),
 ])
 export class MaskLayer extends BaseLayer {
   constructor(obj = {}, opts = {}) {

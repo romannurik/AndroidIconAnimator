@@ -20,5 +20,5 @@ export {FractionProperty} from './FractionProperty';
 export {IdProperty} from './IdProperty';
 export {NumberProperty} from './NumberProperty';
 export {PathDataProperty} from './PathDataProperty';
-export {Property} from './Property';
+export {Property, StubProperty} from './Property';
 export {StringProperty} from './StringProperty';

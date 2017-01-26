@@ -17,21 +17,21 @@
 import {Property} from './Property';
 
 export class NumberProperty extends Property {
-  constructor(opts = {}) {
-    super();
-    this.opts = opts;
+  constructor(name, config = {}) {
+    super(name, config);
+    this.config = config;
   }
 
   trySetEditedValue(obj, propertyName, value) {
     value = parseFloat(value);
     if (!isNaN(value)) {
-      if ('min' in this.opts) {
-        value = Math.max(this.opts.min, value);
+      if ('min' in this.config) {
+        value = Math.max(this.config.min, value);
       }
-      if ('max' in this.opts) {
-        value = Math.min(this.opts.max, value);
+      if ('max' in this.config) {
+        value = Math.min(this.config.max, value);
       }
-      if (this.opts.integer) {
+      if (this.config.integer) {
         value = Math.floor(value);
       }
       obj[propertyName] = value;
@@ -55,13 +55,13 @@ export class NumberProperty extends Property {
 
     if (typeof value === 'number') {
       if (!isNaN(value)) {
-        if ('min' in this.opts) {
-          value = Math.max(this.opts.min, value);
+        if ('min' in this.config) {
+          value = Math.max(this.config.min, value);
         }
-        if ('max' in this.opts) {
-          value = Math.min(this.opts.max, value);
+        if ('max' in this.config) {
+          value = Math.min(this.config.max, value);
         }
-        if (this.opts.integer) {
+        if (this.config.integer) {
           value = Math.floor(value);
         }
       }

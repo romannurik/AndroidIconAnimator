@@ -41,18 +41,18 @@ const ENUM_LINEJOIN_OPTIONS = [
  * artwork.
  */
 @Property.register([
-  {name: 'pathData', property: new PathDataProperty(), animatable: true},
-  {name: 'fillColor', property: new ColorProperty(), animatable: true},
-  {name: 'fillAlpha', property: new FractionProperty(), animatable: true},
-  {name: 'strokeColor', property: new ColorProperty(), animatable: true},
-  {name: 'strokeAlpha', property: new FractionProperty(), animatable: true},
-  {name: 'strokeWidth', property: new NumberProperty({min:0}), animatable: true},
-  {name: 'strokeLinecap', property: new EnumProperty(ENUM_LINECAP_OPTIONS)},
-  {name: 'strokeLinejoin', property: new EnumProperty(ENUM_LINEJOIN_OPTIONS)},
-  {name: 'strokeMiterLimit', property: new NumberProperty({min:1})},
-  {name: 'trimPathStart', property: new FractionProperty(), animatable: true},
-  {name: 'trimPathEnd', property: new FractionProperty(), animatable: true},
-  {name: 'trimPathOffset', property: new FractionProperty(), animatable: true}
+  new PathDataProperty('pathData', {animatable: true}),
+  new ColorProperty('fillColor', {animatable: true}),
+  new FractionProperty('fillAlpha', {animatable: true}),
+  new ColorProperty('strokeColor', {animatable: true}),
+  new FractionProperty('strokeAlpha', {animatable: true}),
+  new NumberProperty('strokeWidth', {min:0, animatable: true}),
+  new EnumProperty('strokeLinecap', ENUM_LINECAP_OPTIONS),
+  new EnumProperty('strokeLinejoin', ENUM_LINEJOIN_OPTIONS),
+  new NumberProperty('strokeMiterLimit', {min:1}),
+  new FractionProperty('trimPathStart', {animatable: true}),
+  new FractionProperty('trimPathEnd', {animatable: true}),
+  new FractionProperty('trimPathOffset', {animatable: true}),
 ])
 export class PathLayer extends BaseLayer {
   constructor(obj = {}, opts = {}) {

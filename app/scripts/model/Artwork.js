@@ -23,11 +23,11 @@ import {LayerGroup} from './LayerGroup';
  * a width, height, and its children.
  */
 @Property.register([
-  {name: 'id', property: new IdProperty()},
-  {name: 'canvasColor', property: new ColorProperty()},
-  {name: 'width', property: new NumberProperty({min:4, max:1024, integer:true})},
-  {name: 'height', property: new NumberProperty({min:4, max:1024, integer:true})},
-  {name: 'alpha', property: new FractionProperty(), animatable: true},
+  new IdProperty('id'),
+  new ColorProperty('canvasColor'),
+  new NumberProperty('width', {min:4, max:1024, integer:true}),
+  new NumberProperty('height', {min:4, max:1024, integer:true}),
+  new FractionProperty('alpha', {animatable: true}),
 ], {reset:true})
 export class Artwork extends LayerGroup {
   constructor(obj = {}, opts = {}) {

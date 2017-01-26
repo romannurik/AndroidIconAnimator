@@ -21,13 +21,13 @@ import {BaseLayer} from './BaseLayer';
  * A group ('folder') containing other layers.
  */
 @Property.register([
-  {name: 'rotation', property: new NumberProperty(), animatable: true},
-  {name: 'scaleX', property: new NumberProperty(), animatable: true},
-  {name: 'scaleY', property: new NumberProperty(), animatable: true},
-  {name: 'pivotX', property: new NumberProperty(), animatable: true},
-  {name: 'pivotY', property: new NumberProperty(), animatable: true},
-  {name: 'translateX', property: new NumberProperty(), animatable: true},
-  {name: 'translateY', property: new NumberProperty(), animatable: true}
+  new NumberProperty('rotation', {animatable: true}),
+  new NumberProperty('scaleX', {animatable: true}),
+  new NumberProperty('scaleY', {animatable: true}),
+  new NumberProperty('pivotX', {animatable: true}),
+  new NumberProperty('pivotY', {animatable: true}),
+  new NumberProperty('translateX', {animatable: true}),
+  new NumberProperty('translateY', {animatable: true}),
 ])
 export class LayerGroup extends BaseLayer {
   constructor(obj = {}, opts = {}) {

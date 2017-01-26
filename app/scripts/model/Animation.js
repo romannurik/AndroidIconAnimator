@@ -22,8 +22,8 @@ import {AnimationBlock} from './AnimationBlock';
  * An animation represents a collection of layer property tweens for a given artwork.
  */
 @Property.register([
-  {name: 'id', property: new IdProperty()},
-  {name: 'duration', property: new NumberProperty({min:100, max:60000})}
+  new IdProperty('id'),
+  new NumberProperty('duration', {min:100, max:60000}),
 ])
 export class Animation {
   constructor(obj = {}) {

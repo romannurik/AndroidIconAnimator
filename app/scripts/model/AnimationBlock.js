@@ -17,7 +17,7 @@
 import {default as bezierEasing} from 'bezier-easing';
 
 import {SvgPathData} from '../SvgPathData';
-import {Property, NumberProperty, EnumProperty} from './properties';
+import {Property, StubProperty, NumberProperty, EnumProperty} from './properties';
 
 const FAST_OUT_SLOW_IN_EASING = bezierEasing(.4, 0, .2, 1);
 const FAST_OUT_LINEAR_IN_EASING = bezierEasing(.4, 0, 1, 1);
@@ -86,11 +86,11 @@ const ENUM_INTERPOLATOR_OPTIONS = [
  * An animation block is an individual layer property tween (property animation).
  */
 @Property.register([
-  {name: 'fromValue', property: 'auto'},
-  {name: 'toValue', property: 'auto'},
-  {name: 'startTime', property: new NumberProperty({min:0, integer:true})},
-  {name: 'endTime', property: new NumberProperty({min:0, integer:true})},
-  {name: 'interpolator', property: new EnumProperty(ENUM_INTERPOLATOR_OPTIONS, {storeEntireOption:true})}
+  new StubProperty('fromValue'),
+  new StubProperty('toValue'),
+  new NumberProperty('startTime', {min:0, integer:true}),
+  new NumberProperty('endTime', {min:0, integer:true}),
+  new EnumProperty('interpolator', ENUM_INTERPOLATOR_OPTIONS, {storeEntireOption:true}),
 ])
 export class AnimationBlock {
   constructor(obj = {}) {

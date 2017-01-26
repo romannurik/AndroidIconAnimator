@@ -20,7 +20,7 @@ import {Property, IdProperty} from './properties';
  * Base class for any node in the tree, including path layers, layer groups, and artworks.
  */
 @Property.register([
-  {name: 'id', property: new IdProperty()}
+  new IdProperty('id')
 ])
 export class BaseLayer {
   constructor(obj = {}, opts = {}) {

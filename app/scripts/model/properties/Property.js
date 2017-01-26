@@ -15,6 +15,13 @@
  */
 
 export class Property {
+  constructor(name, config = {}) {
+    this.name = name;
+    this.config = config;
+    this.animatable = config.animatable;
+    this.inspectable = config.inspectable;
+  }
+
   interpolateValue(start, end, f) {
     return start;
   }
@@ -52,14 +59,13 @@ export class Property {
   static register(props, {reset = false} = {}) {
     return function(cls) {
       props.forEach(prop => {
-        let propertyObj = prop.property;
-        if (propertyObj instanceof Property) {
+        if (!(prop instanceof StubProperty)) {
           Object.defineProperty(cls.prototype, prop.name, {
             get() {
-              return propertyObj.getter_(this, prop.name);
+              return prop.getter_(this, prop.name);
             },
             set(value) {
-              propertyObj.setter_(this, prop.name, value);
+              prop.setter_(this, prop.name, value);
             }
           });
         }
@@ -73,13 +79,13 @@ export class Property {
         Object.assign(inspectableProperties, cls.prototype.inspectableProperties);
       }
 
-      props.forEach(p => {
-        if (p.animatable) {
-          animatableProperties[p.name] = p.property;
+      props.forEach(prop => {
+        if (prop.animatable) {
+          animatableProperties[prop.name] = prop;
         }
 
-        if (!p.inspectable) {
-          inspectableProperties[p.name] = p.property;
+        if (!prop.inspectable) {
+          inspectableProperties[prop.name] = prop;
         }
       });
 
@@ -93,3 +99,6 @@ export class Property {
     };
   }
 }
+
+export class StubProperty extends Property {}
+

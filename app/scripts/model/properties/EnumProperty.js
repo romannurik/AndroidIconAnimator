@@ -17,8 +17,8 @@
 import {Property} from './Property';
 
 export class EnumProperty extends Property {
-  constructor(options, extra) {
-    super();
+  constructor(name, options = {}, config = {}) {
+    super(name, config);
     this.optionsByValue_ = {};
     this.options_ = (options || []).map(option => {
       let newOption = {};
@@ -38,9 +38,9 @@ export class EnumProperty extends Property {
       return option;
     });
 
-    extra = extra || {};
-    if (extra.storeEntireOption) {
-      this.storeEntireOption = extra.storeEntireOption;
+    config = config || {};
+    if (config.storeEntireOption) {
+      this.storeEntireOption = config.storeEntireOption;
     }
   }
 
