@@ -28,13 +28,51 @@ export const SvgLoader = {
 
     let usedIds = {};
 
+    // Construct a map of elements contained within <defs> tags, mapping
+    // their IDs to the element nodes.
+    let defsChildMap = new Map();
+    let extractDefsMap_ = node => {
+      if (!node) {
+        return;
+      }
+      node.childNodes.forEach(child => {
+        if (child instanceof SVGDefsElement) {
+          child.childNodes.forEach(defsElement => {
+            if (defsElement.nodeType != Node.TEXT_NODE
+                && defsElement.nodeType != Node.COMMENT_NODE) {
+              defsChildMap.set(defsElement.id, defsElement);
+            }
+          });
+        } else {
+          extractDefsMap_(child);
+        }
+      });
+    };
+
     let nodeToLayerData_ = (node, context) => {
       if (!node) {
         return null;
       }
 
-      if (node.nodeType == Node.TEXT_NODE || node.nodeType == Node.COMMENT_NODE) {
+      if (node.nodeType == Node.TEXT_NODE
+        || node.nodeType == Node.COMMENT_NODE
+        || node instanceof SVGDefsElement) {
         return null;
+      }
+
+      // If the node is a <use> element, then replace it with the element
+      // contained in the defs map constructed above.
+      if (node instanceof SVGUseElement) {
+        // TODO(alockwood): apparently xlink:href is deprecated... figure out what to do about that
+        let defChildId = node.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+        // TODO(alockwood): can we assume the href is formatted like '#idNameGoesHere'?
+        defChildId = defChildId.substring(1);
+        let replacementNode = defsChildMap.get(defChildId);
+        if (!replacementNode) {
+          return null;
+        }
+        node = replacementNode.cloneNode(true);
+        node.id = defChildId;
       }
 
       let makeFinalNodeId_ = typeIdPrefix => {
@@ -176,6 +214,7 @@ export const SvgLoader = {
       ];
     }
 
+    extractDefsMap_(doc.documentElement);
     let rootLayer = nodeToLayerData_(doc.documentElement, docElContext);
 
     let artwork = {
