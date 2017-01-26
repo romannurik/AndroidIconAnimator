@@ -83,6 +83,7 @@ export const SvgLoader = {
             t = lengthPx_(node.y),
             r = l + lengthPx_(node.width),
             b = t + lengthPx_(node.height);
+        // TODO: handle corner radii
         path = `M ${l},${t} ${r},${t} ${r},${b} ${l},${b} Z`;
 
       } else if (node instanceof SVGLineElement) {

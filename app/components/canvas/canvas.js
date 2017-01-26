@@ -85,16 +85,15 @@ class CanvasController {
     // TODO(alockwood): select clips and/or groups in addition to paths?
     const hitTestLayer_ = layer => {
       if (layer instanceof LayerGroup) {
-        const transformMatrices = this.createTransformMatrices_(layer);
-        matrices.splice(matrices.length, 0, ...transformMatrices);
+        matrices.push(RenderUtil.transformMatrixForLayer(layer));
         // hitTestLayer || h and not the other way around because of reverse z-order
         const result = layer.layers.reduce((h, layer) => hitTestLayer_(layer) || h, null);
-        matrices.splice(-transformMatrices.length, transformMatrices.length);
+        matrices.pop();
         return result;
 
       } else if (layer instanceof PathLayer && layer.pathData) {
         const reversedMatrices = Array.from(matrices).reverse();
-        const pointTransformerFn = p => this.transformPoint_(p, reversedMatrices);
+        const pointTransformerFn = p => RenderUtil.transformPoint(reversedMatrices, p);
         if ((layer.fillColor &&
              layer.pathData.hitTestFill(point, pointTransformerFn)) ||
             (layer.strokeColor &&
@@ -149,28 +148,6 @@ class CanvasController {
         .on('mouseleave', () => {
           this.registeredRulers_.forEach(r => r.hideMouse());
         });
-  }
-
-  createTransformMatrices_(layer) {
-    let cosr = Math.cos(layer.rotation * Math.PI / 180);
-    let sinr = Math.sin(layer.rotation * Math.PI / 180);
-    return [
-      { a: 1, b: 0, c: 0, d: 1, e: layer.pivotX, f: layer.pivotY },
-      { a: 1, b: 0, c: 0, d: 1, e: layer.translateX, f: layer.translateY },
-      { a: cosr, b: sinr, c: -sinr, d: cosr, e: 0, f: 0 },
-      { a: layer.scaleX, b: 0, c: 0, d: layer.scaleY, e: 0, f: 0 },
-      { a: 1, b: 0, c: 0, d: 1, e: -layer.pivotX, f: -layer.pivotY }
-    ];
-  }
-
-  transformPoint_(p, matrices) {
-    return matrices.reduce((p, m) => {
-      return {
-        // dot product
-        x: m.a * p.x + m.c * p.y + m.e * 1,
-        y: m.b * p.x + m.d * p.y + m.f * 1,
-      };
-    }, p);
   }
 
   get artwork() {
@@ -329,6 +306,8 @@ class CanvasController {
           if (layer.trimPathStart !== 0
               || layer.trimPathEnd !== 1
               || layer.trimPathOffset !== 0) {
+            let pathLength = layer.pathData.length;
+
             // Calculate the visible fraction of the trimmed path. If trimPathStart
             // is greater than trimPathEnd, then the result should be the combined
             // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
@@ -342,14 +321,14 @@ class CanvasController {
             // difference in length between the total path length and the visible
             // trimmed path length.
             ctx.setLineDash([
-              shownFraction * layer.pathData.length,
-              (1 - shownFraction + 0.001) * layer.pathData.length
+              shownFraction * pathLength,
+              (1 - shownFraction + 0.001) * pathLength
             ]);
 
             // The amount to offset the path is equal to the trimPathStart plus
             // trimPathOffset. We mod the result because the trimmed path
             // should wrap around once it reaches 1.
-            ctx.lineDashOffset = layer.pathData.length
+            ctx.lineDashOffset = pathLength
                 * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
           } else {
             ctx.setLineDash([]);

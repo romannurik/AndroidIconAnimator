@@ -44,6 +44,20 @@ export const RenderUtil = {
         IDENTITY_TRANSFORM_MATRIX);
   },
 
+  transformPoint(matrices, p) {
+    if (!matrices || !matrices.length) {
+      return Object.assign({}, p);
+    }
+
+    return matrices.reduce((p, m) => ({
+      // [a c e]   [p.x]
+      // [b d f] * [p.y]
+      // [0 0 1]   [ 1 ]
+      x: m[0] * p.x + m[2] * p.y + m[4],
+      y: m[1] * p.x + m[3] * p.y + m[5]
+    }), p);
+  },
+
   computeStrokeWidthMultiplier(transformMatrix) {
     // from getMatrixScale in
     // https://android.googlesource.com/platform/frameworks/base/+/master/libs/hwui/VectorDrawable.cpp
@@ -62,8 +76,8 @@ export const RenderUtil = {
     // first remove translate elements from matrix
     transformMatrix[4] = transformMatrix[5] = 0;
 
-    let vecA = transformPoint_(transformMatrix, {x:0, y:1});
-    let vecB = transformPoint_(transformMatrix, {x:1, y:0});
+    let vecA = RenderUtil.transformPoint([transformMatrix], {x:0, y:1});
+    let vecB = RenderUtil.transformPoint([transformMatrix], {x:1, y:0});
     let scaleX = Math.hypot(vecA.x, vecA.y);
     let scaleY = Math.hypot(vecB.x, vecB.y);
     let crossProduct = vecA.y * vecB.x - vecA.x * vecB.y; // vector cross product
@@ -75,19 +89,6 @@ export const RenderUtil = {
     return matrixScale;
   }
 };
-
-
-
-// TODO: merge with implementation in SvgPathData
-function transformPoint_(m, p) {
-  // [a c e]   [p.x]
-  // [b d f] * [p.y]
-  // [0 0 1]   [ 1 ]
-  return {
-    x: m[0] * p.x + m[2] * p.y + m[4],
-    y: m[1] * p.x + m[3] * p.y + m[5]
-  };
-}
 
 
 // formula generated w/ wolfram alpha
