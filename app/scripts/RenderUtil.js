@@ -18,24 +18,27 @@ const IDENTITY_TRANSFORM_MATRIX = [1, 0, 0, 1, 0, 0];
 
 export const RenderUtil = {
   transformMatrixForLayer(layer) {
-    let m = IDENTITY_TRANSFORM_MATRIX.slice();
-    // TODO: collapse into a single operation
-    if (layer.pivotX || layer.pivotY) {
-      m = translateMatrix_(m, layer.pivotX, layer.pivotY);
-    }
-    if (layer.translateX || layer.translateY) {
-      m = translateMatrix_(m, layer.translateX, layer.translateY);
-    }
-    if (layer.rotation) {
-      m = rotateMatrix_(m, layer.rotation * Math.PI / 180);
-    }
-    if (layer.scaleX !== 1 || layer.scaleY !== 1) {
-      m = scaleMatrix_(m, layer.scaleX, layer.scaleY);
-    }
-    if (layer.pivotX || layer.pivotY) {
-      m = translateMatrix_(m, -layer.pivotX, -layer.pivotY);
-    }
-    return m;
+    let cosR = Math.cos(layer.rotation * Math.PI / 180);
+    let sinR = Math.sin(layer.rotation * Math.PI / 180);
+
+    // first negative pivot, then scale, rotate, translate, and pivot
+    // notes:
+    // translate: [1, 0, 0, 1, x, y]
+    // scale: [sx, 0, 0, sy, 0, 0]
+    // rotate: [cos, sin, -sin, cos, 0, 0]
+
+    return [
+      cosR * layer.scaleX,
+      sinR * layer.scaleX,
+      -sinR * layer.scaleY,
+      cosR * layer.scaleY,
+      (layer.pivotX + layer.translateX)
+          - cosR * layer.scaleX * layer.pivotX
+          + sinR * layer.scaleY * layer.pivotY,
+      (layer.pivotY + layer.translateY)
+          - cosR * layer.scaleY * layer.pivotY
+          - sinR * layer.scaleX * layer.pivotX
+    ];
   },
 
   flattenTransforms(transforms) {
@@ -92,28 +95,13 @@ export const RenderUtil = {
 
 
 // formula generated w/ wolfram alpha
-// returns the dot product of 2D transformation matrices s and t
+// returns the product of 2D transformation matrices s and t
 
 function transformMatrix_(s, t) {
-  return [s[0] * t[0] + s[1] * t[2],
-          s[0] * t[1] + s[1] * t[3],
-          t[0] * s[2] + t[2] * s[3],
-          t[1] * s[2] + s[3] * t[3],
-          t[0] * s[4] + t[4] + t[2] * s[5],
-          t[1] * s[4] + t[3] * s[5] + t[5]];
-}
-
-// https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform
-
-function translateMatrix_(m, x, y) {
-  return transformMatrix_([1, 0, 0, 1, x, y], m);
-}
-
-function scaleMatrix_(m, sx, sy) {
-  return transformMatrix_([sx, 0, 0, sy, 0, 0], m);
-}
-
-function rotateMatrix_(m, angle) {
-  return transformMatrix_(
-      [Math.cos(angle), Math.sin(angle), -Math.sin(angle), Math.cos(angle), 0, 0], m);
+  return [t[0] * s[0] + t[1] * s[2],
+          t[0] * s[1] + t[1] * s[3],
+          s[0] * t[2] + s[2] * t[3],
+          s[1] * t[2] + t[3] * s[3],
+          s[0] * t[4] + s[4] + s[2] * t[5],
+          s[1] * t[4] + s[3] * t[5] + s[5]];
 }

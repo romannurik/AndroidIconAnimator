@@ -85,15 +85,14 @@ class CanvasController {
     // TODO(alockwood): select clips and/or groups in addition to paths?
     const hitTestLayer_ = layer => {
       if (layer instanceof LayerGroup) {
-        matrices.push(RenderUtil.transformMatrixForLayer(layer));
+        matrices.unshift(RenderUtil.transformMatrixForLayer(layer));
         // hitTestLayer || h and not the other way around because of reverse z-order
         const result = layer.layers.reduce((h, layer) => hitTestLayer_(layer) || h, null);
-        matrices.pop();
+        matrices.shift();
         return result;
 
       } else if (layer instanceof PathLayer && layer.pathData) {
-        const reversedMatrices = Array.from(matrices).reverse();
-        const pointTransformerFn = p => RenderUtil.transformPoint(reversedMatrices, p);
+        const pointTransformerFn = p => RenderUtil.transformPoint(matrices, p);
         if ((layer.fillColor &&
              layer.pathData.hitTestFill(point, pointTransformerFn)) ||
             (layer.strokeColor &&
@@ -255,7 +254,7 @@ class CanvasController {
           return;
         }
 
-        transforms.push(RenderUtil.transformMatrixForLayer(layer));
+        transforms.unshift(RenderUtil.transformMatrixForLayer(layer));
 
         ctx.save();
         layer.layers.forEach(layer => drawLayer_(ctx, layer, selectionMode));
@@ -273,7 +272,7 @@ class CanvasController {
           }
         }
 
-        transforms.pop();
+        transforms.shift();
       } else if (layer instanceof MaskLayer) {
         ctx.save();
         ctx.transform(...RenderUtil.flattenTransforms(transforms));
