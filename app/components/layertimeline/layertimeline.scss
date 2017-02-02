@@ -156,6 +156,19 @@
       display: flex;
     }
 
+    .slt-layer-action-button {
+      @include layer-list-button;
+      opacity: .2;
+    }
+
+    md-menu {
+      display: flex;
+    }
+
+    .slt-layer-more-actions {
+      opacity: 0;
+    }
+
     .slt-layer-visibility-toggle {
       &.is-checked {
         opacity: 0;
@@ -163,11 +176,6 @@
       &:not(.is-checked) {
         opacity: .7;
       }
-    }
-
-    .slt-layer-action-button {
-      @include layer-list-button;
-      opacity: .2;
     }
 
     .slt-layer-type-group {
@@ -220,21 +228,10 @@
         font-weight: 500;
         color: $colorBlackTextSecondary;
         line-height: $headerHeight;
-        padding: 0 24px 0 8px;
+        padding: 0 8px 0 8px;
         margin: 0;
         outline: 0;
         background-color: transparent;
-
-        &::after {
-          @include material-icons;
-          content: 'arrow_drop_down';
-          position: absolute;
-          font-size: 24px;
-          right: 0;
-          top: 50%;
-          transform: translate(0, -50%);
-          color: $colorBlackTextDisabled;
-        }
 
         &:focus {
           background-color: rgba(#000, .08);

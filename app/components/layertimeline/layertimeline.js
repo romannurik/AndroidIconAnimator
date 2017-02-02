@@ -423,6 +423,22 @@ class LayerTimelineController {
   }
 
   /**
+   * Converts the given path layer to a clip path.
+   */
+  onConvertLayerToClipPath($event, layer) {
+    let clipPathLayer = new MaskLayer(layer);
+    this.studioState_.swapLayer(layer, clipPathLayer);
+  }
+
+  /**
+   * Converts the given layer (clip path) to a path layer.
+   */
+  onConvertLayerToPath($event, layer) {
+    let newLayer = new PathLayer(layer);
+    this.studioState_.swapLayer(layer, newLayer);
+  }
+
+  /**
    * Creates a new empty animation to the list of animations.
    */
   onAddNewAnimation($event) {

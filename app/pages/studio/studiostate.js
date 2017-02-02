@@ -457,6 +457,22 @@ class StudioStateService {
     this.artworkChanged();
   }
 
+  swapLayer(layer, withLayer) {
+    let parent = layer.parent;
+    let indexInParent = parent.layers.indexOf(layer);
+    withLayer.parent = layer.parent;
+    parent.layers.splice(indexInParent, 1, withLayer);
+    let indexInSelection = this.selection.indexOf(layer);
+    if (indexInSelection >= 0) {
+      this.selection.splice(indexInSelection, 1, withLayer);
+    }
+    // TODO: preserve still-valid animations
+    this.animations.forEach(animation => {
+      animation.blocks = animation.blocks.filter(block => block.layerId != layer.id);
+    });
+    this.artworkChanged();
+  }
+
   new() {
     this.load({
       artwork: new Artwork(BLANK_ARTWORK),

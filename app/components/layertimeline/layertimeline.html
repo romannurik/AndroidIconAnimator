@@ -123,11 +123,28 @@
         </md-button>
         <md-icon md-svg-icon="avdstudio:{{ layer.typeIcon }}"></md-icon>
         <span class="slt-layer-id">{{ layer.id }}</span>
+        <md-menu ng-if="layer._slt.layerType == 'layer' || layer._slt.layerType == 'mask'">
+          <md-button
+              class="md-icon-button slt-layer-action-button slt-layer-more-actions"
+              ng-click="$mdOpenMenu($event)">
+            <md-icon class="material-icons">more_vert</md-icon>
+          </md-button>
+          <md-menu-content>
+            <md-menu-item ng-if="layer._slt.layerType == 'layer'">
+              <md-button ng-click="ctrl.onConvertLayerToClipPath($event, layer)">Convert to clip path</md-button>
+            </md-menu-item>
+            <md-menu-item ng-if="layer._slt.layerType == 'mask'">
+              <md-button ng-click="ctrl.onConvertLayerToPath($event, layer)">Convert to path</md-button>
+            </md-menu-item>
+          </md-menu-content>
+        </md-menu>
         <md-button
             class="md-icon-button slt-layer-action-button slt-layer-visibility-toggle"
             ng-class="{'is-checked':layer.visible}"
-            ng-click="ctrl.onLayerToggleVisibility($event, layer)">
+            ng-click="ctrl.onLayerToggleVisibility($event, layer)"
+            aria-label="Show/hide layer">
           <md-icon class="material-icons">{{layer.visible ? 'visibility' : 'visibility_off'}}</md-icon>
+          <md-tooltip>Show/hide layer</md-tooltip>
         </md-button>
         <md-menu
             class="slt-layer-add-property-menu"
