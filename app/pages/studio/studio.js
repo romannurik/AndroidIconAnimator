@@ -15,6 +15,7 @@
  */
 
 import {LayerGroup, BaseLayer, Artwork, Animation, AnimationBlock} from 'model';
+import {MathUtil} from 'MathUtil';
 import {ColorUtil} from 'ColorUtil';
 import {SvgLoader} from 'SvgLoader';
 import {VectorDrawableLoader} from 'VectorDrawableLoader';
@@ -263,8 +264,10 @@ class StudioCtrl {
               this.studioState_.playbackSpeed = 1;
             } else {
               this.studioState_.playbackSpeed = PLAYBACK_SPEEDS[
-                  Math.max(0, Math.min(PLAYBACK_SPEEDS.length - 1,
-                      currentIndex + (speedUp ? 1 : -1)))];
+                  MathUtil.constrain(
+                      currentIndex + (speedUp ? 1 : -1),
+                      0, PLAYBACK_SPEEDS.length - 1)
+                  ];
             }
           }
           this.studioState_.playing = true;

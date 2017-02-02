@@ -15,6 +15,7 @@
  */
 
 import {ColorUtil} from 'ColorUtil';
+import {MathUtil} from 'MathUtil';
 
 import {Property} from './Property';
 
@@ -23,10 +24,10 @@ export class ColorProperty extends Property {
     start = ColorUtil.parseAndroidColor(start);
     end = ColorUtil.parseAndroidColor(end);
     return ColorUtil.toAndroidString({
-      r: Math.max(0, Math.min(Math.round(Property.simpleInterpolate(start.r, end.r, f)), 255)),
-      g: Math.max(0, Math.min(Math.round(Property.simpleInterpolate(start.g, end.g, f)), 255)),
-      b: Math.max(0, Math.min(Math.round(Property.simpleInterpolate(start.b, end.b, f)), 255)),
-      a: Math.max(0, Math.min(Math.round(Property.simpleInterpolate(start.a, end.a, f)), 255))
+      r: MathUtil.constrain(Math.round(Property.simpleInterpolate(start.r, end.r, f)), 0, 255),
+      g: MathUtil.constrain(Math.round(Property.simpleInterpolate(start.g, end.g, f)), 0, 255),
+      b: MathUtil.constrain(Math.round(Property.simpleInterpolate(start.b, end.b, f)), 0, 255),
+      a: MathUtil.constrain(Math.round(Property.simpleInterpolate(start.a, end.a, f)), 0, 255)
     });
   }
 

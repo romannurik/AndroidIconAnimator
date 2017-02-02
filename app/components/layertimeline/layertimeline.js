@@ -16,6 +16,7 @@
 
 import {Artwork, PathLayer, LayerGroup, MaskLayer, Animation, AnimationBlock} from 'model';
 import {ModelUtil} from 'ModelUtil';
+import {MathUtil} from 'MathUtil';
 import {UiUtil} from 'UiUtil';
 import {DragHelper} from 'DragHelper';
 import {SvgLoader} from 'SvgLoader';
@@ -73,7 +74,7 @@ class LayerTimelineController {
   }
 
   set horizZoom(val) {
-    this.horizZoom_ = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, val));
+    this.horizZoom_ = MathUtil.constrain(val, MIN_ZOOM, MAX_ZOOM);
   }
 
   get artwork() {
@@ -113,7 +114,7 @@ class LayerTimelineController {
 
         event.preventDefault();
         targetHorizZoom *= Math.pow(1.01, -event.originalEvent.deltaY);
-        targetHorizZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, targetHorizZoom));
+        targetHorizZoom = MathUtil.constrain(targetHorizZoom, MIN_ZOOM, MAX_ZOOM);
         if (targetHorizZoom != this.horizZoom) {
           // zoom has changed
           if (performZoomRAF) {

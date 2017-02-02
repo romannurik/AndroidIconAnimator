@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {MathUtil} from 'MathUtil';
 import {DragHelper} from 'DragHelper';
 
 import {TimelineConsts} from './consts';
@@ -52,7 +53,7 @@ angular.module('AVDStudio').directive('studioTimelineGrid', function() {
           let time = (x - TimelineConsts.TIMELINE_ANIMATION_PADDING)
               / ($canvas.width() - TimelineConsts.TIMELINE_ANIMATION_PADDING * 2)
               * scope.animation.duration;
-          time = Math.max(0, Math.min(time, scope.animation.duration));
+          time = MathUtil.constrain(time, 0, scope.animation.duration);
           scope.onScrub({
             animation: scope.animation,
             time,
