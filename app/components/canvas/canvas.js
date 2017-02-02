@@ -296,7 +296,12 @@ class CanvasController {
 
         ctx.save();
         ctx.transform(...flattenedTransforms);
-        layer.pathData && layer.pathData.execute(ctx);
+        if (selectionMode) {
+          layer.pathData && layer.pathData.execute(ctx);
+        } else {
+          layer.pathData && layer.pathData.executeTrimmed(
+              ctx, layer.trimPathStart, layer.trimPathEnd, layer.trimPathOffset);
+        }
         ctx.restore();
 
         if (!selectionMode) {
@@ -309,37 +314,6 @@ class CanvasController {
           ctx.lineCap = layer.strokeLinecap || DefaultValues.LINECAP;
           ctx.lineJoin = layer.strokeLinejoin || DefaultValues.LINEJOIN;
           ctx.miterLimit = layer.miterLimit || DefaultValues.MITER_LIMIT;
-
-          if (layer.trimPathStart !== 0
-              || layer.trimPathEnd !== 1
-              || layer.trimPathOffset !== 0) {
-            let pathLength = layer.pathData.length;
-
-            // Calculate the visible fraction of the trimmed path. If trimPathStart
-            // is greater than trimPathEnd, then the result should be the combined
-            // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
-            let shownFraction = layer.trimPathEnd - layer.trimPathStart;
-            if (layer.trimPathStart > layer.trimPathEnd) {
-              shownFraction += 1;
-            }
-
-            // Calculate the dash array. The first array element is the length of
-            // the trimmed path and the second element is the gap, which is the
-            // difference in length between the total path length and the visible
-            // trimmed path length.
-            ctx.setLineDash([
-              shownFraction * pathLength,
-              (1 - shownFraction + 0.001) * pathLength
-            ]);
-
-            // The amount to offset the path is equal to the trimPathStart plus
-            // trimPathOffset. We mod the result because the trimmed path
-            // should wrap around once it reaches 1.
-            ctx.lineDashOffset = pathLength
-                * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
-          } else {
-            ctx.setLineDash([]);
-          }
 
           if (layer.strokeColor
               && layer.strokeWidth

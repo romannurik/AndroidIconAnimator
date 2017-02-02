@@ -15,13 +15,13 @@
  */
 
 import {default as Bezier} from 'bezier-js';
-
+import {MathUtil} from './MathUtil';
 
 export class SvgPathData {
   constructor(obj) {
     this.length = 0;
     this.bounds = null;
-    this.beziers = [];
+    this.subPaths = [];
 
     if (obj) {
       if (typeof obj == 'string') {
@@ -42,10 +42,10 @@ export class SvgPathData {
     this.string_ = value;
     let commands = parseCommands_(value);
     this.commands_ = commands;
-    let {length, bounds, beziers} = computePathLengthAndBounds_(this.commands_);
+    let {length, bounds, subPaths} = makePathComputations_(this.commands_);
     this.length = length;
     this.bounds = bounds;
-    this.beziers = beziers;
+    this.subPaths = subPaths;
   }
 
   toString() {
@@ -67,10 +67,113 @@ export class SvgPathData {
     });
   }
 
+  // executes the path, possibly trimming it
+  // (if actually trimming, draws only using beziers)
+  executeTrimmed(ctx, start = 0, end = 1, offset = 0, beginPath = true) {
+    if (start === end) {
+      return;
+    }
+
+    if (start === 0 && end === 1 && offset === 0) {
+      this.execute(ctx);
+      return;
+    }
+
+    start += offset;
+    if (start > 1) {
+      start = (start % 1 + 1) % 1; // double modulo to stay positive
+    }
+    end += offset;
+    if (end > 1) {
+      end = (end % 1 + 1) % 1;
+    }
+
+    if (beginPath) {
+      ctx.beginPath();
+    }
+
+    if (start > end) {
+      // wrap around
+      this.executeTrimmed(ctx, 0, end, 0, false);
+      this.executeTrimmed(ctx, start, 1, 0, false);
+      return;
+    }
+
+    // start guaranteed to be before end
+
+    if (!this.subPaths.length) {
+      return;
+    }
+
+    // NOTE: don't support trimming multiple subpaths to match android behavior
+    // https://code.google.com/p/android/issues/detail?id=172547
+    let firstSubPath = this.subPaths[0];
+    let length = firstSubPath.reduce((l, subPath) => l + subPath.length, 0);
+    if (!length) {
+      return;
+    }
+
+    // compute the string of beziers (possibly split) that make up the
+    // path from start to end
+    let beziers = [];
+    let lengthCovered = 0;
+    let started = false;
+    let ended = false;
+    firstSubPath.forEach(segment => {
+      let segStart = lengthCovered / length;
+      let segEnd = (segment.length + lengthCovered) / length;
+      if (!started) {
+        if (start < segEnd) {
+          started = true;
+          let splitStart = MathUtil.progress(start, segStart, segEnd);
+          if (end < segEnd) {
+            ended = true;
+            let splitEnd = MathUtil.progress(end, segStart, segEnd);
+            beziers.push(segment.bezier.split(
+                tForBezierDistance_(segment, splitStart),
+                tForBezierDistance_(segment, splitEnd)));
+          } else {
+            beziers.push(segment.bezier.split(
+                tForBezierDistance_(segment, splitStart)).right);
+          }
+        }
+      } else if (!ended) {
+        if (end < segEnd) {
+          ended = true;
+          let splitEnd = MathUtil.progress(end, segStart, segEnd);
+          beziers.push(segment.bezier.split(
+              tForBezierDistance_(segment, splitEnd)).left);
+        } else {
+          beziers.push(segment.bezier);
+        }
+      }
+      lengthCovered += segment.length;
+    });
+
+    // draw the beziers just computed
+    if (beziers.length) {
+      ctx.moveTo(beziers[0].points[0].x, beziers[0].points[0].y);
+      beziers.forEach(bez => {
+        if (bez.points.length == 4) {
+          ctx.bezierCurveTo(
+              bez.points[1].x, bez.points[1].y,
+              bez.points[2].x, bez.points[2].y,
+              bez.points[3].x, bez.points[3].y);
+        } else if (bez.points.length == 3) {
+          ctx.quadraticCurveTo(
+              bez.points[1].x, bez.points[1].y,
+              bez.points[2].x, bez.points[2].y);
+        }
+      });
+    }
+  }
+
   hitTestStroke(point, pointTransformerFn, strokeWidth) {
     // If the shortest distance from the point to the path is less than half
     // the stroke width, then select the path.
-    return this.beziers
+    return this.subPaths
+        .reduce((all, subPath) => all.concat(subPath), [])
+        .map(segment => segment.bezier)
         .map(bez => new Bezier(bez.points.map(p => pointTransformerFn(p))))
         .map(bez => bez.project(point))
         .reduce((proj, min) => proj.d < min.d ? proj : min).d <= (strokeWidth / 2);
@@ -89,7 +192,9 @@ export class SvgPathData {
         y: this.bounds.b + 1,
       },
     };
-    return this.beziers
+    return this.subPaths
+        .reduce((all, subPath) => all.concat(subPath), [])
+        .map(segment => segment.bezier)
         .map(bez => new Bezier(bez.points.map(p => pointTransformerFn(p))))
         .map(bez => bez.intersects(line).length)
         .reduce((l, sum) => sum + l) % 2 != 0;
@@ -102,10 +207,10 @@ export class SvgPathData {
   set commands(value) {
     this.commands_ = (value ? value.slice() : []);
     this.string_ = commandsToString_(this.commands_);
-    let {length, bounds, beziers} = computePathLengthAndBounds_(this.commands_);
+    let {length, bounds, subPaths} = makePathComputations_(this.commands_);
     this.length = length;
     this.bounds = bounds;
-    this.beziers = beziers;
+    this.subPaths = subPaths;
   }
 
   transform(transforms) {
@@ -142,10 +247,10 @@ export class SvgPathData {
     });
 
     this.string_ = commandsToString_(this.commands_);
-    let { length, bounds, beziers } = computePathLengthAndBounds_(this.commands_);
+    let { length, bounds, subPaths } = makePathComputations_(this.commands_);
     this.length = length;
     this.bounds = bounds;
-    this.beziers = beziers;
+    this.subPaths = subPaths;
   }
 
 
@@ -555,10 +660,42 @@ function executeArc_(ctx, arcArgs) {
   }
 }
 
-function computePathLengthAndBounds_(commands) {
+// maps a distance along the curve to the bezier parameter space (t)
+function tForBezierDistance_({lut, length}, f) {
+  let targetDist = f * length;
+  for (let i = 0; i < lut.length - 1; i++) {
+    let p1 = lut[i];
+    let p2 = lut[i + 1];
+    let dist = MathUtil.dist(p1.x, p1.y, p2.x, p2.y);
+    if (!dist) {
+      continue;
+    }
+
+    if (targetDist <= dist) {
+      f = targetDist / dist;
+      return (i + f) / (lut.length - 1);
+    }
+
+    targetDist -= dist;
+  }
+
+  return 1;
+}
+
+
+function makePathComputations_(commands) {
   let length = 0;
   let bounds = {l: Infinity, t: Infinity, r: -Infinity, b: -Infinity};
-  let beziers = [];
+  let currentSubPath = null;
+  let subPaths = [];
+
+  let pushBezier_ = bezier => {
+    currentSubPath.push({
+      bezier,
+      lut: bezier.getLUT(100),
+      length: bezier.length(),
+    });
+  };
 
   let expandBounds_ = (x, y) => {
     bounds.l = Math.min(x, bounds.l);
@@ -578,13 +715,12 @@ function computePathLengthAndBounds_(commands) {
   let lastMovePoint = null;
   let currentPoint = {x: 0, y: 0};
 
-  let dist_ = (x1, y1, x2, y2) => {
-    return Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
-  };
-
   commands.forEach(({command, args}) => {
     switch (command) {
       case 'moveTo': {
+        // start new sub-path
+        currentSubPath = [];
+        subPaths.push(currentSubPath);
         lastMovePoint = {x:args[0], y:args[1]};
         currentPoint.x = args[0];
         currentPoint.y = args[1];
@@ -593,8 +729,8 @@ function computePathLengthAndBounds_(commands) {
       }
 
       case 'lineTo': {
-        length += dist_(args[0], args[1], currentPoint.x, currentPoint.y);
-        beziers.push(new Bezier(
+        length += MathUtil.dist(args[0], args[1], currentPoint.x, currentPoint.y);
+        pushBezier_(new Bezier(
             currentPoint.x, currentPoint.y,
             args[0], args[1],
             args[0], args[1]));
@@ -606,8 +742,8 @@ function computePathLengthAndBounds_(commands) {
 
       case 'closePath': {
         if (lastMovePoint) {
-          length += dist_(lastMovePoint.x, lastMovePoint.y, currentPoint.x, currentPoint.y);
-          beziers.push(new Bezier(
+          length += MathUtil.dist(lastMovePoint.x, lastMovePoint.y, currentPoint.x, currentPoint.y);
+          pushBezier_(new Bezier(
               currentPoint.x, currentPoint.y,
               lastMovePoint.x, lastMovePoint.y,
               lastMovePoint.x, lastMovePoint.y));
@@ -623,7 +759,7 @@ function computePathLengthAndBounds_(commands) {
         length += bez.length();
         currentPoint.x = args[4];
         currentPoint.y = args[5];
-        beziers.push(bez);
+        pushBezier_(bez);
         expandBoundsToBezier_(bez);
         break;
       }
@@ -633,7 +769,7 @@ function computePathLengthAndBounds_(commands) {
         length += bez.length();
         currentPoint.x = args[2];
         currentPoint.y = args[3];
-        beziers.push(bez);
+        pushBezier_(bez);
         expandBoundsToBezier_(bez);
         break;
       }
@@ -651,7 +787,7 @@ function computePathLengthAndBounds_(commands) {
 
         if (rx == 0 || ry == 0) {
           // degenerate to line
-          length += dist_(currentPointX, currentPointY, tempPoint1X, tempPoint1Y);
+          length += MathUtil.dist(currentPointX, currentPointY, tempPoint1X, tempPoint1Y);
           expandBounds_(tempPoint1X, tempPoint1Y);
           currentPoint.x = tempPoint1X;
           currentPoint.y = tempPoint1Y;
@@ -672,7 +808,7 @@ function computePathLengthAndBounds_(commands) {
           currentPoint.x = bezierCoords[i + 6];
           currentPoint.y = bezierCoords[i + 7];
           expandBoundsToBezier_(bez);
-          beziers.push(bez);
+          pushBezier_(bez);
         }
         currentPoint.x = tempPoint1X;
         currentPoint.y = tempPoint1Y;
@@ -681,7 +817,7 @@ function computePathLengthAndBounds_(commands) {
     }
   });
 
-  return {length, bounds, beziers};
+  return {length, bounds, subPaths};
 }
 
 
