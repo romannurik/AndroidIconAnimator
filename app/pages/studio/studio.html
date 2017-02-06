@@ -29,10 +29,13 @@
               <md-tooltip md-direction="top">Rewind (R)</md-tooltip>
             </md-button>
           </div>
-          <md-button class="md-fab md-mini md-primary" ng-click="studioCtrl.togglePlaying()">
-            <md-icon class="material-icons">
-              {{studioCtrl.isPlaying() ? 'pause' : 'play_arrow'}}
-            </md-icon>
+          <md-button class="md-fab md-mini md-primary"
+              ng-click="studioCtrl.allowPlayAnimate = true; studioCtrl.togglePlaying()">
+            <div
+                class="play-pause-icon animated-icon"
+                ng-class="{'can-animate': !!studioCtrl.allowPlayAnimate,
+                           'is-playing': studioCtrl.isPlaying()}">
+            </div>
             <md-tooltip md-direction="top">
               {{studioCtrl.isPlaying() ? 'Pause' : 'Play'}} current animation (Spacebar)
             </md-tooltip>

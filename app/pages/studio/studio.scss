@@ -64,6 +64,50 @@
     }
   }
 
+  .play-pause-icon {
+    position: absolute;
+    overflow: hidden;
+    left: 50%;
+    top: 50%;
+    width: 24px;
+    height: 24px;
+    transform: translate(-50%, -50%);
+
+    &::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 504px;
+      height: 24px;
+      background-size: 504px 24px;
+      background-position: 0% 0%;
+      transform: translateX(-480px);
+      background-image: url('../images/pauseplay-white@2x.png');
+      pointer-events: none;
+    }
+
+    &.can-animate::after {
+      animation: pauseplay .3s steps(20);
+    }
+
+    &.can-animate.is-playing::after {
+      background-image: url('../images/playpause-white@2x.png');
+      animation: playpause .3s steps(20);
+    }
+
+    @keyframes playpause {
+      from {transform: translateX(0);}
+      to {transform: translateX(-480px);}
+    }
+
+    @keyframes pauseplay {
+      from {transform: translateX(0);}
+      to {transform: translateX(-480px);}
+    }
+  }
+
   .preview-container {
     position: relative;
   }
