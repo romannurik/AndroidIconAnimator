@@ -207,6 +207,7 @@ class StudioCtrl {
 
       if (event.keyCode == 32) {
         // spacebar
+        this.allowPlayAnimate = true;
         this.studioState_.playing = !this.studioState_.playing;
         return false;
 
@@ -311,6 +312,7 @@ class StudioCtrl {
   }
 
   togglePlaying() {
+    this.allowPlayAnimate = true;
     this.studioState_.playing = !this.studioState_.playing;
   }
 
