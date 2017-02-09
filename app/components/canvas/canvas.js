@@ -195,7 +195,9 @@ class CanvasController {
       }
     }
 
-    this.scale_ = Math.max(1, Math.floor(this.scale_));
+    this.scale_ = this.scale_ > 1
+        ? Math.floor(this.scale_)
+        : Math.max(.1, this.scale_);
     this.backingStoreScale_ = this.scale_ * (window.devicePixelRatio || 1);
     [this.canvas_, this.offscreenCanvas_].forEach(canvas => {
       canvas
