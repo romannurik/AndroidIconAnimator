@@ -75,6 +75,7 @@ const ENUM_INTERPOLATOR_OPTIONS = [
   {
     value: 'LINEAR_OUT_SLOW_IN',
     label: 'Linear out, slow in',
+    androidRef: '@android:interpolator/linear_out_slow_in',
     interpolate: f => LINEAR_OUT_SLOW_IN_EASING(f)
   },
   //BOUNCE: https://android.googlesource.com/platform/frameworks/base/+/refs/heads/master/core/java/android/view/animation/BounceInterpolator.java
