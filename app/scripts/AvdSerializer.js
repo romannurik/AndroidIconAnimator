@@ -131,7 +131,7 @@ export const AvdSerializer = {
     destinationNode.setAttributeNS(ANDROID_NS, 'android:height', `${artwork.height}dp`);
     destinationNode.setAttributeNS(ANDROID_NS, 'android:viewportWidth', `${artwork.width}`);
     destinationNode.setAttributeNS(ANDROID_NS, 'android:viewportHeight', `${artwork.height}`);
-    conditionalAttr(destinationNode, 'android:alpha', vl.alpha, 1);
+    conditionalAttr(destinationNode, 'android:alpha', artwork.alpha, 1);
 
     artwork.walk((layer, parentNode) => {
       if (layer instanceof Artwork) {
