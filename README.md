@@ -11,7 +11,7 @@ format for Android.
 Not intended to replace After Effects or other professional animation tools, but very useful for
 simple animations.
 
-![Screen capture of tool](https://github.com/romannurik/AndroidIconAnimator/blob/master/art/screencap.gif)
+![Screen capture of tool](art/screencap.gif)
 
 ## Build instructions
 
