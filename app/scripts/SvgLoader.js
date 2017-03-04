@@ -133,7 +133,7 @@ export const SvgLoader = {
           strokeWidth: context.strokeWidth || 0,
           strokeLinecap: context.strokeLinecap || DefaultValues.LINECAP,
           strokeLinejoin: context.strokeLinejoin || DefaultValues.LINEJOIN,
-          strokeMiterLimit: context.strokeMiterLimit || DefaultValues.MITER_LIMIT,
+          strokeMiterLimit: ('strokeMiterLimit' in context) ? context.strokeMiterLimit : DefaultValues.MITER_LIMIT,
         });
       }
 
