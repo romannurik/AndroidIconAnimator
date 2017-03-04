@@ -130,7 +130,7 @@ export const SvgLoader = {
           fillAlpha: ('fillAlpha' in context) ? context.fillAlpha : 1,
           strokeColor: ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : null,
           strokeAlpha: ('strokeAlpha' in context) ? context.strokeAlpha : 1,
-          strokeWidth: context.strokeWidth || 0,
+          strokeWidth: ('strokeWidth' in context) ? context.strokeWidth : 1,
           strokeLinecap: context.strokeLinecap || DefaultValues.LINECAP,
           strokeLinejoin: context.strokeLinejoin || DefaultValues.LINEJOIN,
           strokeMiterLimit: context.strokeMiterLimit || DefaultValues.MITER_LIMIT,
