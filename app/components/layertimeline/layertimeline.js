@@ -560,7 +560,39 @@ class LayerTimelineController {
    */
   onExportAVDs() {
     ga('send', 'event', 'export', 'exportVectorAnimated');
-    this.studioState_.exportAVDs();
+    this.studioState_.exportAVDs(false);
+  }
+
+  /**
+   * Handles export to animated vector drawable format with attrs for colors.
+   */
+  onExportAVDsAttrs() {
+    ga('send', 'event', 'export', 'exportVectorAnimatedAttrs');
+    this.studioState_.exportAVDs(true);
+  }
+  
+  /**
+   * Handles export to xml with colors.
+   */
+  onExportColorsXml() {
+    ga('send', 'event', 'export', 'exportColorsXml');
+    this.studioState_.exportColorsXml();
+  }
+  
+  /**
+   * Handles export to xml with attrs.
+   */
+  onExportAttrsXml() {
+    ga('send', 'event', 'export', 'exportAttrsXml');
+    this.studioState_.exportAttrsXml();
+  }
+
+  /**
+   * Handles export to xml with attrs.
+   */
+  onExportStylesXml() {
+    ga('send', 'event', 'export', 'exportAttrsXml');
+    this.studioState_.exportStylesXml();
   }
 
   /**

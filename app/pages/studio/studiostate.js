@@ -14,12 +14,25 @@
  * limitations under the License.
  */
 
-import {default as zip} from 'zipjs-browserify';
+import {
+  default as zip
+} from 'zipjs-browserify';
 
-import {Artwork, Animation, AnimationBlock, BaseLayer} from 'model';
-import {AnimationRenderer} from 'AnimationRenderer';
-import {AvdSerializer} from 'AvdSerializer';
-import {ModelUtil} from 'ModelUtil';
+import {
+  Artwork,
+  Animation,
+  AnimationBlock,
+  BaseLayer
+} from 'model';
+import {
+  AnimationRenderer
+} from 'AnimationRenderer';
+import {
+  AvdSerializer
+} from 'AvdSerializer';
+import {
+  ModelUtil
+} from 'ModelUtil';
 
 
 const CHANGES_TAG = '$$studioState::CHANGES';
@@ -32,8 +45,7 @@ const BLANK_ARTWORK = {
   id: new Artwork().typeIdPrefix,
   width: 24,
   height: 24,
-  layers: [
-  ]
+  layers: []
 };
 
 
@@ -93,7 +105,9 @@ class StudioStateService {
 
   set playing(playing) {
     this.playing_ = playing;
-    this.broadcastChanges_({playing: true});
+    this.broadcastChanges_({
+      playing: true
+    });
   }
 
   get artwork() {
@@ -106,7 +120,9 @@ class StudioStateService {
 
   set artwork(artwork) {
     this.artwork_ = artwork;
-    this.artworkChanged({noUndo:true});
+    this.artworkChanged({
+      noUndo: true
+    });
   }
 
   get animations() {
@@ -128,18 +144,26 @@ class StudioStateService {
   animChanged(options = {}) {
     this.dirty_ = true;
     this.rebuildRenderer_();
-    this.broadcastChanges_({animations: true});
+    this.broadcastChanges_({
+      animations: true
+    });
     if (!options.noUndo) {
-      this.saveUndoState_({debounce:true});
+      this.saveUndoState_({
+        debounce: true
+      });
     }
   }
 
   artworkChanged(options = {}) {
     this.dirty_ = true;
     this.rebuildRenderer_();
-    this.broadcastChanges_({artwork: true});
+    this.broadcastChanges_({
+      artwork: true
+    });
     if (!options.noUndo) {
-      this.saveUndoState_({debounce:true});
+      this.saveUndoState_({
+        debounce: true
+      });
     }
   }
 
@@ -166,7 +190,7 @@ class StudioStateService {
     // (commit the current state after N millisec of inactivity)
     if (options.debounce) {
       this.debouncedSaveUndoPromise_ = this.timeout_(
-          () => this.commitUndoStateToTopSlot_(), UNDO_DEBOUNCE_MS);
+        () => this.commitUndoStateToTopSlot_(), UNDO_DEBOUNCE_MS);
     } else {
       this.commitUndoStateToTopSlot_();
     }
@@ -185,12 +209,16 @@ class StudioStateService {
     let state = this.undoStates_[this.currentUndoState_];
     this.artwork_ = new Artwork(state.artwork);
     this.animations_ = state.animations.map(anim => new Animation(anim));
-    this.activeAnimation_ = (this.animations_.length > 0 && state.activeAnimationIndex >= 0)
-        ? this.animations_[state.activeAnimationIndex]
-        : null;
+    this.activeAnimation_ = (this.animations_.length > 0 && state.activeAnimationIndex >= 0) ?
+      this.animations_[state.activeAnimationIndex] :
+      null;
     this.selection = [];
-    this.artworkChanged({noUndo:true});
-    this.animChanged({noUndo:true});
+    this.artworkChanged({
+      noUndo: true
+    });
+    this.animChanged({
+      noUndo: true
+    });
   }
 
   tryUndo() {
@@ -241,15 +269,17 @@ class StudioStateService {
 
     this.activeAnimation_ = activeAnimation;
     this.rebuildRenderer_();
-    this.broadcastChanges_({activeAnimation: true});
+    this.broadcastChanges_({
+      activeAnimation: true
+    });
   }
 
   rebuildRenderer_() {
     this.animationRenderer_ = null;
     if (this.activeAnimation) {
       this.animationRenderer_ = new AnimationRenderer(
-          this.artwork,
-          this.activeAnimation);
+        this.artwork,
+        this.activeAnimation);
       this.animationRenderer_.setAnimationTime(this.activeTime_);
     }
   }
@@ -263,12 +293,14 @@ class StudioStateService {
     if (this.animationRenderer_) {
       this.animationRenderer_.setAnimationTime(activeTime);
     }
-    this.broadcastChanges_({activeTime: true});
+    this.broadcastChanges_({
+      activeTime: true
+    });
   }
 
   getSelectionByType_(type) {
-    return (this.selection_ && this.selection_.length && this.selection_[0] instanceof type)
-        ? this.selection_ : [];
+    return (this.selection_ && this.selection_.length && this.selection_[0] instanceof type) ?
+      this.selection_ : [];
   }
 
   get selectedLayers() {
@@ -300,13 +332,15 @@ class StudioStateService {
     this.selection_.forEach(item => delete item.selected_);
     this.selection_ = selection ? selection.slice() : [];
     this.selection_.forEach(item => item.selected_ = true);
-    this.broadcastChanges_({selection: true});
+    this.broadcastChanges_({
+      selection: true
+    });
   }
 
   areItemsMultiselectCompatible_(item1, item2) {
-    return !!(!item1 || !item2
-        || item1.constructor === item2.constructor
-        || item1 instanceof BaseLayer && item2 instanceof BaseLayer);
+    return !!(!item1 || !item2 ||
+      item1.constructor === item2.constructor ||
+      item1 instanceof BaseLayer && item2 instanceof BaseLayer);
   }
 
   selectItem(item) {
@@ -351,7 +385,9 @@ class StudioStateService {
       }
     }
 
-    this.broadcastChanges_({selection: true});
+    this.broadcastChanges_({
+      selection: true
+    });
   }
 
   deleteLayers(layersToDelete) {
@@ -423,7 +459,7 @@ class StudioStateService {
   }
 
   onChange(fn, $scope) {
-    let watcher = this.rootScope_.$on(CHANGES_TAG, function() {
+    let watcher = this.rootScope_.$on(CHANGES_TAG, function () {
       // window.setTimeout(() => $scope.$apply(() => fn.apply(this, arguments)), 0);
       fn.apply(this, arguments);
     });
@@ -435,7 +471,9 @@ class StudioStateService {
     let anchor = $('<a>').hide().appendTo(document.body);
     let blob = content;
     if (!(content instanceof Blob)) {
-      blob = new Blob([content], {type: 'octet/stream'});
+      blob = new Blob([content], {
+        type: 'octet/stream'
+      });
     }
     let url = window.URL.createObjectURL(blob);
     anchor.attr({
@@ -494,17 +532,61 @@ class StudioStateService {
     this.downloadFile_(xmlStr, `${this.artwork.id}.xml`);
   }
 
-  exportAVDs() {
+  exportAttrsXml() {
+    let xmlStr = AvdSerializer.colorToAttrsXmlString(this.artwork);
+    this.downloadFile_(xmlStr, `attrs.xml`);
+  }
+
+  exportColorsXml() {
+    let xmlStr = AvdSerializer.colorToColorsXmlString(this.artwork);
+    this.downloadFile_(xmlStr, `colors.xml`);
+  }
+
+  exportStylesXml() {
+    let xmlStr = AvdSerializer.colorToStylesXmlString(this.artwork);
+    this.downloadFile_(xmlStr, `styles.xml`);
+  }
+
+  exportAVDs(withColorsAttrs) {
     if (this.animations.length) {
       let exportedAnimations = this.animations.map(animation => ({
         animation,
         filename: `avd_${this.artwork.id}_${animation.id}.xml`,
-        xmlStr: AvdSerializer.artworkAnimationToAvdXmlString(this.artwork, animation)
+        xmlStr: AvdSerializer.artworkAnimationToAvdXmlString(this.artwork, animation, withColorsAttrs)
       }));
 
+
       if (exportedAnimations.length == 1) {
-        // download a single XML
-        this.downloadFile_(exportedAnimations[0].xmlStr, exportedAnimations[0].filename);
+        if (withColorsAttrs) {
+          // download a ZIP
+          zip.createWriter(new zip.BlobWriter(), writer => {
+            // add next file
+            writer.add(
+              exportedAnimations[0].filename,
+              new zip.TextReader(exportedAnimations[0].xmlStr),
+              () => {
+                writer.add(
+                  'attrs.xml',
+                  new zip.TextReader(AvdSerializer.colorToAttrsXmlString(this.artwork)),
+                  () => {
+                    writer.add(
+                      'colors.xml',
+                      new zip.TextReader(AvdSerializer.colorToColorsXmlString(this.artwork)),
+                      () => {
+                        writer.add(
+                          'styles.xml',
+                          new zip.TextReader(AvdSerializer.colorToStylesXmlString(this.artwork)),
+                          () => {
+                            writer.close(blob => this.downloadFile_(blob, `avd_${this.artwork.id}.zip`));
+                          });
+                      });
+                  });
+              });
+          }, error => console.error(error));
+        } else {
+          // download a single XML
+          this.downloadFile_(exportedAnimations[0].xmlStr, exportedAnimations[0].filename);
+        }
       } else {
         // download a ZIP
         zip.createWriter(new zip.BlobWriter(), writer => {
@@ -512,15 +594,35 @@ class StudioStateService {
           let next_ = () => {
             ++i;
             if (i >= exportedAnimations.length) {
-              // close
-              writer.close(blob => this.downloadFile_(blob, `avd_${this.artwork.id}.zip`));
+              if (withColorsAttrs) {
+                writer.add(
+                  'attrs.xml',
+                  new zip.TextReader(AvdSerializer.colorToAttrsXmlString(this.artwork)),
+                  () => {
+                    writer.add(
+                      'colors.xml',
+                      new zip.TextReader(AvdSerializer.colorToColorsXmlString(this.artwork)),
+                      () => {
+                        writer.add(
+                          'styles.xml',
+                          new zip.TextReader(AvdSerializer.colorToStylesXmlString(this.artwork)),
+                          () => {
+                            // close
+                            writer.close(blob => this.downloadFile_(blob, `avd_${this.artwork.id}.zip`));
+                          });
+                      });
+                  });
+              } else {
+                // close
+                writer.close(blob => this.downloadFile_(blob, `avd_${this.artwork.id}.zip`));
+              }
             } else {
               // add next file
               let exportedAnimation = exportedAnimations[i];
               writer.add(
-                  exportedAnimation.filename,
-                  new zip.TextReader(exportedAnimation.xmlStr),
-                  next_);
+                exportedAnimation.filename,
+                new zip.TextReader(exportedAnimation.xmlStr),
+                next_);
             }
           };
           next_();

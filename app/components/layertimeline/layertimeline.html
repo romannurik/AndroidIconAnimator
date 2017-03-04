@@ -70,6 +70,26 @@
               Animated vector drawable(s)
             </md-button>
           </md-menu-item>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onExportAVDsAttrs($event)" ng-disabled="!ctrl.animations.length">
+              Animated vector drawable(s) with Attrs & Colors & Styles
+            </md-button>
+          </md-menu-item>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onExportAttrsXml($event)" ng-disabled="!ctrl.animations.length">
+              Attrs xml
+            </md-button>
+          </md-menu-item>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onExportColorsXml($event)" ng-disabled="!ctrl.animations.length">
+              Colors xml
+            </md-button>
+          </md-menu-item>
+           <md-menu-item>
+            <md-button ng-click="ctrl.onExportStylesXml($event)" ng-disabled="!ctrl.animations.length">
+              Styles xml
+            </md-button>
+          </md-menu-item>
         </md-menu-content>
       </md-menu>
       <div flex></div>
