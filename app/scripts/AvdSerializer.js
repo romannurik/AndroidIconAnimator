@@ -105,7 +105,6 @@ export const AvdSerializer = {
         if (!multiBlock) {
           blockNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
         }
-        blockNode.setAttributeNS(ANDROID_NS, 'android:name', layerId);
         blockNode.setAttributeNS(ANDROID_NS, 'android:propertyName', block.propertyName);
         conditionalAttr_(blockNode, 'android:startOffset', block.startTime, 0);
         conditionalAttr_(blockNode, 'android:duration', block.endTime - block.startTime);
