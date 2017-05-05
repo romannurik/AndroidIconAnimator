@@ -17,7 +17,7 @@
 import {Property} from './Property';
 
 export class EnumProperty extends Property {
-  constructor(name, options = {}, config = {}) {
+  constructor(name, options, config = {}) {
     super(name, config);
     this.optionsByValue_ = {};
     this.options_ = (options || []).map(option => {
