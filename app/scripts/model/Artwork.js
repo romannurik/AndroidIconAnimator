@@ -23,7 +23,6 @@ import {LayerGroup} from './LayerGroup';
  * a width, height, and its children.
  */
 @Property.register([
-  new IdProperty('id'),
   new ColorProperty('canvasColor'),
   new NumberProperty('width', {min:4, max:1024, integer:true}),
   new NumberProperty('height', {min:4, max:1024, integer:true}),
