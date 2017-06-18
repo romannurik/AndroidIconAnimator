@@ -1,3 +1,5 @@
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
+
 **Warning: This app and repository is unmaintained. Check out the very awesome [Shape Shifter](https://github.com/alexjlockwood/ShapeShifter), the successor to this tool.**
 -----
 
