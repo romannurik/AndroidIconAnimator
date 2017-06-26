@@ -16,7 +16,13 @@
 
 import xmlserializer from 'xmlserializer';
 
-import {Artwork, PathLayer, LayerGroup, MaskLayer, DefaultValues} from './model';
+import {
+  Artwork,
+  PathLayer,
+  LayerGroup,
+  MaskLayer,
+  DefaultValues
+} from './model';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 const ANDROID_NS = 'http://schemas.android.com/apk/res/android';
@@ -24,20 +30,30 @@ const AAPT_NS = 'http://schemas.android.com/aapt';
 
 
 let conditionalAttr_ = (node, attr, value, skipValue) => {
-  if (value !== undefined
-      && value !== null
-      && (skipValue === undefined || value !== skipValue)) {
+  if (value !== undefined &&
+    value !== null &&
+    (skipValue === undefined || value !== skipValue)) {
     node.setAttributeNS(ANDROID_NS, attr, value);
   }
 };
 
 
 let serializeXmlNode_ = xmlNode => {
-  let xmlStr = xmlserializer.serializeToString(xmlNode, {indent:4, multiAttributeIndent:4});
+  let xmlStr = xmlserializer.serializeToString(xmlNode, {
+    indent: 4,
+    multiAttributeIndent: 4
+  });
   return xmlStr; //new XMLSerializer().serializeToString(xmlNode);
   // return vkbeautify.xml(xmlStr, 4);
 };
 
+let serializeXmlWithoutIndentNode_ = xmlNode => {
+  let xmlStr = xmlserializer.serializeToString(xmlNode, {
+    indent: 0,
+    multiAttributeIndent: 0
+  });
+  return xmlStr;
+};
 
 export const AvdSerializer = {
 
@@ -47,16 +63,136 @@ export const AvdSerializer = {
   artworkToVectorDrawableXmlString(artwork) {
     let xmlDoc = document.implementation.createDocument(null, 'vector');
     let rootNode = xmlDoc.documentElement;
-    AvdSerializer.artworkToXmlNode_(artwork, rootNode, xmlDoc);
+    AvdSerializer.artworkToXmlNode_(artwork, rootNode, xmlDoc, false);
     return serializeXmlNode_(rootNode);
+  },
+
+  /**
+   * Serializes an Colors to a colors XML file.
+   */
+  colorToColorsXmlString(artwork) {
+    let xmlColorsDoc = document.implementation.createDocument(null, 'resources');
+    let rootNodeColors = xmlColorsDoc.documentElement;
+    rootNodeColors.innerHTML += '\n';
+
+    artwork.walk((layer, parentNode) => {
+      if (layer instanceof PathLayer) {
+
+        if (layer.fillColor != null && layer.fillColor != '') {
+          let colorNode = xmlColorsDoc.createElement('color');
+          colorNode.setAttribute('name', layer.id + '_color');
+          colorNode.append(layer.fillColor);
+          rootNodeColors.appendChild(colorNode);
+          rootNodeColors.innerHTML += '\n';
+        }
+
+        if (layer.strokeColor != null && layer.strokeColor != '') {
+          let strokeColorNode = xmlColorsDoc.createElement('color');
+          strokeColorNode.setAttribute('name', layer.id + '_stroke_color');
+          strokeColorNode.append(layer.strokeColor);
+          rootNodeColors.appendChild(strokeColorNode);
+          rootNodeColors.innerHTML += '\n';
+        }
+      }
+    }, rootNodeColors);
+
+    return serializeXmlWithoutIndentNode_(rootNodeColors);
+  },
+
+  /**
+   * Serializes an Colors to a attrs XML file.
+   */
+  colorToAttrsXmlString(artwork) {
+    let xmlAttrsDoc = document.implementation.createDocument(null, 'resources');
+    let rootNodeAttrs = xmlAttrsDoc.documentElement;
+    rootNodeAttrs.innerHTML += '\n';
+
+    artwork.walk((layer, parentNode) => {
+      if (layer instanceof PathLayer) {
+
+        if (layer.fillColor != null && layer.fillColor != '') {
+          let colorNode = xmlAttrsDoc.createElement('attr');
+          colorNode.setAttribute('name', layer.id + '_color');
+          colorNode.setAttribute('format', 'reference');
+          rootNodeAttrs.appendChild(colorNode);
+          rootNodeAttrs.innerHTML += '\n';
+        }
+
+        if (layer.strokeColor != null && layer.strokeColor != '') {
+          let strokeColorNode = xmlAttrsDoc.createElement('attr');
+          strokeColorNode.setAttribute('name', layer.id + '_stroke_color');
+          strokeColorNode.setAttribute('format', 'reference');
+          rootNodeAttrs.appendChild(strokeColorNode);
+          rootNodeAttrs.innerHTML += '\n';
+        }
+      }
+    }, rootNodeAttrs);
+
+    return serializeXmlWithoutIndentNode_(rootNodeAttrs);
+  },
+
+  /**
+   * Serializes an Colors to a styles XML file.
+   */
+  colorToStylesXmlString(artwork) {
+    let xmlStylesDoc = document.implementation.createDocument(null, 'resources');
+    let rootNodeStyles = xmlStylesDoc.documentElement;
+    rootNodeStyles.innerHTML = '\n<!-- Base application theme. -->\n';
+    let styleNode = xmlStylesDoc.createElement('style');
+    styleNode.setAttribute('name', 'AppTheme');
+    styleNode.setAttribute('parent', 'Theme.AppCompat.Light.DarkActionBar');
+    styleNode.append('\n');
+
+    let itemNode = xmlStylesDoc.createElement('item');
+    itemNode.setAttribute('name', 'colorPrimary');
+    itemNode.innerHTML = '@color/colorPrimary';
+    styleNode.appendChild(itemNode);
+    styleNode.append('\n');
+    itemNode = xmlStylesDoc.createElement('item');
+    itemNode.setAttribute('name', 'colorPrimaryDark');
+    itemNode.innerHTML = '@color/colorPrimaryDark';
+    styleNode.appendChild(itemNode);
+    styleNode.append('\n');
+    itemNode = xmlStylesDoc.createElement('item');
+    itemNode.setAttribute('name', 'colorAccent');
+    itemNode.innerHTML = '@color/colorAccent';
+    styleNode.appendChild(itemNode);
+    styleNode.append('\n');
+
+    artwork.walk((layer, parentNode) => {
+      if (layer instanceof PathLayer) {
+
+        if (layer.fillColor != null && layer.fillColor != '') {
+          let itemNode = xmlStylesDoc.createElement('item');
+          itemNode.setAttribute('name', layer.id + '_color');
+          itemNode.innerHTML = '@color/' + layer.id + '_color';
+          styleNode.appendChild(itemNode);
+          styleNode.append('\n');
+        }
+
+        if (layer.strokeColor != null && layer.strokeColor != '') {
+          let strokeItemNode = xmlStylesDoc.createElement('item');
+          strokeItemNode.setAttribute('name', layer.id + '_stroke_color');
+          strokeItemNode.innerHTML = '@color/' + layer.id + '_stroke_color';
+          styleNode.appendChild(strokeItemNode);
+          styleNode.append('\n');
+        }
+      }
+    }, styleNode);
+
+    rootNodeStyles.appendChild(styleNode);
+    rootNodeStyles.append('\n');
+
+    return serializeXmlWithoutIndentNode_(rootNodeStyles);
   },
 
   /**
    * Serializes a given Artwork and Animation to an animatedvector drawable XML file.
    */
-  artworkAnimationToAvdXmlString(artwork, animation) {
+  artworkAnimationToAvdXmlString(artwork, animation, withColorsAttrs) {
     let xmlDoc = document.implementation.createDocument(null, 'animated-vector');
     let rootNode = xmlDoc.documentElement;
+
     rootNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
     rootNode.setAttributeNS(XMLNS_NS, 'xmlns:aapt', AAPT_NS);
 
@@ -66,7 +202,7 @@ export const AvdSerializer = {
     rootNode.appendChild(artworkContainerNode);
 
     let artworkNode = xmlDoc.createElement('vector');
-    AvdSerializer.artworkToXmlNode_(artwork, artworkNode, xmlDoc);
+    AvdSerializer.artworkToXmlNode_(artwork, artworkNode, xmlDoc, withColorsAttrs);
     artworkContainerNode.appendChild(artworkNode);
 
     // create animation nodes (one per layer)
@@ -111,7 +247,7 @@ export const AvdSerializer = {
         conditionalAttr_(blockNode, 'android:valueFrom', block.fromValue);
         conditionalAttr_(blockNode, 'android:valueTo', block.toValue);
         conditionalAttr_(blockNode, 'android:valueType',
-            animatableProperties[block.propertyName].animatorValueType);
+          animatableProperties[block.propertyName].animatorValueType);
         conditionalAttr_(blockNode, 'android:interpolator', block.interpolator.androidRef);
         blockContainerNode.appendChild(blockNode);
       });
@@ -124,7 +260,7 @@ export const AvdSerializer = {
    * Helper method that serializes an Artwork to a destinationNode in an xmlDoc.
    * The destinationNode should be a <vector> node.
    */
-  artworkToXmlNode_(artwork, destinationNode, xmlDoc) {
+  artworkToXmlNode_(artwork, destinationNode, xmlDoc, withColorsAttrs) {
     destinationNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
     destinationNode.setAttributeNS(ANDROID_NS, 'android:width', `${artwork.width}dp`);
     destinationNode.setAttributeNS(ANDROID_NS, 'android:height', `${artwork.height}dp`);
@@ -140,9 +276,13 @@ export const AvdSerializer = {
         let node = xmlDoc.createElement('path');
         conditionalAttr_(node, 'android:name', layer.id);
         conditionalAttr_(node, 'android:pathData', layer.pathData.pathString);
-        conditionalAttr_(node, 'android:fillColor', layer.fillColor, '');
+        conditionalAttr_(node, 'android:fillColor', withColorsAttrs ?
+          ((layer.fillColor == null || layer.fillColor == '') ?
+            '' : '?attr/' + layer.id + '_color') : layer.fillColor, '');
         conditionalAttr_(node, 'android:fillAlpha', layer.fillAlpha, 1);
-        conditionalAttr_(node, 'android:strokeColor', layer.strokeColor, '');
+        conditionalAttr_(node, 'android:strokeColor', withColorsAttrs ?
+          ((layer.strokeColor == null || layer.strokeColor == '') ?
+            '' : '?attr/' + layer.id + '_stroke_color') : layer.strokeColor, '');
         conditionalAttr_(node, 'android:strokeAlpha', layer.strokeAlpha, 1);
         conditionalAttr_(node, 'android:strokeWidth', layer.strokeWidth, 0);
         conditionalAttr_(node, 'android:trimPathStart', layer.trimPathStart, 0);
@@ -150,9 +290,9 @@ export const AvdSerializer = {
         conditionalAttr_(node, 'android:trimPathOffset', layer.trimPathOffset, 0);
         conditionalAttr_(node, 'android:strokeLineCap', layer.strokeLinecap, DefaultValues.LINECAP);
         conditionalAttr_(node, 'android:strokeLineJoin', layer.strokeLinejoin,
-            DefaultValues.LINEJOIN);
+          DefaultValues.LINEJOIN);
         conditionalAttr_(node, 'android:strokeMiterLimit', layer.strokeMiterLimit,
-            DefaultValues.MITER_LIMIT);
+          DefaultValues.MITER_LIMIT);
         parentNode.appendChild(node);
         return parentNode;
 
