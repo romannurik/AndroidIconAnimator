@@ -22,7 +22,7 @@ If you want to contribute, you can build and serve the web app locally as follow
 
   2. Install `bower` and `gulp`:
 
-     ```
+   ```
      $ npm install -g bower gulp
      ```
 
