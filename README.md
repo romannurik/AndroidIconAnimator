@@ -32,7 +32,7 @@ If you want to contribute, you can build and serve the web app locally as follow
      $ npm install
      ```
 
-  4. To build and serve the web app locally, run:
+  4. To build and serve the web app locally, the you are good to go:
 
      ```
      $ gulp serve
