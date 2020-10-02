@@ -3,7 +3,7 @@
 **Warning: This app and repository is unmaintained. Check out the very awesome [Shape Shifter](https://github.com/alexjlockwood/ShapeShifter), the successor to this tool.**
 -----
 
-# Android Icon Animator
+# Android Icon Animator:-
 
 A web-based tool that lets you design icon animations and other animated vector art for Android.
 Exports to [Animated Vector Drawable](https://developer.android.com/reference/android/graphics/drawable/AnimatedVectorDrawable.html)
@@ -14,7 +14,7 @@ simple animations.
 
 ![Screen capture of tool](art/screencap.gif)
 
-## Build instructions
+## Build instructions:-
 
 If you want to contribute, you can build and serve the web app locally as follows:
 
